@@ -34,17 +34,13 @@ Concept layout more thoroughly in plan/mission.md
 - [x] 5.2 implement questing screen model and prototype components with static dummy data in internal/screens/questing/
 - [x] 5.3 wire ChoiceQuest transition from dashboard screen to questing screen in cmd/pomquest/root.go
 - [x] 5.4 add unit tests in internal/screens/questing/questing_test.go verifying timer ticks and keypress events
-- [ ] 5.5 hero card fixes
-  - [ ] 5.5.1 hero cards should have 2 space in between to accoun for any card becoming active, and thus offset. 
-  - [ ] 5.5.2 hero cards should have padding of (1,2)
-  - [ ] 5.5.3 use 󰓥 for all hero card atk icons
-  - [ ] 5.5.4 atk / def alignment should be icon,space,number,space,icon,space,number
-  - [ ] 5.5.5 fix hero card content alignment:
-  - name and class: top left (same as current)
-  - hero level: top right
-  - atk and defense: bottom left
-  - hp: bottom right
-  - [ ] 5.5.6 active hero card - use two overlaping offset lipgloss boxes, rather than trying to manually redraw. see https://github.com/charmbracelet/lipgloss#compositing
+- [x] 5.5 hero card fixes
+  - [x] 5.5.1 hero cards should have 2 space in between to accoun for any card becoming active, and thus offset. 
+  - [x] 5.5.2 hero cards should have padding of (1,2)
+  - [x] 5.5.3 use 󰓥 for all hero card atk icons
+  - [x] 5.5.4 atk / def alignment should be icon,space,number,space,icon,space,number
+  - [x] 5.5.5 fix hero card content alignment (name & class top left, hero level top right, atk & def bottom left, hp bottom right)
+  - [x] 5.5.6 active hero card - use two overlaping offset lipgloss boxes, rather than trying to manually redraw.
 - [ ] 5.6 
 
 ## Feature 6: define class base stats
