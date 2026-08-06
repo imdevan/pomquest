@@ -2,23 +2,19 @@ package questing
 
 import "github.com/pomquest/internal/ui"
 
-// TimerComponent wraps ui.ProgressBarComponent for quest pomodoro progress.
+// TimerComponent wraps ui.ProgressBarComponent for quest destination and pomodoro progress.
 type TimerComponent struct {
-	theme       ui.Theme
-	label       string
-	currentSecs int
-	totalSecs   int
+	theme ui.Theme
+	data  ui.QuestProgressData
 }
 
-func NewTimerComponent(theme ui.Theme, label string, currentSecs, totalSecs int) TimerComponent {
+func NewTimerComponent(theme ui.Theme, data ui.QuestProgressData) TimerComponent {
 	return TimerComponent{
-		theme:       theme,
-		label:       label,
-		currentSecs: currentSecs,
-		totalSecs:   totalSecs,
+		theme: theme,
+		data:  data,
 	}
 }
 
 func (c TimerComponent) View() string {
-	return ui.NewProgressBarComponent(c.theme, c.label, c.currentSecs, c.totalSecs, 30).View()
+	return ui.NewProgressBarComponent(c.theme, c.data).View()
 }

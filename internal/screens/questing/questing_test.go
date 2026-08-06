@@ -15,22 +15,19 @@ func TestQuestingScreen(t *testing.T) {
 
 	// Test View rendering
 	view := model.View()
-	if !strings.Contains(view, "FOCUS TIMER") {
-		t.Errorf("expected view to contain FOCUS TIMER, got:\n%s", view)
+	if !strings.Contains(view, "Forest of Izelliador") {
+		t.Errorf("expected view to contain Forest of Izelliador, got:\n%s", view)
 	}
-	if !strings.Contains(view, "Jimmothy") {
-		t.Errorf("expected view to contain hero Jimmothy, got:\n%s", view)
-	}
-	if !strings.Contains(view, "DUNGEON LOG") {
-		t.Errorf("expected view to contain DUNGEON LOG, got:\n%s", view)
+	if !strings.Contains(view, "jimmothy") {
+		t.Errorf("expected view to contain hero jimmothy, got:\n%s", view)
 	}
 
-	// Test pressing space to add dice roll log entry
+	// Test pressing space to add attack action log entry
 	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{' '}})
 	m := updated.(Model)
 	lastLog := m.LogMessages[len(m.LogMessages)-1]
-	if !strings.Contains(lastLog, "Pam rolls dice") {
-		t.Errorf("expected new log entry to contain dice roll, got '%s'", lastLog)
+	if !strings.Contains(lastLog, "pam attacks") {
+		t.Errorf("expected new log entry to contain pam attacks, got '%s'", lastLog)
 	}
 
 	// Test pause key
