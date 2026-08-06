@@ -41,9 +41,30 @@ Concept layout more thoroughly in plan/mission.md
   - [x] 5.5.4 atk / def alignment should be icon,space,number,space,icon,space,number
   - [x] 5.5.5 fix hero card content alignment (name & class top left, hero level top right, atk & def bottom left, hp bottom right)
   - [x] 5.5.6 active hero card - use two overlaping offset lipgloss boxes, rather than trying to manually redraw.
-- [ ] 5.6 
+- [ ] 5.6 party card fixes
+  - [ ] 5.6.1 partybar should be renamed to party card
+  - [ ] 5.6.2 party card should be composed of a lipgloss table component with 3 columns and one header row. 3d column should be right aligned. 
 
-## Feature 6: define class base stats
+  |party | | |
+  |---|---|---|
+  |coins: 0g10s80c|diet: balanced| |
+  |food: 2,000lbs|pace: fast| magic items: 0|
+  |ox: 4| | gems: 0|
+  |spare parts: 3| | tresure chests: 1|
+
+## Feature 6: party model update
+- [ ] 6.1 add these to the party model. 
+  - [ ] 6.1.1 small non-negative ints
+    - loot (generic trade-able item)
+    - rope
+    - bombs
+    - potions
+    - shovels
+
+  - [ ] 6.1.2 enum / string with fixed set of valid options:
+    - item usage: "none" + same as diet
+    - greed: none, low, med, high, extreme
+## Feature 7: define class base stats
 only warrior
 str 2, con 2⌋
 dmg: 1d6/2+1 => 0.5, 2, 2.5, 3, 3.5, 4
@@ -53,15 +74,15 @@ dmg: ⌊(1d6+2)/2⌋ = 1, 2, 2, 3, 3, 4
 
 maybe this
 dmg: hits for 1d2 󰇋 (2) dmg!
-## Feature 7: create randomization library
+## Feature 8: create randomization library
 2d6 based system 2.6% crit chance - epic fail
 
 
-## Feature 8: define quest, biome, path, weather tables
+## Feature 9: define quest, biome, path, weather tables
 start with 1 quest, 1 biome, 1 path, 1 sunny weather
 
 
-## Feature 9: define monster stat table
+## Feature 10: define monster stat table
 
 ... maybe sql isn't needed for stats ext? unless, they are downloaded with first install... sqlite still good for saving player state. But does it make sense to ship all as embeded sqlite db?
 
