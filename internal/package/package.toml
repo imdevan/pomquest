@@ -1,14 +1,14 @@
 # Package information - source of truth for project metadata
 # Run just sync after modifying this file
 
-name = "go-cli-template"
-package_name = "go-cli-template"
-module = "github.com/go-cli-template"
+name = "pomquest"
+package_name = "pomquest"
+module = "github.com/pomquest"
 description = "A generic CLI tool template built with Go, Cobra, and Bubble Tea. This template provides a foundation for building interactive command-line applications with a clean architecture and modern UI components."
 short = "A generic CLI tool template"
 version = "0.2.3"
-homepage = "https://devan.gg/go-cli-template"
-repository = "https://github.com/imdevan/go-cli-template/"
+homepage = "https://devan.gg/pomquest"
+repository = "https://github.com/imdevan/pomquest/"
 author = "hi@devan.gg"
 docs_site = "https://devan.gg"
-docs_base = "/go-cli-template"
+ocs_base = "/pomquest"
