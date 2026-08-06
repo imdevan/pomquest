@@ -7,9 +7,9 @@ Concept layout more thoroughly in plan/mission.md
 
 # Features
 ## Feature 1: define data models
-- [ ] 1.1 define / refine gorm data models for game in plan/data_models.go.
+- [x] 1.1 define / refine gorm data models for game in internal/app/data_models.go.
 - do not integrate into app yet. 
-- data models will be used to represent everything from game state, to monsters, to heroes. 
+- data models will be used to represent everything from game state, to monsters, to heroes
 
   
 
