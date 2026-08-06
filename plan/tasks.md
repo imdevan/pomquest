@@ -41,9 +41,9 @@ Concept layout more thoroughly in plan/mission.md
   - [x] 5.5.4 atk / def alignment should be icon,space,number,space,icon,space,number
   - [x] 5.5.5 fix hero card content alignment (name & class top left, hero level top right, atk & def bottom left, hp bottom right)
   - [x] 5.5.6 active hero card - use two overlaping offset lipgloss boxes, rather than trying to manually redraw.
-- [ ] 5.6 party card fixes
-  - [ ] 5.6.1 partybar should be renamed to party card
-  - [ ] 5.6.2 party card should be composed of a lipgloss table component with 3 columns and one header row. 3d column should be right aligned. 
+- [x] 5.6 party card fixes
+  - [x] 5.6.1 partybar should be renamed to party card
+  - [x] 5.6.2 party card should be composed of a lipgloss table component with 3 columns and one header row. 3d column should be right aligned. 
 
   |party | | |
   |---|---|---|
