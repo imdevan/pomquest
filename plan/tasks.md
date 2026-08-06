@@ -14,20 +14,16 @@ Concept layout more thoroughly in plan/mission.md
   
 
 ## Feature 2: define sqlite db architecture
-document:
-- put findings in plan/sqlite-discovery.md
-- what should be stored? What should be embedded enums? 
-- define simple migration patterns
+- [x] 2.1 document findings in plan/sqlite-discovery.md
+- [x] 2.2 analyze what should be stored vs embedded enums/code templates
+- [x] 2.3 define simple migration patterns (GORM AutoMigrate & pragmas)
+- [x] 2.4 define how app interacts with sqlite db (GameRepository layer & max open connections)
+- [x] 2.5 define handling for early session termination (WAL mode, micro-saves, recovery prompt)
+- [x] 2.6 outline additional architectural questions (multi-instance locking, log pruning, test mocks)
 
 ## Feature 3: define ui
-document:
-- put findings in plan/define-ui-discovery.md
-- [ ] 3.1 create map of user flows
-- based on plan/screens.md
-- [ ] 3.2 tree diagram of ui architecture 
-- should show proposed components
-- each component should have a generic lib component and 1 or several domain specific components that utilize the lib components
-  - to  optimize clarity and shared theming. 
+- [x] 3.1 create map of user flows based on plan/screens.md, plan/screens_simple.md, and plan/initial-path.md in plan/define-ui-discovery.md
+- [x] 3.2 tree diagram of ui architecture showing generic lib components vs domain specific components for shared theming in plan/define-ui-discovery.md
 
 ## Feature 4: simple dashboard screen
 

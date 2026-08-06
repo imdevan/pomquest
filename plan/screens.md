@@ -85,3 +85,15 @@ can do standard provision mgmt and keep timer running?
 
 # Dashboard*
 
+dungeon map view  
+
+
+
+   o - o
+  /     
+o       
+               dark forest --
+              /
+            󱢗 
+            / 
+ft foobaar

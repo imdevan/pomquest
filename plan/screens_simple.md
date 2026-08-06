@@ -7,6 +7,9 @@ md: 90 (half width mon: 91)
 lg: 120 (3/4 width mon: 121)
 xl: 180+ (full width mon: 183)
 
+1.25x screen half width: 106
+1.25x screen full width: 219
+
 height:
 full_with_tmux: 41 - standard
 full_without_tmux_or_waybar: 44
