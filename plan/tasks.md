@@ -51,20 +51,36 @@ Concept layout more thoroughly in plan/mission.md
   |food: 2,000lbs|pace: fast| magic items: 0|
   |ox: 4| | gems: 0|
   |spare parts: 3| | tresure chests: 1|
+## Feature 6: create custom internal/ui/texturedCard
+- [ ] 6.1 should
+- work with lipgloss border styling
+- create a custom border that can have text on any of the 4 corners. 
+╭ top-left ────────── top-right ╮
+│                               │
+╰ bottom-left ──── bottom-right ╯
+- properties, per corner
+  - padding, padding-left, padding-right: num of spaces between border and children
+  - margin space between text and corner
+  - theme if needed
+- [ ] 6.2 use for party card
+╭─ Party ───────────────────────╮
+│     - party table -           │
+╰───────────────────────────────╯
 
-## Feature 6: party model update
-- [ ] 6.1 add these to the party model. 
-  - [ ] 6.1.1 small non-negative ints
+
+## Feature 7: party model update
+- [ ] 7.1 add these to the party model. 
+  - [ ] 7.1.1 small non-negative ints
     - loot (generic trade-able item)
     - rope
     - bombs
     - potions
     - shovels
 
-  - [ ] 6.1.2 enum / string with fixed set of valid options:
+  - [ ] 7.1.2 enum / string with fixed set of valid options:
     - item usage: "none" + same as diet
     - greed: none, low, med, high, extreme
-## Feature 7: define class base stats
+## Feature 8: define class base stats
 only warrior
 str 2, con 2⌋
 dmg: 1d6/2+1 => 0.5, 2, 2.5, 3, 3.5, 4
@@ -74,15 +90,15 @@ dmg: ⌊(1d6+2)/2⌋ = 1, 2, 2, 3, 3, 4
 
 maybe this
 dmg: hits for 1d2 󰇋 (2) dmg!
-## Feature 8: create randomization library
+## Feature 9: create randomization library
 2d6 based system 2.6% crit chance - epic fail
 
 
-## Feature 9: define quest, biome, path, weather tables
+## Feature 10: define quest, biome, path, weather tables
 start with 1 quest, 1 biome, 1 path, 1 sunny weather
 
 
-## Feature 10: define monster stat table
+## Feature 11: define monster stat table
 
 ... maybe sql isn't needed for stats ext? unless, they are downloaded with first install... sqlite still good for saving player state. But does it make sense to ship all as embeded sqlite db?
 
