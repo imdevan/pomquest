@@ -1,26 +1,34 @@
 package ui
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/lipgloss"
 )
 
-type staticHelp struct {
-	short []key.Binding
-	full  [][]key.Binding
+// HelpComponent is a generic keybindings footer widget.
+type HelpComponent struct {
+	Keys  []key.Binding
+	Theme Theme
 }
 
-func (h staticHelp) ShortHelp() []key.Binding {
-	return h.short
+func NewHelpComponent(theme Theme, keys []key.Binding) HelpComponent {
+	return HelpComponent{
+		Keys:  keys,
+		Theme: theme,
+	}
 }
 
-func (h staticHelp) FullHelp() [][]key.Binding {
-	return h.full
-}
+func (c HelpComponent) View() string {
+	helpStyle := lipgloss.NewStyle().
+		Foreground(c.Theme.Muted).
+		MarginTop(1)
 
-func ListHelpView(model list.Model, short []key.Binding, full [][]key.Binding) string {
-	return model.Styles.HelpStyle.Render(model.Help.View(staticHelp{
-		short: short,
-		full:  full,
-	}))
+	var helpStrs []string
+	for _, k := range c.Keys {
+		helpStrs = append(helpStrs, fmt.Sprintf("%s: %s", k.Help().Key, k.Help().Desc))
+	}
+	return helpStyle.Render(strings.Join(helpStrs, "  •  "))
 }
