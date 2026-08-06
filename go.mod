@@ -1,4 +1,4 @@
-module github.com/go-cli-template
+module github.com/pomquest
 
 go 1.25.6
 
