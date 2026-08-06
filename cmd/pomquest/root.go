@@ -13,6 +13,7 @@ import (
 	"github.com/pomquest/internal/domain"
 	pkg "github.com/pomquest/internal/package"
 	"github.com/pomquest/internal/screens/dashboard"
+	"github.com/pomquest/internal/screens/questing"
 )
 
 // Metadata loaded from package.toml at build time
@@ -103,7 +104,7 @@ func runDashboard(cfg domain.Config) error {
 	if dbScreen, ok := finalModel.(dashboard.Model); ok {
 		switch dbScreen.Selected {
 		case dashboard.ChoiceQuest:
-			fmt.Println("⚔ Starting a new Quest Journey...")
+			return runQuesting(cfg)
 		case dashboard.ChoiceHoard:
 			fmt.Println("💎 Dragon Hoard: 0 Gold, 0 Magic Items")
 		case dashboard.ChoiceProvision:
@@ -115,5 +116,18 @@ func runDashboard(cfg domain.Config) error {
 		}
 	}
 
+	return nil
+}
+
+func runQuesting(cfg domain.Config) error {
+	model := questing.NewModel(cfg)
+
+	p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithoutSignalHandler())
+	_, err := p.Run()
+	if err != nil {
+		return fmt.Errorf("failed to run questing screen: %w", err)
+	}
+
+	fmt.Println("🗡 Quest Journey paused or completed. Returned to Hearth.")
 	return nil
 }
