@@ -26,8 +26,9 @@ Concept layout more thoroughly in plan/mission.md
 - [x] 3.2 tree diagram of ui architecture showing generic lib components vs domain specific components for shared theming in plan/define-ui-discovery.md
 
 ## Feature 4: simple dashboard screen
-
-
+- [x] 4.1 implement hearth dashboard screen TUI component in internal/ui/dashboard.go
+- [x] 4.2 wire root CLI command in cmd/pomquest/root.go to trigger dashboard screen on execution
+- [x] 4.3 add unit tests in internal/ui/dashboard_test.go verifying navigation and option selection
 ## Feature 5: simple questing screen
 
 
