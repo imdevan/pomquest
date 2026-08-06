@@ -1,6 +1,8 @@
 package questing
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/pomquest/internal/ui"
 )
@@ -19,17 +21,30 @@ func NewPartyGridComponent(theme ui.Theme, heroes []ui.HeroCardData) PartyGridCo
 }
 
 func (c PartyGridComponent) View() string {
+	hasActive := false
+	for _, h := range c.heroes {
+		if h.IsActive {
+			hasActive = true
+			break
+		}
+	}
+
 	turnIndicatorStyle := lipgloss.NewStyle().
 		Foreground(c.theme.Primary).
 		Bold(true)
 
-	// Turn damage indicator above active hero card
-	turnHeader := "      " + turnIndicatorStyle.Render("7!")
+	var turnHeader string
+	if hasActive {
+		turnHeader = "      " + turnIndicatorStyle.Render("7!") + "\n"
+	}
 
 	var cards []string
 	for _, h := range c.heroes {
-		card := ui.NewHeroCardComponent(c.theme, h).View()
-		cards = append(cards, card)
+		cardView := ui.NewHeroCardComponent(c.theme, h).View()
+		if !hasActive {
+			cardView = strings.TrimPrefix(cardView, "\n")
+		}
+		cards = append(cards, cardView)
 	}
 
 	// 2 spaces in between cards to account for offset active card (Requirement 5.5.1)
@@ -42,5 +57,5 @@ func (c PartyGridComponent) View() string {
 	}
 
 	grid := lipgloss.JoinHorizontal(lipgloss.Top, spacerCards...)
-	return turnHeader + "\n" + grid
+	return turnHeader + grid
 }

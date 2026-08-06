@@ -16,17 +16,17 @@ type tickMsg time.Time
 
 // Model represents the active questing UI screen.
 type Model struct {
-	Theme          ui.Theme
-	Responsive     *ui.ResponsiveManager
-	LogTitle       string
-	LogMessages    []string
-	Heroes         []ui.HeroCardData
-	Supplies       ui.PartyBarData
-	ProgressData   ui.QuestProgressData
-	Paused         bool
-	Quitted        bool
-	Width          int
-	Height         int
+	Theme        ui.Theme
+	Responsive   *ui.ResponsiveManager
+	LogTitle     string
+	LogMessages  []string
+	Heroes       []ui.HeroCardData
+	Supplies     ui.PartyBarData
+	ProgressData ui.QuestProgressData
+	Paused       bool
+	Quitted      bool
+	Width        int
+	Height       int
 }
 
 // NewModel initializes the questing screen with exact mockup data.
@@ -51,7 +51,7 @@ func NewModel(cfg domain.Config) Model {
 			"+ 3 xp! +3 copper!",
 		},
 		Heroes: []ui.HeroCardData{
-			{Name: "jimmothy", Class: "fighter", Level: 2, HP: 10, MaxHP: 10, Attack: 2, Armor: 2, Status: "Healthy", IsActive: true},
+			{Name: "jimmothy", Class: "fighter", Level: 2, HP: 10, MaxHP: 10, Attack: 2, Armor: 2, Status: "Healthy", IsActive: false},
 			{Name: "applebee", Class: "wizard", Level: 1, HP: 6, MaxHP: 6, Attack: 3, Armor: 0, Status: "Healthy"},
 			{Name: "pam", Class: "ranger", Level: 1, HP: 6, MaxHP: 8, Attack: 3, Armor: 0, Status: "Healthy"},
 			{Name: "sam", Class: "rouge", Level: 2, HP: 0, MaxHP: 8, Attack: 3, Armor: 0, Status: "Dead", IsDead: true},

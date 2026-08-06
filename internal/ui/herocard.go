@@ -100,6 +100,7 @@ func (c HeroCardComponent) View() string {
 	var sb strings.Builder
 	sb.WriteString(topLine + "\n")
 	sb.WriteString(classStr + "\n")
+	sb.WriteString("\n")          // Extra line of space between hero class and status
 	sb.WriteString(line3 + "\n") // Line reserved for status effects
 	sb.WriteString(bottomLine)
 
@@ -109,7 +110,8 @@ func (c HeroCardComponent) View() string {
 		return compositeActiveOffsetCard(frontCard, c.Theme.Border)
 	}
 
-	return frontCard
+	// Non-active cards in a grid with an active card: top row offset by 1 empty line so active card raises above them
+	return "\n" + frontCard
 }
 
 func spaceBetween(left, right string, width int) string {
@@ -130,12 +132,11 @@ func compositeActiveOffsetCard(frontCard string, borderColor lipgloss.Color) str
 		return frontCard
 	}
 
-	// Determine physical visual width of frontCard line
 	cardWidth := lipgloss.Width(frontLines[0])
 	borderStyle := lipgloss.NewStyle().Foreground(borderColor)
 
 	var result []string
-	// Row 0: top line of front card (shifted 1 up, 1 left)
+	// Row 0: top line of front card (raised 1 row up, 1 col left)
 	result = append(result, frontLines[0]+" ")
 
 	// Row 1: front line 1 + base box top-right corner ╮
