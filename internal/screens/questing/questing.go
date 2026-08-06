@@ -21,7 +21,7 @@ type Model struct {
 	LogTitle     string
 	LogMessages  []string
 	Heroes       []ui.HeroCardData
-	Supplies     ui.PartyBarData
+	Supplies     ui.PartyCardData
 	ProgressData ui.QuestProgressData
 	Paused       bool
 	Quitted      bool
@@ -56,17 +56,18 @@ func NewModel(cfg domain.Config) Model {
 			{Name: "pam", Class: "ranger", Level: 1, HP: 6, MaxHP: 8, Attack: 3, Armor: 0, Status: "Healthy"},
 			{Name: "sam", Class: "rouge", Level: 2, HP: 0, MaxHP: 8, Attack: 3, Armor: 0, Status: "Dead", IsDead: true},
 		},
-		Supplies: ui.PartyBarData{
-			Gold:       1,
-			Silver:     60,
-			Copper:     0,
-			FoodLbs:    400,
-			Diet:       "balanced",
-			SpareParts: 2,
-			Oxen:       4,
-			Regents:    8,
-			SickCount:  1,
-			Pace:       "fast",
+		Supplies: ui.PartyCardData{
+			Gold:           0,
+			Silver:         10,
+			Copper:         80,
+			FoodLbs:        2000,
+			Diet:           "balanced",
+			Pace:           "fast",
+			SpareParts:     3,
+			Oxen:           4,
+			MagicItems:     0,
+			Gems:           0,
+			TreasureChests: 1,
 		},
 		ProgressData: ui.QuestProgressData{
 			Destination: "Forest of Izelliador",

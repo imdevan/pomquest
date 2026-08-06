@@ -2,13 +2,13 @@ package questing
 
 import "github.com/pomquest/internal/ui"
 
-// SuppliesComponent wraps ui.PartyBarComponent matching mockup specs.
+// SuppliesComponent wraps ui.PartyCardComponent rendering party card table.
 type SuppliesComponent struct {
 	theme ui.Theme
-	data  ui.PartyBarData
+	data  ui.PartyCardData
 }
 
-func NewSuppliesComponent(theme ui.Theme, data ui.PartyBarData) SuppliesComponent {
+func NewSuppliesComponent(theme ui.Theme, data ui.PartyCardData) SuppliesComponent {
 	return SuppliesComponent{
 		theme: theme,
 		data:  data,
@@ -16,5 +16,5 @@ func NewSuppliesComponent(theme ui.Theme, data ui.PartyBarData) SuppliesComponen
 }
 
 func (c SuppliesComponent) View() string {
-	return ui.NewPartyBarComponent(c.theme, c.data, 72).View()
+	return ui.NewPartyCardComponent(c.theme, c.data, 72).View()
 }
