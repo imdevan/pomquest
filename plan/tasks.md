@@ -30,8 +30,10 @@ Concept layout more thoroughly in plan/mission.md
 - [x] 4.2 wire root CLI command in cmd/pomquest/root.go to trigger dashboard screen on execution
 - [x] 4.3 add unit tests in internal/ui/dashboard_test.go verifying navigation and option selection
 ## Feature 5: simple questing screen
-
-
+- [x] 5.1 create generic UI components for progress bar, log view, hero card, and party supplies bar in internal/ui/
+- [x] 5.2 implement questing screen model and prototype components with static dummy data in internal/screens/questing/
+- [x] 5.3 wire ChoiceQuest transition from dashboard screen to questing screen in cmd/pomquest/root.go
+- [x] 5.4 add unit tests in internal/screens/questing/questing_test.go verifying timer ticks and keypress events
 
 ## Feature 6: define class base stats
 only warrior
