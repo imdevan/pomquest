@@ -59,17 +59,10 @@ Concept layout more thoroughly in plan/mission.md
 
 
 ## Feature 7: party model update
-- [ ] 7.1 add these to the party model. 
-  - [ ] 7.1.1 small non-negative ints
-    - loot (generic trade-able item)
-    - rope
-    - bombs
-    - potions
-    - shovels
-
-  - [ ] 7.1.2 enum / string with fixed set of valid options:
-    - item usage: "none" + same as diet
-    - greed: none, low, med, high, extreme
+- [x] 7.1 add these to the party model:
+  - [x] 7.1.1 small non-negative ints (loot, rope, bombs, potions, shovels)
+  - [x] 7.1.2 enum / string with fixed set of valid options (item usage: "none", "sparing", "balanced", "generous"; greed: "none", "low", "med", "high", "extreme")
+- [x] 7.2 add those properties to the partycard
 
 ## Feature 8: create icon package
 - [x] 8.1 map strings to nerdfont utf equivalents

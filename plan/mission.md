@@ -243,7 +243,7 @@ bard: vicious mockery: apply weakness to all enemies
 
 76 total
 ────────────────────────────────────────────────────────────────────────────
-  ╭─ Party 󰓥  󰱯 󰧼  ────────────────────────────────────────── 󰋑 󰋑 󰋑 󰛠 ──╮
+  ╭─ Party 󰓥  󰱯 󰧼  ─────────────────────────────────────────  󰋑 󰋑 󰋑 󰛠 ──╮
   │                                                                      │
   │ 󱐟 food: 400lbs               󰪞 item usage: sparse              󰼃 x2  │
   │ 󱢏 loot: 67                   󰪞 diet: sparse                    󰚑 x1  │
@@ -268,7 +268,43 @@ bard: vicious mockery: apply weakness to all enemies
                                                │           
                               may remove pace due to pomodoro component
 
-                                     
+
+ ### party supplies stats
+󱐟 food
+󱢏 loot
+ spare parts
+ ox
+
+rope 󰼃
+bombs 󰚑
+poitions 
+shovel 󰜐
+
+item usage, diet, pace, and greed icons are based on their
+lues
+
+item usage
+  none 
+  sparse 
+  balanced 
+  heavy 
+
+diet
+  none 
+  sparse 
+  balanced 
+  filling 
+
+greed
+  none 
+  sparse
+  balanced 
+  heavy 
+
+pace
+  slow 󰾆
+  balanced 󰾅
+  fast 󰓅
 
 # Events
 
