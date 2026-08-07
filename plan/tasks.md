@@ -52,27 +52,32 @@ Concept layout more thoroughly in plan/mission.md
   |ox: 4| | gems: 0|
   |spare parts: 3| | tresure chests: 1|
 
-## Feature 6: create custom internal/ui/texturedCard
-- [x] 6.1 create custom internal/ui/texturedCard component supporting embedded text on any of the 4 border corners with padding, margin, and styling properties
-- [x] 6.2 use TexturedCard for party card container wrapping party table
+## Feature 6: party card
+- [x] 6.1 add team hearts ui component
+  - [x] 6.1.1 takes max and current hp, renders hearts evaluated in 10 HP and 5 HP increments using icon.KeyHeart...
+  - [x] 6.1.2 add team hearts to party texture card top-right
+
+## Feature 7: create custom internal/ui/texturedCard
+- [x] 7.1 create custom internal/ui/texturedCard component supporting embedded text on any of the 4 border corners with padding, margin, and styling properties
+- [x] 7.2 use TexturedCard for party card container wrapping party table
 
 
 
-## Feature 7: party model update
-- [x] 7.1 add these to the party model:
-  - [x] 7.1.1 small non-negative ints (loot, rope, bombs, potions, shovels)
-  - [x] 7.1.2 enum / string with fixed set of valid options (item usage: "none", "sparing", "balanced", "generous"; greed: "none", "low", "med", "high", "extreme")
-- [x] 7.2 add those properties to the partycard
+## Feature 8: party model update
+- [x] 8.1 add these to the party model:
+  - [x] 8.1.1 small non-negative ints (loot, rope, bombs, potions, shovels)
+  - [x] 8.1.2 enum / string with fixed set of valid options (item usage: "none", "sparing", "balanced", "generous"; greed: "none", "low", "med", "high", "extreme")
+- [x] 8.2 add those properties to the partycard
 
-## Feature 8: create icon package
-- [x] 8.1 map strings to nerdfont utf equivalents
-- [x] 8.2 some icons can have a nerd font and emoji variant
-- [x] 8.3 create library of names mapped to icons
-- [x] 8.4 replace all icons on quest screen components with icon package icons
+## Feature 9: create icon package
+- [x] 9.1 map strings to nerdfont utf equivalents
+- [x] 9.2 some icons can have a nerd font and emoji variant
+- [x] 9.3 create library of names mapped to icons
+- [x] 9.4 replace all icons on quest screen components with icon package icons
 
-## Feature 9: create icon library
+## Feature 10: create icon library
 
-## Feature 10: define class base stats
+## Feature 11: define class base stats
 only warrior
 str 2, con 2⌋
 dmg: 1d6/2+1 => 0.5, 2, 2.5, 3, 3.5, 4
@@ -82,15 +87,15 @@ dmg: ⌊(1d6+2)/2⌋ = 1, 2, 2, 3, 3, 4
 
 maybe this
 dmg: hits for 1d2 󰇋 (2) dmg!
-## Feature 11: create randomization library
+## Feature 12: create randomization library
 2d6 based system 2.6% crit chance - epic fail
 
 
-## Feature 12: define quest, biome, path, weather tables
+## Feature 13: define quest, biome, path, weather tables
 start with 1 quest, 1 biome, 1 path, 1 sunny weather
 
 
-## Feature 13: define monster stat table
+## Feature 14: define monster stat table
 
 ... maybe sql isn't needed for stats ext? unless, they are downloaded with first install... sqlite still good for saving player state. But does it make sense to ship all as embeded sqlite db?
 
@@ -99,3 +104,13 @@ start with 1 quest, 1 biome, 1 path, 1 sunny weather
 
 
 start with 1 monster, bats... 1hp 0def 1 atk
+
+## Feature 15: add icons
+- [x] 15.1 add heart icons in internal/adapters/icon/icon.go:74    
+  - [x] 15.1.1 10hp heart 󰋑 
+  - [x] 15.1.2 10hp - 5 heart 󰛞 
+  - [x] 15.1.3 10hp - 10 heart 󰋕
+  - [x] 15.1.4 5hp heart 󰛟
+  - [x] 15.1.5 5hp empty heart 󰛠
+
+
