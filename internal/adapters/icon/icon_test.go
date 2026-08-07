@@ -44,6 +44,23 @@ func TestIconRegistry(t *testing.T) {
 		t.Errorf("expected KeyShovel NerdFont to be 󰜐, got %s", got)
 	}
 
+	// Test heart icons
+	if got := GetNerdFont(KeyHeart10Full); got != "󰋑" {
+		t.Errorf("expected KeyHeart10Full NerdFont to be 󰋑, got %s", got)
+	}
+	if got := GetNerdFont(KeyHeart10Half); got != "󰛞" {
+		t.Errorf("expected KeyHeart10Half NerdFont to be 󰛞, got %s", got)
+	}
+	if got := GetNerdFont(KeyHeart10Empty); got != "󰋕" {
+		t.Errorf("expected KeyHeart10Empty NerdFont to be 󰋕, got %s", got)
+	}
+	if got := GetNerdFont(KeyHeart5Full); got != "󰛟" {
+		t.Errorf("expected KeyHeart5Full NerdFont to be 󰛟, got %s", got)
+	}
+	if got := GetNerdFont(KeyHeart5Empty); got != "󰛠" {
+		t.Errorf("expected KeyHeart5Empty NerdFont to be 󰛠, got %s", got)
+	}
+
 	// Test party stat category icons
 	if got := GetNerdFont(KeyItemUsage); got != "" {
 		t.Errorf("expected KeyItemUsage NerdFont to be , got %s", got)
@@ -51,8 +68,8 @@ func TestIconRegistry(t *testing.T) {
 	if got := GetNerdFont(KeyDiet); got != "" {
 		t.Errorf("expected KeyDiet NerdFont to be , got %s", got)
 	}
-	if got := GetNerdFont(KeyPace); got != "󰑮" {
-		t.Errorf("expected KeyPace NerdFont to be 󰑮, got %s", got)
+	if got := GetNerdFont(KeyPace); got != "󰖃" {
+		t.Errorf("expected KeyPace NerdFont to be 󰖃, got %s", got)
 	}
 	if got := GetNerdFont(KeyGreed); got != "" {
 		t.Errorf("expected KeyGreed NerdFont to be , got %s", got)
@@ -95,8 +112,8 @@ func TestPartyStatValueBasedIcons(t *testing.T) {
 		{"greed heavy", GetGreedIcon("heavy", ModeNerdFont), ""},
 
 		{"pace slow", GetPaceIcon("slow", ModeNerdFont), ""},
-		{"pace balanced", GetPaceIcon("balanced", ModeNerdFont), "󰖃"},
-		{"pace fast", GetPaceIcon("fast", ModeNerdFont), "󰜎"},
+		{"pace balanced", GetPaceIcon("balanced", ModeNerdFont), "󰜎"},
+		{"pace fast", GetPaceIcon("fast", ModeNerdFont), "󰑮"},
 
 		// Emoji mode tests for value based icons
 		{"item usage heavy emoji", GetItemUsageIcon("heavy", ModeEmoji), "🔥"},

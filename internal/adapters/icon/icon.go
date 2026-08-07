@@ -15,6 +15,11 @@ const (
 	KeyAttack     IconKey = "attack"
 	KeyArmor      IconKey = "armor"
 	KeyHP         IconKey = "hp"
+	KeyHeart10Full  IconKey = "heart_10_full"
+	KeyHeart10Half  IconKey = "heart_10_half"
+	KeyHeart10Empty IconKey = "heart_10_empty"
+	KeyHeart5Full   IconKey = "heart_5_full"
+	KeyHeart5Empty  IconKey = "heart_5_empty"
 	KeyDice       IconKey = "dice"
 	KeyWeather    IconKey = "weather"
 	KeyTerrain    IconKey = "terrain"
@@ -75,6 +80,11 @@ var registry = map[IconKey]IconPair{
 	KeyAttack:    {NerdFont: "󰓥", Emoji: "⚔️"},
 	KeyArmor:     {NerdFont: "🛡", Emoji: "🛡️"},
 	KeyHP:        {NerdFont: "", Emoji: "❤️"},
+	KeyHeart10Full:  {NerdFont: "󰋑", Emoji: "❤️"},
+	KeyHeart10Half:  {NerdFont: "󰛞", Emoji: "💔"},
+	KeyHeart10Empty: {NerdFont: "󰋕", Emoji: "🖤"},
+	KeyHeart5Full:   {NerdFont: "󰛟", Emoji: "💗"},
+	KeyHeart5Empty:  {NerdFont: "󰛠", Emoji: "🤍"},
 	KeyDice:      {NerdFont: "󰇍", Emoji: "🎲"},
 	KeyWeather:   {NerdFont: "☀️", Emoji: "☀️"},
 	KeyTerrain:   {NerdFont: "🌲", Emoji: "🌲"},
