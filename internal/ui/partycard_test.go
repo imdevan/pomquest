@@ -30,6 +30,8 @@ func TestPartyCardComponentView(t *testing.T) {
 		MagicItems:     0,
 		Gems:           0,
 		TreasureChests: 1,
+		CurrentHP:      30,
+		MaxHP:          35,
 	}
 
 	comp := NewPartyCardComponent(theme, data, 72)
@@ -37,6 +39,9 @@ func TestPartyCardComponentView(t *testing.T) {
 
 	if !strings.Contains(view, "Party") {
 		t.Errorf("expected view to contain Party header, got:\n%s", view)
+	}
+	if !strings.Contains(view, "󰋑 󰋑 󰋑 󰛠") {
+		t.Errorf("expected view to contain team hearts in top-right, got:\n%s", view)
 	}
 	if !strings.Contains(view, "0g 10s 80c") {
 		t.Errorf("expected view to contain gold info 0g 10s 80c, got:\n%s", view)
@@ -59,7 +64,7 @@ func TestPartyCardComponentView(t *testing.T) {
 	if !strings.Contains(view, " diet: balanced ") {
 		t.Errorf("expected view to contain diet balanced with icons, got:\n%s", view)
 	}
-	if !strings.Contains(view, "󰑮 pace: fast 󰜎") {
+	if !strings.Contains(view, "󰖃 pace: fast 󰑮") {
 		t.Errorf("expected view to contain pace fast with icons, got:\n%s", view)
 	}
 	if !strings.Contains(view, " greed: sparse ") {

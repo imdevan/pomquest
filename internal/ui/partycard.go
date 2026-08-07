@@ -30,6 +30,8 @@ type PartyCardData struct {
 	Shovels        int
 	ItemUsage      string
 	Greed          string
+	CurrentHP      int
+	MaxHP          int
 }
 
 // PartyCardComponent is a generic party resources card widget rendered using TexturedCard.
@@ -135,7 +137,7 @@ func (c PartyCardComponent) View() string {
 
 	tableContent := t.Render()
 
-	// Wrap party table inside TexturedCard with TopLeft: "Party" header and BottomRight: Gold
+	// Wrap party table inside TexturedCard with TopLeft: "Party" header, TopRight: team hearts, and BottomRight: Gold
 	card := NewTexturedCard(c.Theme, c.Width, tableContent).Padding(paddingTopBottom, horizontalPadding)
 	card.TopLeft = CornerText{
 		Text:         "Party",
@@ -143,6 +145,23 @@ func (c PartyCardComponent) View() string {
 		PaddingLeft:  1,
 		PaddingRight: 1,
 	}
+
+	maxHP := c.Data.MaxHP
+	curHP := c.Data.CurrentHP
+	if maxHP <= 0 {
+		maxHP = 35
+		curHP = 35
+	}
+	teamHeartsStr := RenderTeamHearts(curHP, maxHP, icon.ModeNerdFont)
+	if teamHeartsStr != "" {
+		card.TopRight = CornerText{
+			Text:         teamHeartsStr,
+			Margin:       1,
+			PaddingLeft:  1,
+			PaddingRight: 1,
+		}
+	}
+
 	card.BottomRight = CornerText{
 		Text:         goldStr,
 		Margin:       1,
