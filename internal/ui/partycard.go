@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 )
 
@@ -23,7 +24,7 @@ type PartyCardData struct {
 	TreasureChests int
 }
 
-// PartyCardComponent is a generic party resources card widget rendered with default lipgloss/table.
+// PartyCardComponent is a generic party resources card widget rendered using TexturedCard.
 type PartyCardComponent struct {
 	Data  PartyCardData
 	Width int
@@ -49,6 +50,9 @@ func (c PartyCardComponent) View() string {
 		c.Data.Diet = "balanced"
 	}
 
+	horizontalPadding := 2
+	paddingTopBottom := 1
+
 	coinStr := fmt.Sprintf("coins: %dg %ds %dc", c.Data.Gold, c.Data.Silver, c.Data.Copper)
 	foodStr := fmt.Sprintf("food: %slbs", formatNumberWithCommas(c.Data.FoodLbs))
 	oxStr := fmt.Sprintf("ox: %d", c.Data.Oxen)
@@ -61,16 +65,43 @@ func (c PartyCardComponent) View() string {
 	gemsStr := fmt.Sprintf("gems: %d", c.Data.Gems)
 	chestStr := fmt.Sprintf("treasure chests: %d", c.Data.TreasureChests)
 
+	// Inner table width takes into account outer borders (2) and horizontal padding (2 * horizontalPadding)
+	innerTableWidth := c.Width - 2 - (2 * horizontalPadding)
+	if innerTableWidth < 10 {
+		innerTableWidth = 10
+	}
+
+	emptyBorder := lipgloss.Border{}
 	t := table.New().
-		Headers("Party:", "", "").
+		Border(emptyBorder).
+		BorderRow(false).
+		BorderColumn(false).
+		Width(innerTableWidth).
 		Rows(
 			[]string{coinStr, dietStr, ""},
 			[]string{foodStr, paceStr, magicStr},
 			[]string{oxStr, "", gemsStr},
 			[]string{partsStr, "", chestStr},
-		)
+		).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			if col == 2 {
+				return lipgloss.NewStyle().Foreground(c.Theme.Text).Align(lipgloss.Right)
+			}
+			return lipgloss.NewStyle().Foreground(c.Theme.Text).Align(lipgloss.Left)
+		})
 
-	return t.Render()
+	tableContent := t.Render()
+
+	// Wrap party table inside TexturedCard with TopLeft: "Party" header and fluent .Padding(0, 2)
+	card := NewTexturedCard(c.Theme, c.Width, tableContent).Padding(paddingTopBottom, horizontalPadding)
+	card.TopLeft = CornerText{
+		Text:         "Party",
+		Margin:       1,
+		PaddingLeft:  1,
+		PaddingRight: 1,
+	}
+
+	return card.View()
 }
 
 func formatNumberWithCommas(n int) string {
