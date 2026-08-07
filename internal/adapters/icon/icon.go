@@ -35,6 +35,12 @@ const (
 	KeyPotion     IconKey = "potion"
 	KeyShovel     IconKey = "shovel"
 
+	// Stat category keys
+	KeyItemUsage IconKey = "item_usage"
+	KeyDiet      IconKey = "diet"
+	KeyGreed     IconKey = "greed"
+	KeyPace      IconKey = "pace"
+
 	// Item usage keys
 	KeyItemUsageNone     IconKey = "item_usage_none"
 	KeyItemUsageSparse   IconKey = "item_usage_sparse"
@@ -86,8 +92,8 @@ var registry = map[IconKey]IconPair{
 	KeySpareParts: {NerdFont: "", Emoji: "⚙️"},
 	KeyOx:         {NerdFont: "", Emoji: "🐂"},
 
-	KeyRope:   {NerdFont: "󰈤", Emoji: "🪢"},
-	KeyBomb:   {NerdFont: "󰼃", Emoji: "💣"},
+	KeyRope:   {NerdFont: "󰼃", Emoji: "🪢"},
+	KeyBomb:   {NerdFont: "󰚑", Emoji: "💣"},
 	KeyPotion: {NerdFont: "", Emoji: "🧪"},
 	KeyShovel: {NerdFont: "󰜐", Emoji: "⛏️"},
 
@@ -107,8 +113,13 @@ var registry = map[IconKey]IconPair{
 	KeyGreedHeavy:    {NerdFont: "", Emoji: "🤑"},
 
 	KeyPaceSlow:     {NerdFont: "", Emoji: "🐢"},
-	KeyPaceBalanced: {NerdFont: "󰖃", Emoji: "🚶"},
-	KeyPaceFast:     {NerdFont: "󰜎", Emoji: "🏃"},
+	KeyPaceBalanced: {NerdFont: "󰜎", Emoji: "🚶"},
+	KeyPaceFast:     {NerdFont: "󰑮", Emoji: "🏃"},
+
+	KeyItemUsage: {NerdFont: "", Emoji: "🎒"},
+	KeyDiet:      {NerdFont: "", Emoji: "🍽️"},
+	KeyPace:      {NerdFont: "󰖃", Emoji: "⏱️"},
+	KeyGreed:     {NerdFont: "", Emoji: "👑"},
 }
 
 // Get returns the icon string for a given key and display mode.

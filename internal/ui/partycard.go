@@ -72,10 +72,15 @@ func (c PartyCardComponent) View() string {
 	partsIcon := icon.GetNerdFont(icon.KeySpareParts)
 	oxIcon := icon.GetNerdFont(icon.KeyOx)
 
-	usageIcon := icon.GetItemUsageIcon(c.Data.ItemUsage, icon.ModeNerdFont)
-	dietIcon := icon.GetDietIcon(c.Data.Diet, icon.ModeNerdFont)
-	paceIcon := icon.GetPaceIcon(c.Data.Pace, icon.ModeNerdFont)
-	greedIcon := icon.GetGreedIcon(c.Data.Greed, icon.ModeNerdFont)
+	itemUsageStatIcon := icon.GetNerdFont(icon.KeyItemUsage)
+	dietStatIcon := icon.GetNerdFont(icon.KeyDiet)
+	paceStatIcon := icon.GetNerdFont(icon.KeyPace)
+	greedStatIcon := icon.GetNerdFont(icon.KeyGreed)
+
+	usageValIcon := icon.GetItemUsageIcon(c.Data.ItemUsage, icon.ModeNerdFont)
+	dietValIcon := icon.GetDietIcon(c.Data.Diet, icon.ModeNerdFont)
+	paceValIcon := icon.GetPaceIcon(c.Data.Pace, icon.ModeNerdFont)
+	greedValIcon := icon.GetGreedIcon(c.Data.Greed, icon.ModeNerdFont)
 
 	potionIcon := icon.GetNerdFont(icon.KeyPotion)
 	bombIcon := icon.GetNerdFont(icon.KeyBomb)
@@ -89,10 +94,10 @@ func (c PartyCardComponent) View() string {
 	oxStr := fmt.Sprintf("%s ox: %d", oxIcon, c.Data.Oxen)
 
 	// Column 2: item usage, diet, pace, greed
-	usageStr := fmt.Sprintf("%s item usage: %s", usageIcon, c.Data.ItemUsage)
-	dietStr := fmt.Sprintf("%s diet: %s", dietIcon, c.Data.Diet)
-	paceStr := fmt.Sprintf("%s pace: %s", paceIcon, c.Data.Pace)
-	greedStr := fmt.Sprintf("%s greed: %s", greedIcon, c.Data.Greed)
+	usageStr := fmt.Sprintf("%s item usage: %s %s", itemUsageStatIcon, c.Data.ItemUsage, usageValIcon)
+	dietStr := fmt.Sprintf("%s diet: %s %s", dietStatIcon, c.Data.Diet, dietValIcon)
+	paceStr := fmt.Sprintf("%s pace: %s %s", paceStatIcon, c.Data.Pace, paceValIcon)
+	greedStr := fmt.Sprintf("%s greed: %s %s", greedStatIcon, c.Data.Greed, greedValIcon)
 
 	// Column 3: potions, bombs, shovels, rope
 	potionsStr := fmt.Sprintf("%s potions: %d", potionIcon, c.Data.Potions)
