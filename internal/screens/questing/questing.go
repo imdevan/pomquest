@@ -53,7 +53,7 @@ func NewModel(cfg domain.Config) Model {
 		Heroes: []ui.HeroCardData{
 			{Name: "jimmothy", Class: "fighter", Level: 2, HP: 10, MaxHP: 10, Attack: 2, Armor: 2, Status: "Healthy", IsActive: false},
 			{Name: "applebee", Class: "wizard", Level: 1, HP: 6, MaxHP: 6, Attack: 3, Armor: 0, Status: "Healthy"},
-			{Name: "pam", Class: "ranger", Level: 1, HP: 6, MaxHP: 8, Attack: 3, Armor: 0, Status: "Healthy"},
+			{Name: "pam", Class: "ranger", Level: 1, HP: 8, MaxHP: 8, Attack: 3, Armor: 0, Status: "Healthy"},
 			{Name: "sam", Class: "rouge", Level: 2, HP: 0, MaxHP: 8, Attack: 3, Armor: 0, Status: "Dead", IsDead: true},
 		},
 		Supplies: ui.PartyCardData{
@@ -68,6 +68,8 @@ func NewModel(cfg domain.Config) Model {
 			MagicItems:     0,
 			Gems:           0,
 			TreasureChests: 1,
+			CurrentHP:      24,
+			MaxHP:          32,
 		},
 		ProgressData: ui.QuestProgressData{
 			Destination: "Forest of Izelliador",
