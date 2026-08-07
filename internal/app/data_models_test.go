@@ -30,6 +30,35 @@ func TestAutoMigrateDataModels(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to auto migrate models: %v", err)
 	}
+
+	party := Party{
+		Name:      "Fellowship",
+		Loot:      5,
+		Rope:      2,
+		Bombs:     3,
+		Potions:   4,
+		Shovels:   1,
+		ItemUsage: "sparse",
+		Greed:     "low",
+		Pace:      "fast",
+		Diet:      "balanced",
+	}
+
+	if err := db.Create(&party).Error; err != nil {
+		t.Fatalf("failed to create party record: %v", err)
+	}
+
+	var fetched Party
+	if err := db.First(&fetched, party.ID).Error; err != nil {
+		t.Fatalf("failed to fetch party record: %v", err)
+	}
+
+	if fetched.Loot != 5 || fetched.Rope != 2 || fetched.Bombs != 3 || fetched.Shovels != 1 {
+		t.Errorf("unexpected supply quantities: %+v", fetched)
+	}
+	if fetched.ItemUsage != "sparse" || fetched.Greed != "low" {
+		t.Errorf("unexpected item usage or greed: %+v", fetched)
+	}
 }
 
 func TestCreatureAndNounEmbedding(t *testing.T) {

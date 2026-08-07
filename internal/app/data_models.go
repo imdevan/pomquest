@@ -84,12 +84,19 @@ type Party struct {
 	Silver     int    `gorm:"default:0"`
 	Copper     int    `gorm:"default:0"`
 	FoodLbs    int    `gorm:"default:100"`
-	Diet       string `gorm:"size:32;default:'balanced'"` // balanced, sparse, generous
+	Diet       string `gorm:"size:32;default:'balanced'"` // sparse, balanced, heavy
+	Pace       string `gorm:"size:32;default:'fast'"`     // slow, balanced, fast
 	SpareParts int    `gorm:"default:2"`
 	Oxen       int    `gorm:"default:2"`
 	Regents    int    `gorm:"default:0"`
 	Potions    int    `gorm:"default:0"`
 	Poisons    int    `gorm:"default:0"`
+	Loot       int    `gorm:"default:0"`
+	Rope       int    `gorm:"default:0"`
+	Bombs      int    `gorm:"default:0"`
+	Shovels    int    `gorm:"default:0"`
+	ItemUsage  string `gorm:"size:32;default:'none'"` // none, sparse, balanced, heavy
+	Greed      string `gorm:"size:32;default:'none'"` // none, low, med, high
 	Heroes     []Hero `gorm:"foreignKey:PartyID"`
 }
 
