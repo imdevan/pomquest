@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pomquest/internal/adapters/icon"
 )
 
 // HeroCardData holds values for a single hero card display.
@@ -86,13 +87,14 @@ func (c HeroCardComponent) View() string {
 	}
 
 	// Line 4: Atk & Def (Bottom Left), HP (Bottom Right)
-	// Format: icon, space, number, space, icon, space, number -> 󰓥 2 🛡 2
+	atkIcon := icon.GetNerdFont(icon.KeyAttack)
+	armIcon := icon.GetNerdFont(icon.KeyArmor)
 	var atkDefStr, hpStr string
 	if c.DataModel.IsDead {
-		atkDefStr = deadStyle.Render(fmt.Sprintf("󰓥 %d 🛡 %d", c.DataModel.Attack, c.DataModel.Armor))
+		atkDefStr = deadStyle.Render(fmt.Sprintf("%s %d %s %d", atkIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor))
 		hpStr = deadStyle.Render(fmt.Sprintf("%d/%d", c.DataModel.HP, c.DataModel.MaxHP))
 	} else {
-		atkDefStr = statStyle.Render(fmt.Sprintf("󰓥 %d 🛡 %d", c.DataModel.Attack, c.DataModel.Armor))
+		atkDefStr = statStyle.Render(fmt.Sprintf("%s %d %s %d", atkIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor))
 		hpStr = statStyle.Render(fmt.Sprintf("%d/%d", c.DataModel.HP, c.DataModel.MaxHP))
 	}
 	bottomLine := spaceBetween(atkDefStr, hpStr, innerWidth)

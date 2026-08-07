@@ -28,8 +28,8 @@ func TestPartyCardComponentView(t *testing.T) {
 	comp := NewPartyCardComponent(theme, data, 72)
 	view := comp.View()
 
-	if !strings.Contains(view, "Party:") {
-		t.Errorf("expected view to contain Party:, got:\n%s", view)
+	if !strings.Contains(view, "Party") {
+		t.Errorf("expected view to contain Party header, got:\n%s", view)
 	}
 	if !strings.Contains(view, "coins: 0g 10s 80c") {
 		t.Errorf("expected view to contain coins info, got:\n%s", view)

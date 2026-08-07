@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pomquest/internal/adapters/icon"
 )
 
 // QuestProgressData holds destination, progress timer, and environmental info.
@@ -73,10 +74,10 @@ func (c ProgressBarComponent) View() string {
 
 	// Line 3: Environment & Days
 	if c.Data.Weather == "" {
-		c.Data.Weather = "☀️"
+		c.Data.Weather = icon.GetNerdFont(icon.KeyWeather)
 	}
 	if c.Data.Terrain == "" {
-		c.Data.Terrain = "🌲"
+		c.Data.Terrain = icon.GetNerdFont(icon.KeyTerrain)
 	}
 	if c.Data.Hazards == "" {
 		c.Data.Hazards = "mud, rain"
