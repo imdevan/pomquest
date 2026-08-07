@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+	"github.com/pomquest/internal/adapters/icon"
 )
 
 // PartyCardData holds resources and supplies info for the party card.
@@ -22,6 +23,13 @@ type PartyCardData struct {
 	MagicItems     int
 	Gems           int
 	TreasureChests int
+	Loot           int
+	Rope           int
+	Bombs          int
+	Potions        int
+	Shovels        int
+	ItemUsage      string
+	Greed          string
 }
 
 // PartyCardComponent is a generic party resources card widget rendered using TexturedCard.
@@ -49,21 +57,51 @@ func (c PartyCardComponent) View() string {
 	if c.Data.Diet == "" {
 		c.Data.Diet = "balanced"
 	}
+	if c.Data.ItemUsage == "" {
+		c.Data.ItemUsage = "none"
+	}
+	if c.Data.Greed == "" {
+		c.Data.Greed = "none"
+	}
 
 	horizontalPadding := 2
 	paddingTopBottom := 1
 
-	coinStr := fmt.Sprintf("coins: %dg %ds %dc", c.Data.Gold, c.Data.Silver, c.Data.Copper)
-	foodStr := fmt.Sprintf("food: %slbs", formatNumberWithCommas(c.Data.FoodLbs))
-	oxStr := fmt.Sprintf("ox: %d", c.Data.Oxen)
-	partsStr := fmt.Sprintf("spare parts: %d", c.Data.SpareParts)
+	foodIcon := icon.GetNerdFont(icon.KeyFood)
+	lootIcon := icon.GetNerdFont(icon.KeyLoot)
+	partsIcon := icon.GetNerdFont(icon.KeySpareParts)
+	oxIcon := icon.GetNerdFont(icon.KeyOx)
 
-	dietStr := fmt.Sprintf("diet: %s", c.Data.Diet)
-	paceStr := fmt.Sprintf("pace: %s", c.Data.Pace)
+	usageIcon := icon.GetItemUsageIcon(c.Data.ItemUsage, icon.ModeNerdFont)
+	dietIcon := icon.GetDietIcon(c.Data.Diet, icon.ModeNerdFont)
+	paceIcon := icon.GetPaceIcon(c.Data.Pace, icon.ModeNerdFont)
+	greedIcon := icon.GetGreedIcon(c.Data.Greed, icon.ModeNerdFont)
 
-	magicStr := fmt.Sprintf("magic items: %d", c.Data.MagicItems)
-	gemsStr := fmt.Sprintf("gems: %d", c.Data.Gems)
-	chestStr := fmt.Sprintf("treasure chests: %d", c.Data.TreasureChests)
+	potionIcon := icon.GetNerdFont(icon.KeyPotion)
+	bombIcon := icon.GetNerdFont(icon.KeyBomb)
+	shovelIcon := icon.GetNerdFont(icon.KeyShovel)
+	ropeIcon := icon.GetNerdFont(icon.KeyRope)
+
+	// Column 1: food, loot, spare parts, ox
+	foodStr := fmt.Sprintf("%s food: %slbs", foodIcon, formatNumberWithCommas(c.Data.FoodLbs))
+	lootStr := fmt.Sprintf("%s loot: %d", lootIcon, c.Data.Loot)
+	partsStr := fmt.Sprintf("%s spare parts: %d", partsIcon, c.Data.SpareParts)
+	oxStr := fmt.Sprintf("%s ox: %d", oxIcon, c.Data.Oxen)
+
+	// Column 2: item usage, diet, pace, greed
+	usageStr := fmt.Sprintf("%s item usage: %s", usageIcon, c.Data.ItemUsage)
+	dietStr := fmt.Sprintf("%s diet: %s", dietIcon, c.Data.Diet)
+	paceStr := fmt.Sprintf("%s pace: %s", paceIcon, c.Data.Pace)
+	greedStr := fmt.Sprintf("%s greed: %s", greedIcon, c.Data.Greed)
+
+	// Column 3: potions, bombs, shovels, rope
+	potionsStr := fmt.Sprintf("%s potions: %d", potionIcon, c.Data.Potions)
+	bombsStr := fmt.Sprintf("%s bombs: %d", bombIcon, c.Data.Bombs)
+	shovelsStr := fmt.Sprintf("%s shovels: %d", shovelIcon, c.Data.Shovels)
+	ropeStr := fmt.Sprintf("%s rope: %d", ropeIcon, c.Data.Rope)
+
+	// Gold placed in bottom-right corner of TexturedCard container
+	goldStr := fmt.Sprintf("%dg %ds %dc", c.Data.Gold, c.Data.Silver, c.Data.Copper)
 
 	// Inner table width takes into account outer borders (2) and horizontal padding (2 * horizontalPadding)
 	innerTableWidth := c.Width - 2 - (2 * horizontalPadding)
@@ -78,10 +116,10 @@ func (c PartyCardComponent) View() string {
 		BorderColumn(false).
 		Width(innerTableWidth).
 		Rows(
-			[]string{coinStr, dietStr, ""},
-			[]string{foodStr, paceStr, magicStr},
-			[]string{oxStr, "", gemsStr},
-			[]string{partsStr, "", chestStr},
+			[]string{foodStr, usageStr, potionsStr},
+			[]string{lootStr, dietStr, bombsStr},
+			[]string{partsStr, paceStr, shovelsStr},
+			[]string{oxStr, greedStr, ropeStr},
 		).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			if col == 2 {
@@ -92,13 +130,20 @@ func (c PartyCardComponent) View() string {
 
 	tableContent := t.Render()
 
-	// Wrap party table inside TexturedCard with TopLeft: "Party" header and fluent .Padding(0, 2)
+	// Wrap party table inside TexturedCard with TopLeft: "Party" header and BottomRight: Gold
 	card := NewTexturedCard(c.Theme, c.Width, tableContent).Padding(paddingTopBottom, horizontalPadding)
 	card.TopLeft = CornerText{
 		Text:         "Party",
 		Margin:       1,
 		PaddingLeft:  1,
 		PaddingRight: 1,
+	}
+	card.BottomRight = CornerText{
+		Text:         goldStr,
+		Margin:       1,
+		PaddingLeft:  1,
+		PaddingRight: 1,
+		Style:        lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Tags),
 	}
 
 	return card.View()
