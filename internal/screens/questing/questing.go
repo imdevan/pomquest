@@ -144,7 +144,7 @@ func (m Model) View() string {
 	containerWidth := DefaultContainerWidth // 96 container width requirement (18.1.1)
 
 	logComp := NewLogComponent(m.Theme, m.LogTitle, m.LogMessages, containerWidth)
-	partyComp := NewPartyGridComponent(m.Theme, m.Heroes)
+	partyComp := NewPartyGridComponent(m.Theme, m.Heroes, containerWidth)
 	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth)
 	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth)
 

@@ -11,12 +11,18 @@ import (
 type PartyGridComponent struct {
 	theme  ui.Theme
 	heroes []ui.HeroCardData
+	width  int
 }
 
-func NewPartyGridComponent(theme ui.Theme, heroes []ui.HeroCardData) PartyGridComponent {
+func NewPartyGridComponent(theme ui.Theme, heroes []ui.HeroCardData, width ...int) PartyGridComponent {
+	w := DefaultContainerWidth
+	if len(width) > 0 && width[0] > 0 {
+		w = width[0]
+	}
 	return PartyGridComponent{
 		theme:  theme,
 		heroes: heroes,
+		width:  w,
 	}
 }
 
@@ -57,5 +63,10 @@ func (c PartyGridComponent) View() string {
 	}
 
 	grid := lipgloss.JoinHorizontal(lipgloss.Top, spacerCards...)
-	return turnHeader + grid
+	content := turnHeader + grid
+
+	if c.width > 0 {
+		return lipgloss.NewStyle().Width(c.width).Align(lipgloss.Center).Render(content)
+	}
+	return content
 }
