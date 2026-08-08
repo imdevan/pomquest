@@ -6,13 +6,15 @@ import "github.com/charmbracelet/lipgloss"
 type Breakpoint int
 
 const (
-	// BreakpointXS represents extra small screens (< 40 columns).
-	BreakpointXS Breakpoint = iota
+	// BreakpointXXS represents extra small screens (< 26 columns).
+	BreakpointXXS Breakpoint = iota
+	// BreakpointXS represents extra small screens (26-39 columns).
+	BreakpointXS
 	// BreakpointSM represents small screens (40-60 columns).
 	BreakpointSM
-	// BreakpointMD represents medium screens (60-80 columns).
+	// BreakpointMD represents medium screens (60-79 columns).
 	BreakpointMD
-	// BreakpointLG represents large screens (80-100 columns).
+	// BreakpointLG represents large screens (80-99 columns).
 	BreakpointLG
 	// BreakpointXL represents extra large screens (>= 100 columns).
 	BreakpointXL
