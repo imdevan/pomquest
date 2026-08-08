@@ -1,7 +1,6 @@
 package questing
 
 import (
-	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -129,10 +128,12 @@ func (m Model) View() string {
 		return ""
 	}
 
-	logComp := NewLogComponent(m.Theme, m.LogTitle, m.LogMessages)
+	containerWidth := DefaultContainerWidth // 96 container width requirement (18.1.1)
+
+	logComp := NewLogComponent(m.Theme, m.LogTitle, m.LogMessages, containerWidth)
 	partyComp := NewPartyGridComponent(m.Theme, m.Heroes)
-	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies)
-	progressComp := NewTimerComponent(m.Theme, m.ProgressData)
+	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth)
+	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth)
 
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "attack/action")),
@@ -141,15 +142,14 @@ func (m Model) View() string {
 	}
 	helpComp := NewHelpComponent(m.Theme, helpKeys)
 
-	var sb strings.Builder
-	sb.WriteString(logComp.View() + "\n\n")
-	sb.WriteString(partyComp.View() + "\n\n")
-	sb.WriteString(suppliesComp.View() + "\n")
-	sb.WriteString(progressComp.View() + "\n")
-	sb.WriteString(helpComp.View())
-
-	contentStyle := lipgloss.NewStyle().Align(lipgloss.Left)
-	content := contentStyle.Render(sb.String())
+	qContainer := NewQuestContainerComponent(m.Theme, containerWidth)
+	content := qContainer.Render(
+		logComp.View(),
+		partyComp.View(),
+		suppliesComp.View(),
+		progressComp.View(),
+		helpComp.View(),
+	)
 
 	if m.Width > 0 && m.Height > 0 {
 		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
