@@ -122,3 +122,17 @@ start with 1 monster, bats... 1hp 0def 1 atk
 ## Feature 17: quest log
 - [x] 17.1 replace quest log border with textureCard
 - [x] 17.2 show quest log date top-left text on quest log texture card
+
+## Feature 18: container
+- [x] 18.1 create container that wraps quest screen components
+  - [x] 18.1.1 all quest component sections flex to fit container width
+  - [x] 18.1.2 set the width of the container to 96
+
+
+## Feature 19: responsiveness
+
+## Feature 20: fix screen transitions
+- [ ] 20.1 currently there is a blink where all text seems to be shifted to left side col when going from home to questing. 
+- is there a way to clear the page before navigating to prevent the flash?
+
+
