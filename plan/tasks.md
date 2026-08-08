@@ -132,6 +132,7 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 18.1.2 set the width of the container to 96
 
 ## Feature 19: responsiveness
+- [ ] 19.1 adjust container and nested children
 
 ## Feature 20: fix screen transitions
 - [x] 20.1 currently there is a blink where all text seems to be shifted to left side col when going from home to questing.

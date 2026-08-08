@@ -5,10 +5,10 @@ widths (cols):
 xxxs: 0-24 (standard left 1/3rd split at half width on mon: 11)
 xxs: 24 ()
 xs: 36 (standard left 1/3rd split mon: 45)
-sm: 60 (1/4 width mon: 60)
-md: 90 (half width mon: 91)
-lg: 120 (3/4 width mon: 121)
-xl: 180+ (full width mon: 183)
+sm: 60 (1/4 width mon: 58/60)
+md: 90 (half width mon: 89/91)
+lg: 118 (3/4 width mon: 119/121)
+xl: 180+ (full width mon: 181/183)
 
 1.25x screen half width: 106
 1.25x screen full width: 219
