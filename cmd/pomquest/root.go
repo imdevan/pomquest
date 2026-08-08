@@ -13,6 +13,7 @@ import (
 	"github.com/pomquest/internal/domain"
 	pkg "github.com/pomquest/internal/package"
 	"github.com/pomquest/internal/screens/dashboard"
+	"github.com/pomquest/internal/screens/hoard"
 	"github.com/pomquest/internal/screens/questing"
 )
 
@@ -108,6 +109,7 @@ type screenState int
 const (
 	screenDashboard screenState = iota
 	screenQuesting
+	screenHoard
 )
 
 type appModel struct {
@@ -115,6 +117,7 @@ type appModel struct {
 	state       screenState
 	dashboard   dashboard.Model
 	questing    questing.Model
+	hoard       hoard.Model
 	width       int
 	height      int
 	exitMessage string
@@ -126,6 +129,7 @@ func newAppModel(cfg domain.Config) appModel {
 		state:     screenDashboard,
 		dashboard: dashboard.NewModel(cfg),
 		questing:  questing.NewModel(cfg),
+		hoard:     hoard.NewModel(cfg),
 		width:     80,
 		height:    24,
 	}
@@ -142,6 +146,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.dashboard.SetDimensions(msg.Width, msg.Height)
 		m.questing.SetDimensions(msg.Width, msg.Height)
+		m.hoard.SetDimensions(msg.Width, msg.Height)
 	}
 
 	switch m.state {
@@ -157,8 +162,10 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.questing.SetDimensions(m.width, m.height)
 					return m, m.questing.Init()
 				case dashboard.ChoiceHoard:
-					m.exitMessage = "💎 Dragon Hoard: 0 Gold, 0 Magic Items"
-					return m, tea.Quit
+					m.state = screenHoard
+					m.hoard = hoard.NewModel(m.cfg)
+					m.hoard.SetDimensions(m.width, m.height)
+					return m, m.hoard.Init()
 				case dashboard.ChoiceProvision:
 					m.exitMessage = "🎒 Party Provisions: 100 lbs Food, 4 Oxen, 2 Spare Parts"
 					return m, tea.Quit
@@ -185,6 +192,19 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		return m, cmd
+
+	case screenHoard:
+		newH, cmd := m.hoard.Update(msg)
+		if hModel, ok := newH.(hoard.Model); ok {
+			m.hoard = hModel
+			if hModel.Quitted {
+				m.state = screenDashboard
+				m.dashboard = dashboard.NewModel(m.cfg)
+				m.dashboard.SetDimensions(m.width, m.height)
+				return m, m.dashboard.Init()
+			}
+		}
+		return m, cmd
 	}
 
 	return m, nil
@@ -196,6 +216,8 @@ func (m appModel) View() string {
 		return m.dashboard.View()
 	case screenQuesting:
 		return m.questing.View()
+	case screenHoard:
+		return m.hoard.View()
 	default:
 		return ""
 	}
