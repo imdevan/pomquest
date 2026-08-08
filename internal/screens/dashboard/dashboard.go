@@ -50,11 +50,21 @@ func NewModel(cfg domain.Config) Model {
 		},
 		Cursor:   0,
 		Selected: -1,
+		Width:    80,
+		Height:   24,
+	}
+}
+
+func (m *Model) SetDimensions(width, height int) {
+	m.Width = width
+	m.Height = height
+	if m.Responsive != nil {
+		m.Responsive.SetWidth(width)
 	}
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return tea.ClearScreen
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

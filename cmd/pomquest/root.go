@@ -89,45 +89,114 @@ func runInteractive(cmd *cobra.Command, opts *rootOptions, args []string) error 
 		cfg = domain.DefaultConfig()
 	}
 
-	return runDashboard(cfg)
-}
-
-func runDashboard(cfg domain.Config) error {
-	model := dashboard.NewModel(cfg)
-
+	model := newAppModel(cfg)
 	p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithoutSignalHandler())
 	finalModel, err := p.Run()
 	if err != nil {
-		return fmt.Errorf("failed to run dashboard: %w", err)
+		return fmt.Errorf("failed to run application: %w", err)
 	}
 
-	if dbScreen, ok := finalModel.(dashboard.Model); ok {
-		switch dbScreen.Selected {
-		case dashboard.ChoiceQuest:
-			return runQuesting(cfg)
-		case dashboard.ChoiceHoard:
-			fmt.Println("💎 Dragon Hoard: 0 Gold, 0 Magic Items")
-		case dashboard.ChoiceProvision:
-			fmt.Println("🎒 Party Provisions: 100 lbs Food, 4 Oxen, 2 Spare Parts")
-		case dashboard.ChoiceSettings:
-			fmt.Println("⚙ Settings / Config options")
-		case dashboard.ChoiceQuit:
-			fmt.Println("Goodbye, Dark Lord!")
-		}
+	if app, ok := finalModel.(appModel); ok && app.exitMessage != "" {
+		fmt.Println(app.exitMessage)
 	}
 
 	return nil
 }
 
-func runQuesting(cfg domain.Config) error {
-	model := questing.NewModel(cfg)
+type screenState int
 
-	p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithoutSignalHandler())
-	_, err := p.Run()
-	if err != nil {
-		return fmt.Errorf("failed to run questing screen: %w", err)
+const (
+	screenDashboard screenState = iota
+	screenQuesting
+)
+
+type appModel struct {
+	cfg         domain.Config
+	state       screenState
+	dashboard   dashboard.Model
+	questing    questing.Model
+	width       int
+	height      int
+	exitMessage string
+}
+
+func newAppModel(cfg domain.Config) appModel {
+	return appModel{
+		cfg:       cfg,
+		state:     screenDashboard,
+		dashboard: dashboard.NewModel(cfg),
+		questing:  questing.NewModel(cfg),
+		width:     80,
+		height:    24,
+	}
+}
+
+func (m appModel) Init() tea.Cmd {
+	return m.dashboard.Init()
+}
+
+func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		m.dashboard.SetDimensions(msg.Width, msg.Height)
+		m.questing.SetDimensions(msg.Width, msg.Height)
 	}
 
-	fmt.Println("🗡 Quest Journey paused or completed. Returned to Hearth.")
-	return nil
+	switch m.state {
+	case screenDashboard:
+		newDb, cmd := m.dashboard.Update(msg)
+		if dbModel, ok := newDb.(dashboard.Model); ok {
+			m.dashboard = dbModel
+			if dbModel.Selected >= 0 {
+				switch dbModel.Selected {
+				case dashboard.ChoiceQuest:
+					m.state = screenQuesting
+					m.questing = questing.NewModel(m.cfg)
+					m.questing.SetDimensions(m.width, m.height)
+					return m, m.questing.Init()
+				case dashboard.ChoiceHoard:
+					m.exitMessage = "💎 Dragon Hoard: 0 Gold, 0 Magic Items"
+					return m, tea.Quit
+				case dashboard.ChoiceProvision:
+					m.exitMessage = "🎒 Party Provisions: 100 lbs Food, 4 Oxen, 2 Spare Parts"
+					return m, tea.Quit
+				case dashboard.ChoiceSettings:
+					m.exitMessage = "⚙ Settings / Config options"
+					return m, tea.Quit
+				case dashboard.ChoiceQuit:
+					m.exitMessage = "Goodbye, Dark Lord!"
+					return m, tea.Quit
+				}
+			}
+		}
+		return m, cmd
+
+	case screenQuesting:
+		newQ, cmd := m.questing.Update(msg)
+		if qModel, ok := newQ.(questing.Model); ok {
+			m.questing = qModel
+			if qModel.Quitted {
+				m.state = screenDashboard
+				m.dashboard = dashboard.NewModel(m.cfg)
+				m.dashboard.SetDimensions(m.width, m.height)
+				return m, m.dashboard.Init()
+			}
+		}
+		return m, cmd
+	}
+
+	return m, nil
+}
+
+func (m appModel) View() string {
+	switch m.state {
+	case screenDashboard:
+		return m.dashboard.View()
+	case screenQuesting:
+		return m.questing.View()
+	default:
+		return ""
+	}
 }

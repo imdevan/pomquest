@@ -80,13 +80,26 @@ func NewModel(cfg domain.Config) Model {
 			DaysPassed:  12,
 			Width:       72,
 		},
+		Width:  80,
+		Height: 24,
+	}
+}
+
+func (m *Model) SetDimensions(width, height int) {
+	m.Width = width
+	m.Height = height
+	if m.Responsive != nil {
+		m.Responsive.SetWidth(width)
 	}
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-		return tickMsg(t)
-	})
+	return tea.Batch(
+		tea.ClearScreen,
+		tea.Tick(time.Second, func(t time.Time) tea.Msg {
+			return tickMsg(t)
+		}),
+	)
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
