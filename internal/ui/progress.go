@@ -52,8 +52,12 @@ func (c ProgressBarComponent) View() string {
 	destStyle := lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Primary)
 	timeStyle := lipgloss.NewStyle().Foreground(c.Theme.Secondary)
 
-	// Line 1: Dest & Timer
-	destLine := fmt.Sprintf("  Dest: %-42s %s", destStyle.Render(c.Data.Destination), timeStyle.Render(timeStr))
+	// Line 1: Dest & Timer flexed to width
+	destPadding := c.Data.Width - len("  Dest: ") - len(timeStr) - 3
+	if destPadding < 10 {
+		destPadding = 10
+	}
+	destLine := fmt.Sprintf("  Dest: %-*s %s", destPadding, destStyle.Render(c.Data.Destination), timeStyle.Render(timeStr))
 
 	// Line 2: Progress bar using bubbles/progress
 	barWidth := c.Data.Width - 6
@@ -75,7 +79,7 @@ func (c ProgressBarComponent) View() string {
 
 	barLine := "  " + prog.ViewAs(ratio)
 
-	// Line 3: Environment & Days
+	// Line 3: Environment & Days flexed to width
 	if c.Data.Weather == "" {
 		c.Data.Weather = icon.GetNerdFont(icon.KeyWeather)
 	}
@@ -89,8 +93,13 @@ func (c ProgressBarComponent) View() string {
 		c.Data.DaysPassed = 12
 	}
 
-	envLine := fmt.Sprintf("  Weather: %s | Terrain: %s | Hazards: %-18s days passed: %d",
-		c.Data.Weather, c.Data.Terrain, c.Data.Hazards, c.Data.DaysPassed)
+	hazardsPadding := c.Data.Width - 45
+	if hazardsPadding < 10 {
+		hazardsPadding = 10
+	}
+
+	envLine := fmt.Sprintf("  Weather: %s | Terrain: %s | Hazards: %-*s days passed: %d",
+		c.Data.Weather, c.Data.Terrain, hazardsPadding, c.Data.Hazards, c.Data.DaysPassed)
 
 	return strings.Join([]string{destLine, barLine, envLine}, "\n")
 }
