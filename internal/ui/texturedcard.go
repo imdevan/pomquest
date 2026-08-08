@@ -121,18 +121,25 @@ func (c TexturedCard) View() string {
 
 	trimmedContent := strings.TrimSpace(c.Content)
 	contentLines := strings.Split(trimmedContent, "\n")
-	for _, line := range contentLines {
-		line = strings.TrimRight(line, "\r")
-		if strings.TrimSpace(line) == "" {
+	for _, rawLine := range contentLines {
+		rawLine = strings.TrimRight(rawLine, "\r")
+		if strings.TrimSpace(rawLine) == "" {
 			continue
 		}
-		lineWidth := lipgloss.Width(line)
-		neededSpaces := innerAvailableWidth - lineWidth
-		if neededSpaces < 0 {
-			neededSpaces = 0
+		linesToRender := []string{rawLine}
+		if innerAvailableWidth > 0 && lipgloss.Width(rawLine) > innerAvailableWidth {
+			linesToRender = WrapLine(rawLine, innerAvailableWidth)
 		}
-		formattedLine := leftBorder + leftPadStr + line + strings.Repeat(" ", neededSpaces) + rightPadStr + rightBorder
-		middleLines = append(middleLines, formattedLine)
+
+		for _, line := range linesToRender {
+			lineWidth := lipgloss.Width(line)
+			neededSpaces := innerAvailableWidth - lineWidth
+			if neededSpaces < 0 {
+				neededSpaces = 0
+			}
+			formattedLine := leftBorder + leftPadStr + line + strings.Repeat(" ", neededSpaces) + rightPadStr + rightBorder
+			middleLines = append(middleLines, formattedLine)
+		}
 	}
 
 	// Padding bottom lines

@@ -28,13 +28,27 @@ func NewLogViewComponent(theme Theme, title string, messages []string, maxRows, 
 }
 
 func (c LogViewComponent) View() string {
+	availWidth := c.Width - 4
+	if availWidth <= 0 {
+		availWidth = 68
+	}
+
+	var allWrapped []string
+	for _, msg := range c.Messages {
+		lines := strings.Split(msg, "\n")
+		for _, l := range lines {
+			wrapped := WrapLine(l, availWidth)
+			allWrapped = append(allWrapped, wrapped...)
+		}
+	}
+
 	start := 0
-	if len(c.Messages) > c.MaxRows {
-		start = len(c.Messages) - c.MaxRows
+	if len(allWrapped) > c.MaxRows {
+		start = len(allWrapped) - c.MaxRows
 	}
 
 	var sb strings.Builder
-	visible := c.Messages[start:]
+	visible := allWrapped[start:]
 	for _, msg := range visible {
 		sb.WriteString(msg + "\n")
 	}

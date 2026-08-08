@@ -36,3 +36,16 @@ func TestTexturedCardFourCorners(t *testing.T) {
 		t.Errorf("expected view to contain content Hello World, got:\n%s", view)
 	}
 }
+
+func TestTexturedCardTextWrapping(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	longContent := "This is a very long line of text that exceeds the card width and should automatically be wrapped."
+	card := NewTexturedCard(theme, 30, longContent).Padding(0, 1)
+	view := card.View()
+
+	if !strings.Contains(view, "This is a very long") {
+		t.Errorf("expected view to contain wrapped text, got:\n%s", view)
+	}
+}
