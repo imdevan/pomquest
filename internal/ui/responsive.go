@@ -10,11 +10,11 @@ const (
 	BreakpointXXS Breakpoint = iota
 	// BreakpointXS represents extra small screens (26-39 columns).
 	BreakpointXS
-	// BreakpointSM represents small screens (40-60 columns).
+	// BreakpointSM represents small screens (40-57 columns).
 	BreakpointSM
-	// BreakpointMD represents medium screens (60-79 columns).
+	// BreakpointMD represents medium screens (58-77 columns).
 	BreakpointMD
-	// BreakpointLG represents large screens (80-99 columns).
+	// BreakpointLG represents large screens (78-99 columns).
 	BreakpointLG
 	// BreakpointXL represents extra large screens (>= 100 columns).
 	BreakpointXL
@@ -54,9 +54,9 @@ func (rm *ResponsiveManager) calculateBreakpoint() Breakpoint {
 	switch {
 	case rm.width < 40:
 		return BreakpointXS
-	case rm.width < 60:
+	case rm.width < 58:
 		return BreakpointSM
-	case rm.width < 80:
+	case rm.width < 78:
 		return BreakpointMD
 	case rm.width < 100:
 		return BreakpointLG
