@@ -74,12 +74,22 @@ func (c HeroCardComponent) View() string {
 	}
 	topLine := spaceBetween(nameStr, levelStr, innerWidth)
 
-	// Line 2: Class (Top Left)
+	// Line 2: Class with Icon (Top Left)
+	classIcon := c.DataModel.Icon
+	if classIcon == "" {
+		classIcon = icon.GetClassIcon(c.DataModel.Class, icon.ModeNerdFont)
+	}
+
+	classDisplay := c.DataModel.Class
+	if classIcon != "" {
+		classDisplay = fmt.Sprintf("%s %s", classIcon, c.DataModel.Class)
+	}
+
 	var classStr string
 	if c.DataModel.IsDead {
-		classStr = deadStyle.Render(c.DataModel.Class)
+		classStr = deadStyle.Render(classDisplay)
 	} else {
-		classStr = classStyle.Render(c.DataModel.Class)
+		classStr = classStyle.Render(classDisplay)
 	}
 
 	// Line 3: Status effects line (line above hp / atk / def row)

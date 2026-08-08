@@ -128,3 +128,34 @@ func TestPartyStatValueBasedIcons(t *testing.T) {
 		}
 	}
 }
+
+func TestClassIcons(t *testing.T) {
+	tests := []struct {
+		class    string
+		mode     Mode
+		expected string
+	}{
+		{"fighter", ModeNerdFont, "⚔"},
+		{"wizard", ModeNerdFont, "🪄"},
+		{"warlock", ModeNerdFont, "👁️"},
+		{"ranger", ModeNerdFont, "🏹"},
+		{"rogue", ModeNerdFont, "🗡"},
+		{"rouge", ModeNerdFont, "🗡"},
+		{"cleric", ModeNerdFont, "⚕"},
+		{"paladin", ModeNerdFont, "🛡"},
+		{"bard", ModeNerdFont, "🪕"},
+		{"druid", ModeNerdFont, "🌿"},
+		{"barbarian", ModeNerdFont, "🪓"},
+		{"monk", ModeNerdFont, "🥋"},
+		{"guard", ModeNerdFont, "💂"},
+		{"fighter", ModeEmoji, "⚔️"},
+		{"wizard", ModeEmoji, "🧙"},
+	}
+
+	for _, tt := range tests {
+		got := GetClassIcon(tt.class, tt.mode)
+		if got != tt.expected {
+			t.Errorf("GetClassIcon(%q, %v) = %q, want %q", tt.class, tt.mode, got, tt.expected)
+		}
+	}
+}

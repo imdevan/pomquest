@@ -1,5 +1,7 @@
 package icon
 
+import "strings"
+
 // Mode defines the icon rendering variant (Nerd Font or Emoji).
 type Mode int
 
@@ -12,39 +14,53 @@ const (
 type IconKey string
 
 const (
-	KeyAttack     IconKey = "attack"
-	KeyArmor      IconKey = "armor"
-	KeyHP         IconKey = "hp"
+	KeyAttack       IconKey = "attack"
+	KeyArmor        IconKey = "armor"
+	KeyHP           IconKey = "hp"
 	KeyHeart10Full  IconKey = "heart_10_full"
 	KeyHeart10Half  IconKey = "heart_10_half"
 	KeyHeart10Empty IconKey = "heart_10_empty"
 	KeyHeart5Full   IconKey = "heart_5_full"
 	KeyHeart5Empty  IconKey = "heart_5_empty"
-	KeyDice       IconKey = "dice"
-	KeyWeather    IconKey = "weather"
-	KeyTerrain    IconKey = "terrain"
-	KeyQuest      IconKey = "quest"
-	KeyGold       IconKey = "gold"
-	KeySilver     IconKey = "silver"
-	KeyCopper     IconKey = "copper"
-	KeyFood       IconKey = "food"
-	KeyOx         IconKey = "ox"
-	KeySpareParts IconKey = "spare_parts"
-	KeyMagicItem  IconKey = "magic_item"
-	KeyGem        IconKey = "gem"
-	KeyChest      IconKey = "chest"
-	KeySick       IconKey = "sick"
-	KeyLoot       IconKey = "loot"
-	KeyRope       IconKey = "rope"
-	KeyBomb       IconKey = "bomb"
-	KeyPotion     IconKey = "potion"
-	KeyShovel     IconKey = "shovel"
+	KeyDice         IconKey = "dice"
+	KeyWeather      IconKey = "weather"
+	KeyTerrain      IconKey = "terrain"
+	KeyQuest        IconKey = "quest"
+	KeyGold         IconKey = "gold"
+	KeySilver       IconKey = "silver"
+	KeyCopper       IconKey = "copper"
+	KeyFood         IconKey = "food"
+	KeyOx           IconKey = "ox"
+	KeySpareParts   IconKey = "spare_parts"
+	KeyMagicItem    IconKey = "magic_item"
+	KeyGem          IconKey = "gem"
+	KeyChest        IconKey = "chest"
+	KeySick         IconKey = "sick"
+	KeyLoot         IconKey = "loot"
+	KeyRope         IconKey = "rope"
+	KeyBomb         IconKey = "bomb"
+	KeyPotion       IconKey = "potion"
+	KeyShovel       IconKey = "shovel"
 
 	// Stat category keys
 	KeyItemUsage IconKey = "item_usage"
 	KeyDiet      IconKey = "diet"
 	KeyGreed     IconKey = "greed"
 	KeyPace      IconKey = "pace"
+
+	// Class keys
+	KeyClassFighter   IconKey = "class_fighter"
+	KeyClassWizard    IconKey = "class_wizard"
+	KeyClassWarlock   IconKey = "class_warlock"
+	KeyClassRanger    IconKey = "class_ranger"
+	KeyClassRogue     IconKey = "class_rogue"
+	KeyClassCleric    IconKey = "class_cleric"
+	KeyClassPaladin   IconKey = "class_paladin"
+	KeyClassBard      IconKey = "class_bard"
+	KeyClassDruid     IconKey = "class_druid"
+	KeyClassBarbarian IconKey = "class_barbarian"
+	KeyClassMonk      IconKey = "class_monk"
+	KeyClassGuard     IconKey = "class_guard"
 
 	// Item usage keys
 	KeyItemUsageNone     IconKey = "item_usage_none"
@@ -77,22 +93,22 @@ type IconPair struct {
 }
 
 var registry = map[IconKey]IconPair{
-	KeyAttack:    {NerdFont: "󰓥", Emoji: "⚔️"},
-	KeyArmor:     {NerdFont: "🛡", Emoji: "🛡️"},
-	KeyHP:        {NerdFont: "", Emoji: "❤️"},
+	KeyAttack:       {NerdFont: "󰓥", Emoji: "⚔️"},
+	KeyArmor:        {NerdFont: "🛡", Emoji: "🛡️"},
+	KeyHP:           {NerdFont: "", Emoji: "❤️"},
 	KeyHeart10Full:  {NerdFont: "󰋑", Emoji: "❤️"},
 	KeyHeart10Half:  {NerdFont: "󰛞", Emoji: "💔"},
 	KeyHeart10Empty: {NerdFont: "󰋕", Emoji: "🖤"},
 	KeyHeart5Full:   {NerdFont: "󰛟", Emoji: "💗"},
 	KeyHeart5Empty:  {NerdFont: "󰛠", Emoji: "🤍"},
-	KeyDice:      {NerdFont: "󰇍", Emoji: "🎲"},
-	KeyWeather:   {NerdFont: "☀️", Emoji: "☀️"},
-	KeyTerrain:   {NerdFont: "🌲", Emoji: "🌲"},
-	KeyQuest:     {NerdFont: "🗡", Emoji: "🗡️"},
-	KeyMagicItem: {NerdFont: "✨", Emoji: "✨"},
-	KeyGem:       {NerdFont: "💎", Emoji: "💎"},
-	KeyChest:     {NerdFont: "📦", Emoji: "📦"},
-	KeySick:      {NerdFont: "🤢", Emoji: "🤢"},
+	KeyDice:         {NerdFont: "󰇍", Emoji: "🎲"},
+	KeyWeather:      {NerdFont: "☀️", Emoji: "☀️"},
+	KeyTerrain:      {NerdFont: "🌲", Emoji: "🌲"},
+	KeyQuest:        {NerdFont: "🗡", Emoji: "🗡️"},
+	KeyMagicItem:    {NerdFont: "✨", Emoji: "✨"},
+	KeyGem:          {NerdFont: "💎", Emoji: "💎"},
+	KeyChest:        {NerdFont: "📦", Emoji: "📦"},
+	KeySick:         {NerdFont: "🤢", Emoji: "🤢"},
 
 	KeyGold:       {NerdFont: "🪙", Emoji: "🪙"},
 	KeyCopper:     {NerdFont: "🥉", Emoji: "🥉"},
@@ -106,6 +122,19 @@ var registry = map[IconKey]IconPair{
 	KeyBomb:   {NerdFont: "󰚑", Emoji: "💣"},
 	KeyPotion: {NerdFont: "", Emoji: "🧪"},
 	KeyShovel: {NerdFont: "󰜐", Emoji: "⛏️"},
+
+	KeyClassFighter:   {NerdFont: "⚔", Emoji: "⚔️"},
+	KeyClassWizard:    {NerdFont: "", Emoji: "🧙"},
+	KeyClassWarlock:   {NerdFont: "󰱯", Emoji: "👁️"},
+	KeyClassRanger:    {NerdFont: "󱡁", Emoji: "🏹"},
+	KeyClassRogue:     {NerdFont: "🗡", Emoji: "🗡️"},
+	KeyClassCleric:    {NerdFont: "⚕", Emoji: "⚕️"},
+	KeyClassPaladin:   {NerdFont: "󰳊", Emoji: "🛡️"},
+	KeyClassBard:      {NerdFont: "󰝱", Emoji: "🪕"},
+	KeyClassDruid:     {NerdFont: "", Emoji: "🌿"},
+	KeyClassBarbarian: {NerdFont: "󰿖", Emoji: "💪"},
+	KeyClassMonk:      {NerdFont: "", Emoji: "✊"},
+	KeyClassGuard:     {NerdFont: "󱢾", Emoji: "🛡️"},
 
 	KeyItemUsageNone:     {NerdFont: "", Emoji: "🚫"},
 	KeyItemUsageSparse:   {NerdFont: "", Emoji: "💧"},
@@ -229,6 +258,42 @@ func GetPaceIconKey(val string) IconKey {
 		return KeyPaceFast
 	default:
 		return KeyPaceFast
+	}
+}
+
+// GetClassIcon returns the icon string for a hero class name or key.
+func GetClassIcon(val string, mode Mode) string {
+	return Get(GetClassIconKey(val), mode)
+}
+
+func GetClassIconKey(val string) IconKey {
+	switch strings.ToLower(strings.TrimSpace(val)) {
+	case "fighter", "warrior", "knight", "class_fighter":
+		return KeyClassFighter
+	case "wizard", "mage", "sorcerer", "class_wizard":
+		return KeyClassWizard
+	case "warlock", "class_warlock":
+		return KeyClassWarlock
+	case "ranger", "hunter", "archer", "class_ranger":
+		return KeyClassRanger
+	case "rogue", "rouge", "thief", "assassin", "class_rogue":
+		return KeyClassRogue
+	case "cleric", "priest", "healer", "class_cleric":
+		return KeyClassCleric
+	case "paladin", "class_paladin":
+		return KeyClassPaladin
+	case "bard", "class_bard":
+		return KeyClassBard
+	case "druid", "class_druid":
+		return KeyClassDruid
+	case "barbarian", "class_barbarian":
+		return KeyClassBarbarian
+	case "monk", "class_monk":
+		return KeyClassMonk
+	case "guard", "tank", "defender", "class_guard":
+		return KeyClassGuard
+	default:
+		return IconKey(val)
 	}
 }
 

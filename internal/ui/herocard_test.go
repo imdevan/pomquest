@@ -30,6 +30,10 @@ func TestHeroCardComponentView_LG(t *testing.T) {
 	if !strings.Contains(view, "2 🛡 2") {
 		t.Errorf("expected LG hero card view to contain '2 🛡 2' with spaces, got:\n%s", view)
 	}
+	// Expect class icon next to class name ("⚔ fighter")
+	if !strings.Contains(view, "⚔ fighter") {
+		t.Errorf("expected hero card view to contain class icon next to class '⚔ fighter', got:\n%s", view)
+	}
 }
 
 func TestHeroCardComponentView_MD(t *testing.T) {
