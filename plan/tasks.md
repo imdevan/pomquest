@@ -114,3 +114,8 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 15.1.5 5hp empty heart 󰛠
 
 
+## Feature 16: quest footer
+- [x] 16.1 use progress bar for timer progress.
+  - [x] 16.1.1 integrate github.com/charmbracelet/bubbles/progress model into ProgressBarComponent in internal/ui/progress.go
+  - [x] 16.1.2 add unit test coverage in internal/ui/progress_test.go
+
