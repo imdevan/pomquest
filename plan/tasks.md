@@ -119,3 +119,6 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 16.1.1 integrate github.com/charmbracelet/bubbles/progress model into ProgressBarComponent in internal/ui/progress.go
   - [x] 16.1.2 add unit test coverage in internal/ui/progress_test.go
 
+## Feature 17: quest log
+- [x] 17.1 replace quest log border with textureCard
+- [x] 17.2 show quest log date top-left text on quest log texture card
