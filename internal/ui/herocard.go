@@ -43,13 +43,24 @@ func NewHeroCardComponent(theme Theme, data HeroCardData, responsive ...*Respons
 }
 
 func (c HeroCardComponent) View() string {
+	rm := c.Responsive
+	if rm == nil {
+		rm = NewResponsiveManager(80)
+	}
+	isMD := !rm.IsAtLeast(BreakpointLG)
+
 	innerWidth := 14
+	paddingH := 1
+	if isMD {
+		innerWidth = 10
+		paddingH = 0
+	}
 
 	cardStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(c.Theme.Border).
-		Padding(0, 1).
-		Width(innerWidth + 2)
+		Padding(0, paddingH).
+		Width(innerWidth + paddingH*2)
 
 	if c.DataModel.IsActive {
 		cardStyle = cardStyle.BorderForeground(c.Theme.Primary)
@@ -63,13 +74,18 @@ func (c HeroCardComponent) View() string {
 	statusStyle := lipgloss.NewStyle().Foreground(c.Theme.Tags)
 	deadStyle := lipgloss.NewStyle().Foreground(c.Theme.Muted).Strikethrough(true)
 
+	heroName := c.DataModel.Name
+	if isMD {
+		heroName = abbreviateName(heroName)
+	}
+
 	// Line 1: Name (Top Left), Level (Top Right)
 	var nameStr, levelStr string
 	if c.DataModel.IsDead {
-		nameStr = deadStyle.Render(c.DataModel.Name)
+		nameStr = deadStyle.Render(heroName)
 		levelStr = deadStyle.Render(fmt.Sprintf("%d", c.DataModel.Level))
 	} else {
-		nameStr = nameStyle.Render(c.DataModel.Name)
+		nameStr = nameStyle.Render(heroName)
 		levelStr = classStyle.Render(fmt.Sprintf("%d", c.DataModel.Level))
 	}
 	topLine := spaceBetween(nameStr, levelStr, innerWidth)
@@ -80,9 +96,17 @@ func (c HeroCardComponent) View() string {
 		classIcon = icon.GetClassIcon(c.DataModel.Class, icon.ModeNerdFont)
 	}
 
-	classDisplay := c.DataModel.Class
-	if classIcon != "" {
-		classDisplay = fmt.Sprintf("%s %s", classIcon, c.DataModel.Class)
+	var classDisplay string
+	if isMD {
+		// On MD: only show class icon
+		classDisplay = classIcon
+	} else {
+		// On LG+: show class icon and class name
+		if classIcon != "" {
+			classDisplay = fmt.Sprintf("%s %s", classIcon, c.DataModel.Class)
+		} else {
+			classDisplay = c.DataModel.Class
+		}
 	}
 
 	var classStr string
@@ -95,25 +119,25 @@ func (c HeroCardComponent) View() string {
 	// Line 3: Status effects line (line above hp / atk / def row)
 	line3 := ""
 	if c.DataModel.Status != "" && c.DataModel.Status != "Healthy" {
+		statusText := c.DataModel.Status
+		if isMD && len(statusText) > innerWidth {
+			statusText = statusText[:innerWidth]
+		}
 		if c.DataModel.IsDead {
-			line3 = deadStyle.Render(c.DataModel.Status)
+			line3 = deadStyle.Render(statusText)
 		} else {
-			line3 = statusStyle.Render(c.DataModel.Status)
+			line3 = statusStyle.Render(statusText)
 		}
 	}
 
 	// Line 4: Atk & Def (Bottom Left), HP (Bottom Right)
 	atkIcon := icon.GetNerdFont(icon.KeyAttack)
 	armIcon := icon.GetNerdFont(icon.KeyArmor)
-	rm := c.Responsive
-	if rm == nil {
-		rm = NewResponsiveManager(80)
-	}
 
 	var atkDefFmt string
-	if !rm.IsAtLeast(BreakpointLG) {
+	if isMD {
 		// On MD breakpoint: remove space between attack icon & atk value, and defense icon & def value
-		atkDefFmt = "%s%d %s%d"
+		atkDefFmt = "%s%d%s%d"
 	} else {
 		// On LG+: keep spaces
 		atkDefFmt = "%s %d %s %d"
@@ -193,4 +217,11 @@ func compositeActiveOffsetCard(frontCard string, borderColor lipgloss.Color) str
 	}
 
 	return strings.Join(result, "\n")
+}
+
+func abbreviateName(name string) string {
+	if len(name) > 4 {
+		return name[:3] + "."
+	}
+	return name
 }
