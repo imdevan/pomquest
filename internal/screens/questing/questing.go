@@ -142,10 +142,13 @@ func (m Model) View() string {
 	}
 
 	containerWidth := DefaultContainerWidth // 96 container width requirement (18.1.1)
+	if m.Responsive != nil && m.Responsive.Width() > 0 {
+		containerWidth = min(DefaultContainerWidth, m.Responsive.Width())
+	}
 
 	logComp := NewLogComponent(m.Theme, m.LogTitle, m.LogMessages, containerWidth)
-	heroCardsComp := NewHeroCardsComponent(m.Theme, m.Heroes, containerWidth)
-	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth)
+	heroCardsComp := NewHeroCardsComponent(m.Theme, m.Heroes, containerWidth, m.Responsive)
+	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth, m.Responsive)
 	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth)
 
 	helpKeys := []key.Binding{
@@ -155,7 +158,7 @@ func (m Model) View() string {
 	}
 	helpComp := NewHelpComponent(m.Theme, helpKeys)
 
-	qContainer := NewQuestContainerComponent(m.Theme, containerWidth)
+	qContainer := NewQuestContainerComponent(m.Theme, containerWidth, m.Responsive)
 	content := qContainer.Render(
 		logComp.View(),
 		heroCardsComp.View(),

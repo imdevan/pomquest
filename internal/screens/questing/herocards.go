@@ -9,20 +9,28 @@ import (
 
 // HeroCardsComponent renders party hero cards centered within the container width.
 type HeroCardsComponent struct {
-	theme  ui.Theme
-	heroes []ui.HeroCardData
-	width  int
+	theme      ui.Theme
+	heroes     []ui.HeroCardData
+	width      int
+	responsive *ui.ResponsiveManager
 }
 
-func NewHeroCardsComponent(theme ui.Theme, heroes []ui.HeroCardData, width ...int) HeroCardsComponent {
+func NewHeroCardsComponent(theme ui.Theme, heroes []ui.HeroCardData, width int, responsive ...*ui.ResponsiveManager) HeroCardsComponent {
 	w := DefaultContainerWidth
-	if len(width) > 0 && width[0] > 0 {
-		w = width[0]
+	if width > 0 {
+		w = width
+	}
+	var rm *ui.ResponsiveManager
+	if len(responsive) > 0 && responsive[0] != nil {
+		rm = responsive[0]
+	} else {
+		rm = ui.NewResponsiveManager(w)
 	}
 	return HeroCardsComponent{
-		theme:  theme,
-		heroes: heroes,
-		width:  w,
+		theme:      theme,
+		heroes:     heroes,
+		width:      w,
+		responsive: rm,
 	}
 }
 
@@ -54,7 +62,7 @@ func (c HeroCardsComponent) View() string {
 
 	var cards []string
 	for _, h := range c.heroes {
-		cardView := ui.NewHeroCardComponent(c.theme, h).View()
+		cardView := ui.NewHeroCardComponent(c.theme, h, c.responsive).View()
 		if !hasActive {
 			cardView = strings.TrimPrefix(cardView, "\n")
 		}

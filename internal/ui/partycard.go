@@ -36,19 +36,27 @@ type PartyCardData struct {
 
 // PartyCardComponent is a generic party resources card widget rendered using TexturedCard.
 type PartyCardComponent struct {
-	Data  PartyCardData
-	Width int
-	Theme Theme
+	Data       PartyCardData
+	Width      int
+	Theme      Theme
+	Responsive *ResponsiveManager
 }
 
-func NewPartyCardComponent(theme Theme, data PartyCardData, width int) PartyCardComponent {
+func NewPartyCardComponent(theme Theme, data PartyCardData, width int, responsive ...*ResponsiveManager) PartyCardComponent {
 	if width <= 0 {
 		width = 72
 	}
+	var rm *ResponsiveManager
+	if len(responsive) > 0 && responsive[0] != nil {
+		rm = responsive[0]
+	} else {
+		rm = NewResponsiveManager(width)
+	}
 	return PartyCardComponent{
-		Data:  data,
-		Width: width,
-		Theme: theme,
+		Data:       data,
+		Width:      width,
+		Theme:      theme,
+		Responsive: rm,
 	}
 }
 
@@ -89,23 +97,48 @@ func (c PartyCardComponent) View() string {
 	shovelIcon := icon.GetNerdFont(icon.KeyShovel)
 	ropeIcon := icon.GetNerdFont(icon.KeyRope)
 
-	// Column 1: food, loot, spare parts, ox
-	foodStr := fmt.Sprintf("%s food: %slbs", foodIcon, formatNumberWithCommas(c.Data.FoodLbs))
-	lootStr := fmt.Sprintf("%s loot: %d", lootIcon, c.Data.Loot)
-	partsStr := fmt.Sprintf("%s spare parts: %d", partsIcon, c.Data.SpareParts)
-	oxStr := fmt.Sprintf("%s ox: %d", oxIcon, c.Data.Oxen)
+	rm := c.Responsive
+	if rm == nil {
+		rm = NewResponsiveManager(c.Width)
+	}
 
-	// Column 2: item usage, diet, pace, greed
-	usageStr := fmt.Sprintf("%s item usage: %s %s", itemUsageStatIcon, c.Data.ItemUsage, usageValIcon)
-	dietStr := fmt.Sprintf("%s diet: %s %s", dietStatIcon, c.Data.Diet, dietValIcon)
-	paceStr := fmt.Sprintf("%s pace: %s %s", paceStatIcon, c.Data.Pace, paceValIcon)
-	greedStr := fmt.Sprintf("%s greed: %s %s", greedStatIcon, c.Data.Greed, greedValIcon)
+	var foodStr, lootStr, partsStr, oxStr string
+	var usageStr, dietStr, paceStr, greedStr string
+	var potionsStr, bombsStr, shovelsStr, ropeStr string
 
-	// Column 3: potions, bombs, shovels, rope
-	potionsStr := fmt.Sprintf("%s potions: %d", potionIcon, c.Data.Potions)
-	bombsStr := fmt.Sprintf("%s bombs: %d", bombIcon, c.Data.Bombs)
-	shovelsStr := fmt.Sprintf("%s shovels: %d", shovelIcon, c.Data.Shovels)
-	ropeStr := fmt.Sprintf("%s rope: %d", ropeIcon, c.Data.Rope)
+	if !rm.IsAtLeast(BreakpointLG) {
+		// On MD or lower: remove name from party status labels. Such that party card has icon: value
+		foodStr = fmt.Sprintf("%s: %slbs", foodIcon, formatNumberWithCommas(c.Data.FoodLbs))
+		lootStr = fmt.Sprintf("%s: %d", lootIcon, c.Data.Loot)
+		partsStr = fmt.Sprintf("%s: %d", partsIcon, c.Data.SpareParts)
+		oxStr = fmt.Sprintf("%s: %d", oxIcon, c.Data.Oxen)
+
+		usageStr = fmt.Sprintf("%s: %s %s", itemUsageStatIcon, c.Data.ItemUsage, usageValIcon)
+		dietStr = fmt.Sprintf("%s: %s %s", dietStatIcon, c.Data.Diet, dietValIcon)
+		paceStr = fmt.Sprintf("%s: %s %s", paceStatIcon, c.Data.Pace, paceValIcon)
+		greedStr = fmt.Sprintf("%s: %s %s", greedStatIcon, c.Data.Greed, greedValIcon)
+
+		potionsStr = fmt.Sprintf("%s: %d", potionIcon, c.Data.Potions)
+		bombsStr = fmt.Sprintf("%s: %d", bombIcon, c.Data.Bombs)
+		shovelsStr = fmt.Sprintf("%s: %d", shovelIcon, c.Data.Shovels)
+		ropeStr = fmt.Sprintf("%s: %d", ropeIcon, c.Data.Rope)
+	} else {
+		// On LG+: keep full label names
+		foodStr = fmt.Sprintf("%s food: %slbs", foodIcon, formatNumberWithCommas(c.Data.FoodLbs))
+		lootStr = fmt.Sprintf("%s loot: %d", lootIcon, c.Data.Loot)
+		partsStr = fmt.Sprintf("%s spare parts: %d", partsIcon, c.Data.SpareParts)
+		oxStr = fmt.Sprintf("%s ox: %d", oxIcon, c.Data.Oxen)
+
+		usageStr = fmt.Sprintf("%s item usage: %s %s", itemUsageStatIcon, c.Data.ItemUsage, usageValIcon)
+		dietStr = fmt.Sprintf("%s diet: %s %s", dietStatIcon, c.Data.Diet, dietValIcon)
+		paceStr = fmt.Sprintf("%s pace: %s %s", paceStatIcon, c.Data.Pace, paceValIcon)
+		greedStr = fmt.Sprintf("%s greed: %s %s", greedStatIcon, c.Data.Greed, greedValIcon)
+
+		potionsStr = fmt.Sprintf("%s potions: %d", potionIcon, c.Data.Potions)
+		bombsStr = fmt.Sprintf("%s bombs: %d", bombIcon, c.Data.Bombs)
+		shovelsStr = fmt.Sprintf("%s shovels: %d", shovelIcon, c.Data.Shovels)
+		ropeStr = fmt.Sprintf("%s rope: %d", ropeIcon, c.Data.Rope)
+	}
 
 	// Gold placed in bottom-right corner of TexturedCard container
 	goldStr := fmt.Sprintf("%dg %ds %dc", c.Data.Gold, c.Data.Silver, c.Data.Copper)

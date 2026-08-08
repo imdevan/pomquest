@@ -7,7 +7,7 @@ import (
 	"github.com/pomquest/internal/domain"
 )
 
-func TestPartyCardComponentView(t *testing.T) {
+func TestPartyCardComponentView_LG(t *testing.T) {
 	cfg := domain.DefaultConfig()
 	theme := ThemeFromConfig(cfg)
 
@@ -34,7 +34,7 @@ func TestPartyCardComponentView(t *testing.T) {
 		MaxHP:          35,
 	}
 
-	comp := NewPartyCardComponent(theme, data, 72)
+	comp := NewPartyCardComponent(theme, data, 96)
 	view := comp.View()
 
 	if !strings.Contains(view, "Party") {
@@ -81,5 +81,46 @@ func TestPartyCardComponentView(t *testing.T) {
 	}
 	if !strings.Contains(view, "󰼃 rope: 3") {
 		t.Errorf("expected view to contain rope with icon, got:\n%s", view)
+	}
+}
+
+func TestPartyCardComponentView_MD(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	data := PartyCardData{
+		Gold:           0,
+		Silver:         10,
+		Copper:         80,
+		FoodLbs:        2000,
+		Loot:           67,
+		SpareParts:     3,
+		Oxen:           4,
+		ItemUsage:      "heavy",
+		Diet:           "balanced",
+		Pace:           "fast",
+		Greed:          "sparse",
+		Potions:        2,
+		Bombs:          5,
+		Shovels:        1,
+		Rope:           3,
+		CurrentHP:      30,
+		MaxHP:          35,
+	}
+
+	comp := NewPartyCardComponent(theme, data, 72)
+	view := comp.View()
+
+	if !strings.Contains(view, "󱐟: 2,000lbs") {
+		t.Errorf("expected view to contain food info without label name in MD mode, got:\n%s", view)
+	}
+	if !strings.Contains(view, "󱢏: 67") {
+		t.Errorf("expected view to contain loot info without label name in MD mode, got:\n%s", view)
+	}
+	if !strings.Contains(view, ": heavy ") {
+		t.Errorf("expected view to contain item usage without label name in MD mode, got:\n%s", view)
+	}
+	if strings.Contains(view, "food:") {
+		t.Errorf("expected view NOT to contain 'food:' label in MD mode, got:\n%s", view)
 	}
 }

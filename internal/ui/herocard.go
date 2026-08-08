@@ -25,14 +25,20 @@ type HeroCardData struct {
 
 // HeroCardComponent renders hero cards according to design specs.
 type HeroCardComponent struct {
-	Theme     Theme
-	DataModel HeroCardData
+	Theme      Theme
+	DataModel  HeroCardData
+	Responsive *ResponsiveManager
 }
 
-func NewHeroCardComponent(theme Theme, data HeroCardData) HeroCardComponent {
+func NewHeroCardComponent(theme Theme, data HeroCardData, responsive ...*ResponsiveManager) HeroCardComponent {
+	var rm *ResponsiveManager
+	if len(responsive) > 0 && responsive[0] != nil {
+		rm = responsive[0]
+	}
 	return HeroCardComponent{
-		DataModel: data,
-		Theme:     theme,
+		DataModel:  data,
+		Theme:      theme,
+		Responsive: rm,
 	}
 }
 
@@ -89,12 +95,26 @@ func (c HeroCardComponent) View() string {
 	// Line 4: Atk & Def (Bottom Left), HP (Bottom Right)
 	atkIcon := icon.GetNerdFont(icon.KeyAttack)
 	armIcon := icon.GetNerdFont(icon.KeyArmor)
+	rm := c.Responsive
+	if rm == nil {
+		rm = NewResponsiveManager(80)
+	}
+
+	var atkDefFmt string
+	if !rm.IsAtLeast(BreakpointLG) {
+		// On MD breakpoint: remove space between attack icon & atk value, and defense icon & def value
+		atkDefFmt = "%s%d %s%d"
+	} else {
+		// On LG+: keep spaces
+		atkDefFmt = "%s %d %s %d"
+	}
+
 	var atkDefStr, hpStr string
 	if c.DataModel.IsDead {
-		atkDefStr = deadStyle.Render(fmt.Sprintf("%s %d %s %d", atkIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor))
+		atkDefStr = deadStyle.Render(fmt.Sprintf(atkDefFmt, atkIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor))
 		hpStr = deadStyle.Render(fmt.Sprintf("%d/%d", c.DataModel.HP, c.DataModel.MaxHP))
 	} else {
-		atkDefStr = statStyle.Render(fmt.Sprintf("%s %d %s %d", atkIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor))
+		atkDefStr = statStyle.Render(fmt.Sprintf(atkDefFmt, atkIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor))
 		hpStr = statStyle.Render(fmt.Sprintf("%d/%d", c.DataModel.HP, c.DataModel.MaxHP))
 	}
 	bottomLine := spaceBetween(atkDefStr, hpStr, innerWidth)

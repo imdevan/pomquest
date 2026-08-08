@@ -9,9 +9,9 @@ type PartyGridComponent struct {
 	heroCards HeroCardsComponent
 }
 
-func NewPartyGridComponent(theme ui.Theme, heroes []ui.HeroCardData, width ...int) PartyGridComponent {
+func NewPartyGridComponent(theme ui.Theme, heroes []ui.HeroCardData, width int, responsive ...*ui.ResponsiveManager) PartyGridComponent {
 	return PartyGridComponent{
-		heroCards: NewHeroCardsComponent(theme, heroes, width...),
+		heroCards: NewHeroCardsComponent(theme, heroes, width, responsive...),
 	}
 }
 

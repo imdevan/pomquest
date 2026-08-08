@@ -11,17 +11,25 @@ const DefaultContainerWidth = 96
 
 // QuestContainerComponent wraps quest screen components into a flex width container layout.
 type QuestContainerComponent struct {
-	Width int
-	Theme ui.Theme
+	Width      int
+	Theme      ui.Theme
+	Responsive *ui.ResponsiveManager
 }
 
-func NewQuestContainerComponent(theme ui.Theme, width int) QuestContainerComponent {
+func NewQuestContainerComponent(theme ui.Theme, width int, responsive ...*ui.ResponsiveManager) QuestContainerComponent {
 	if width <= 0 {
 		width = DefaultContainerWidth
 	}
+	var rm *ui.ResponsiveManager
+	if len(responsive) > 0 && responsive[0] != nil {
+		rm = responsive[0]
+	} else {
+		rm = ui.NewResponsiveManager(width)
+	}
 	return QuestContainerComponent{
-		Width: width,
-		Theme: theme,
+		Width:      width,
+		Theme:      theme,
+		Responsive: rm,
 	}
 }
 
