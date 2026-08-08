@@ -30,3 +30,21 @@ func TestQuestContainerComponent(t *testing.T) {
 		t.Errorf("expected container view to contain section2, got:\n%s", view)
 	}
 }
+
+func TestQuestContainerComponent_SmallScreenUnsupported(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ui.ThemeFromConfig(cfg)
+
+	rmSM := ui.NewResponsiveManager(50)
+	c := NewQuestContainerComponent(theme, 50, rmSM)
+
+	view := c.Render("Section 1 Content")
+
+	if !strings.Contains(view, "terminal width is not currently") {
+		t.Errorf("expected container view on SM breakpoint to display unsupported width message, got:\n%s", view)
+	}
+	// Verify border characters exist
+	if !strings.Contains(view, "╭") && !strings.Contains(view, "─") {
+		t.Errorf("expected container view to render full pane border, got:\n%s", view)
+	}
+}

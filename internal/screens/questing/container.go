@@ -34,6 +34,29 @@ func NewQuestContainerComponent(theme ui.Theme, width int, responsive ...*ui.Res
 }
 
 func (c QuestContainerComponent) Render(sections ...string) string {
+	if c.Responsive != nil && c.Responsive.IsAtMost(ui.BreakpointSM) {
+		msgStyle := lipgloss.NewStyle().
+			Foreground(c.Theme.Text).
+			Align(lipgloss.Center)
+
+		w := c.Width
+		if c.Responsive.Width() > 0 {
+			w = c.Responsive.Width()
+		}
+
+		paneStyle := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(c.Theme.Border).
+			Padding(1, 2).
+			Align(lipgloss.Center)
+
+		if w > 4 {
+			paneStyle = paneStyle.Width(w - 2)
+		}
+
+		return paneStyle.Render(msgStyle.Render("This terminal width is not currently supported."))
+	}
+
 	var sb strings.Builder
 	for i, s := range sections {
 		if s == "" {
