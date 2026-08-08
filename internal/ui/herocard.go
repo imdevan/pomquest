@@ -37,7 +37,7 @@ func NewHeroCardComponent(theme Theme, data HeroCardData) HeroCardComponent {
 }
 
 func (c HeroCardComponent) View() string {
-	innerWidth := 16
+	innerWidth := 14
 
 	cardStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
