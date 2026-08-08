@@ -29,6 +29,8 @@ const (
 	KeyGold         IconKey = "gold"
 	KeySilver       IconKey = "silver"
 	KeyCopper       IconKey = "copper"
+	KeyCoins        IconKey = "coins"
+	KeyCoin         IconKey = "coin"
 	KeyFood         IconKey = "food"
 	KeyOx           IconKey = "ox"
 	KeySpareParts   IconKey = "spare_parts"
@@ -41,6 +43,15 @@ const (
 	KeyBomb         IconKey = "bomb"
 	KeyPotion       IconKey = "potion"
 	KeyShovel       IconKey = "shovel"
+
+	// Hoard statistics keys
+	KeyHeroesHired     IconKey = "heroes_hired"
+	KeyHeroesLost      IconKey = "heroes_lost"
+	KeyPlacesTraveled  IconKey = "places_traveled"
+	KeyQuestsStarted   IconKey = "quests_started"
+	KeyQuestsCompleted IconKey = "quests_completed"
+	KeyTimeFocused     IconKey = "time_focused"
+	KeyTreasure        IconKey = "treasure"
 
 	// Stat category keys
 	KeyItemUsage IconKey = "item_usage"
@@ -94,7 +105,7 @@ type IconPair struct {
 
 var registry = map[IconKey]IconPair{
 	KeyAttack:       {NerdFont: "󰓥", Emoji: "⚔️"},
-	KeyArmor:        {NerdFont: "🛡", Emoji: "🛡️"},
+	KeyArmor:        {NerdFont: "󰒘", Emoji: "🛡️"},
 	KeyHP:           {NerdFont: "", Emoji: "❤️"},
 	KeyHeart10Full:  {NerdFont: "󰋑", Emoji: "❤️"},
 	KeyHeart10Half:  {NerdFont: "󰛞", Emoji: "💔"},
@@ -113,6 +124,8 @@ var registry = map[IconKey]IconPair{
 	KeyGold:       {NerdFont: "🪙", Emoji: "🪙"},
 	KeyCopper:     {NerdFont: "🥉", Emoji: "🥉"},
 	KeySilver:     {NerdFont: "🥈", Emoji: "🥈"},
+	KeyCoins:      {NerdFont: "", Emoji: "🪙"},
+	KeyCoin:       {NerdFont: "🪙", Emoji: "🪙"},
 	KeyFood:       {NerdFont: "󱐟", Emoji: "🍖"},
 	KeyLoot:       {NerdFont: "󱢏", Emoji: "💰"},
 	KeySpareParts: {NerdFont: "", Emoji: "⚙️"},
@@ -122,6 +135,14 @@ var registry = map[IconKey]IconPair{
 	KeyBomb:   {NerdFont: "󰚑", Emoji: "💣"},
 	KeyPotion: {NerdFont: "", Emoji: "🧪"},
 	KeyShovel: {NerdFont: "󰜐", Emoji: "⛏️"},
+
+	KeyHeroesHired:     {NerdFont: "󰡉", Emoji: "👥"},
+	KeyHeroesLost:      {NerdFont: "󰯈", Emoji: "💀"},
+	KeyPlacesTraveled:  {NerdFont: "", Emoji: "🗺️"},
+	KeyQuestsStarted:   {NerdFont: "", Emoji: "📜"},
+	KeyQuestsCompleted: {NerdFont: "", Emoji: "🏆"},
+	KeyTimeFocused:     {NerdFont: "", Emoji: "⏱️"},
+	KeyTreasure:        {NerdFont: "󰜦", Emoji: "💎"},
 
 	KeyClassFighter:   {NerdFont: "⚔", Emoji: "⚔️"},
 	KeyClassWizard:    {NerdFont: "", Emoji: "🧙"},

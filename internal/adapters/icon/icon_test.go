@@ -18,6 +18,11 @@ func TestIconRegistry(t *testing.T) {
 		t.Errorf("expected KeyWeather to be ☀️, got %s", weather)
 	}
 
+	// Test coin icons
+	if got := GetNerdFont(KeyCoins); got != "🪙" {
+		t.Errorf("expected KeyCoins NerdFont to be 🪙, got %s", got)
+	}
+
 	// Test party stat static icons
 	if got := GetNerdFont(KeyFood); got != "󱐟" {
 		t.Errorf("expected KeyFood NerdFont to be 󱐟, got %s", got)
