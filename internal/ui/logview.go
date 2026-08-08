@@ -13,7 +13,7 @@ type LogViewComponent struct {
 
 func NewLogViewComponent(theme Theme, title string, messages []string, maxRows, width int) LogViewComponent {
 	if maxRows <= 0 {
-		maxRows = 8
+		maxRows = 10
 	}
 	if width <= 0 {
 		width = 72

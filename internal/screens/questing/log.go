@@ -26,5 +26,5 @@ func NewLogComponent(theme ui.Theme, title string, messages []string, width int)
 }
 
 func (c LogComponent) View() string {
-	return ui.NewLogViewComponent(c.theme, c.title, c.messages, 8, c.width).View()
+	return ui.NewLogViewComponent(c.theme, c.title, c.messages, 10, c.width).View()
 }
