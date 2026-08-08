@@ -144,7 +144,7 @@ func (m Model) View() string {
 	containerWidth := DefaultContainerWidth // 96 container width requirement (18.1.1)
 
 	logComp := NewLogComponent(m.Theme, m.LogTitle, m.LogMessages, containerWidth)
-	partyComp := NewPartyGridComponent(m.Theme, m.Heroes, containerWidth)
+	heroCardsComp := NewHeroCardsComponent(m.Theme, m.Heroes, containerWidth)
 	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth)
 	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth)
 
@@ -158,7 +158,7 @@ func (m Model) View() string {
 	qContainer := NewQuestContainerComponent(m.Theme, containerWidth)
 	content := qContainer.Render(
 		logComp.View(),
-		partyComp.View(),
+		heroCardsComp.View(),
 		suppliesComp.View(),
 		progressComp.View(),
 		helpComp.View(),
