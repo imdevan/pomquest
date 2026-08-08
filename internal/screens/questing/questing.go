@@ -21,7 +21,7 @@ type Model struct {
 	LogMessages  []string
 	Heroes       []ui.HeroCardData
 	Supplies     ui.PartyCardData
-	ProgressData ui.QuestProgressData
+	ProgressData QuestProgressData
 	Paused       bool
 	Quitted      bool
 	Width        int
@@ -70,7 +70,7 @@ func NewModel(cfg domain.Config) Model {
 			CurrentHP:      24,
 			MaxHP:          32,
 		},
-		ProgressData: ui.QuestProgressData{
+		ProgressData: QuestProgressData{
 			Destination: "Forest of Izelliador",
 			CurrentSecs: 1260, // 21:00
 			TotalSecs:   1500, // 25:00
