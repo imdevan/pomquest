@@ -1,10 +1,6 @@
 package ui
 
-import (
-	"strings"
-
-	"github.com/charmbracelet/lipgloss"
-)
+import "strings"
 
 // LogViewComponent is a generic auto-scrolling log stream widget with rounded border.
 type LogViewComponent struct {
@@ -32,12 +28,6 @@ func NewLogViewComponent(theme Theme, title string, messages []string, maxRows, 
 }
 
 func (c LogViewComponent) View() string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(c.Theme.Border).
-		Padding(0, 1).
-		Width(c.Width)
-
 	start := 0
 	if len(c.Messages) > c.MaxRows {
 		start = len(c.Messages) - c.MaxRows
@@ -50,11 +40,17 @@ func (c LogViewComponent) View() string {
 	}
 
 	content := strings.TrimRight(sb.String(), "\n")
-	
-	// Apply custom title top border if title present
+
+	card := NewTexturedCard(c.Theme, c.Width, content).Padding(0, 1)
+
 	if c.Title != "" {
-		boxStyle = boxStyle.BorderTop(true)
+		card.TopLeft = CornerText{
+			Text:         c.Title,
+			Margin:       1,
+			PaddingLeft:  1,
+			PaddingRight: 1,
+		}
 	}
 
-	return boxStyle.Render(content)
+	return card.View()
 }
