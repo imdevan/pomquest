@@ -132,7 +132,14 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 18.1.2 set the width of the container to 96
 
 ## Feature 19: responsiveness
-- [ ] 19.1 adjust container and nested children
+- [x] 19.1 adjust container and nested children to use internal/ui/responsive.go
+  - [x] 19.1.1 on md: remove name from party status labels such that party card has `icon: value`
+  - [x] 19.1.2 on md: remove space between icon atk and icon def on hero cards
+  - [x] 19.1.3 on lg +: keep full label names and standard icon spacing
+  - [ ] 19.1.4 on sm: show only active hero card. 
+  - show all heros as a list on the left side with the active hero selected
+  - use '| heroname' to indicate active hero
+  - [ ] 19.1.5 on xs: show a message saying this terminal width is not currently supported
 
 ## Feature 20: fix screen transitions
 - [x] 20.1 currently there is a blink where all text seems to be shifted to left side col when going from home to questing.

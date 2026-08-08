@@ -43,6 +43,12 @@ content should flex to the size of the max width container
 
 Manages max
 
+## card
+
+58-6 = 52
+52/4 = pm
+
+
 
 # Terminal notes
 
