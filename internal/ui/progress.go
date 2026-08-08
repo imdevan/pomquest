@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/pomquest/internal/adapters/icon"
 )
@@ -50,13 +51,15 @@ func (c ProgressBarComponent) View() string {
 
 	destStyle := lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Primary)
 	timeStyle := lipgloss.NewStyle().Foreground(c.Theme.Secondary)
-	mutedStyle := lipgloss.NewStyle().Foreground(c.Theme.Muted)
 
 	// Line 1: Dest & Timer
 	destLine := fmt.Sprintf("  Dest: %-42s %s", destStyle.Render(c.Data.Destination), timeStyle.Render(timeStr))
 
-	// Line 2: Progress bar
+	// Line 2: Progress bar using bubbles/progress
 	barWidth := c.Data.Width - 6
+	if barWidth < 10 {
+		barWidth = 10
+	}
 	ratio := float64(c.Data.CurrentSecs) / float64(c.Data.TotalSecs)
 	if ratio > 1.0 {
 		ratio = 1.0
@@ -64,13 +67,13 @@ func (c ProgressBarComponent) View() string {
 		ratio = 0
 	}
 
-	filledLen := int(ratio * float64(barWidth))
-	emptyLen := barWidth - filledLen
+	prog := progress.New(
+		progress.WithoutPercentage(),
+		progress.WithSolidFill(string(c.Theme.Primary)),
+	)
+	prog.Width = barWidth
 
-	filledStyle := lipgloss.NewStyle().Foreground(c.Theme.Primary)
-	emptyStyle := lipgloss.NewStyle().Foreground(c.Theme.Muted)
-
-	barLine := "  " + filledStyle.Render(strings.Repeat("█", filledLen)) + emptyStyle.Render(strings.Repeat(" ", emptyLen)) + mutedStyle.Render("]")
+	barLine := "  " + prog.ViewAs(ratio)
 
 	// Line 3: Environment & Days
 	if c.Data.Weather == "" {
