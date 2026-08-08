@@ -29,12 +29,13 @@ Max width x height container
 xxxs: 0-24 (11)
 xxs: 24 ()
 xs: 36 (45)
+  show not supported message
 sm: 60 (60)
+  - show full width
 md: 90 (91)
 lg: 120 (121)
 xl: 180+ (181)
 
-"╭──────────────────╮  ╭──────────────────╮  ╭──────────────────╮  ╭──────────────────╮"
 
 content should flex to the size of the max width container
 

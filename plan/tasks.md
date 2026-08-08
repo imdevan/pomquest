@@ -118,6 +118,8 @@ start with 1 monster, bats... 1hp 0def 1 atk
 - [x] 16.1 use progress bar for timer progress.
   - [x] 16.1.1 integrate github.com/charmbracelet/bubbles/progress model into ProgressBarComponent in internal/ui/progress.go
   - [x] 16.1.2 add unit test coverage in internal/ui/progress_test.go
+- [ ] 16.2 progress bar should be the full width of the container
+time should be aligned fully to right of container
 
 ## Feature 17: quest log
 - [x] 17.1 replace quest log border with textureCard
@@ -127,7 +129,6 @@ start with 1 monster, bats... 1hp 0def 1 atk
 - [x] 18.1 create container that wraps quest screen components
   - [x] 18.1.1 all quest component sections flex to fit container width
   - [x] 18.1.2 set the width of the container to 96
-
 
 ## Feature 19: responsiveness
 
