@@ -133,7 +133,8 @@ time should be aligned fully to right of container
 ## Feature 19: responsiveness
 
 ## Feature 20: fix screen transitions
-- [ ] 20.1 currently there is a blink where all text seems to be shifted to left side col when going from home to questing. 
-- is there a way to clear the page before navigating to prevent the flash?
+- [x] 20.1 currently there is a blink where all text seems to be shifted to left side col when going from home to questing.
+  - [x] 20.1.1 pass terminal dimensions across screen transitions to prevent uncentered rendering on frame 1
+  - [x] 20.1.2 clear terminal screen on model Init to prevent transition flash
 
 
