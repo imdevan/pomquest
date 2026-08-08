@@ -7,9 +7,9 @@ type TimerComponent struct {
 	footer QuestFooterComponent
 }
 
-func NewTimerComponent(theme ui.Theme, data QuestProgressData, width int) TimerComponent {
+func NewTimerComponent(theme ui.Theme, data QuestProgressData, width int, responsive ...*ui.ResponsiveManager) TimerComponent {
 	return TimerComponent{
-		footer: NewQuestFooterComponent(theme, data, width),
+		footer: NewQuestFooterComponent(theme, data, width, responsive...),
 	}
 }
 

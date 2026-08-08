@@ -23,20 +23,28 @@ type QuestProgressData struct {
 
 // QuestFooterComponent renders destination, timer, progress bar, and environmental info.
 type QuestFooterComponent struct {
-	theme ui.Theme
-	data  QuestProgressData
-	width int
+	theme      ui.Theme
+	data       QuestProgressData
+	width      int
+	responsive *ui.ResponsiveManager
 }
 
-func NewQuestFooterComponent(theme ui.Theme, data QuestProgressData, width int) QuestFooterComponent {
+func NewQuestFooterComponent(theme ui.Theme, data QuestProgressData, width int, responsive ...*ui.ResponsiveManager) QuestFooterComponent {
 	if width <= 0 {
 		width = DefaultContainerWidth
 	}
 	data.Width = width
+	var rm *ui.ResponsiveManager
+	if len(responsive) > 0 && responsive[0] != nil {
+		rm = responsive[0]
+	} else {
+		rm = ui.NewResponsiveManager(width)
+	}
 	return QuestFooterComponent{
-		theme: theme,
-		data:  data,
-		width: width,
+		theme:      theme,
+		data:       data,
+		width:      width,
+		responsive: rm,
 	}
 }
 
@@ -83,7 +91,20 @@ func (c QuestFooterComponent) View() string {
 		c.data.DaysPassed = 12
 	}
 
-	leftEnv := fmt.Sprintf("Weather: %s | Terrain: %s | Hazards: %s", c.data.Weather, c.data.Terrain, c.data.Hazards)
+	rm := c.responsive
+	if rm == nil {
+		rm = ui.NewResponsiveManager(c.width)
+	}
+
+	var leftEnv string
+	if !rm.IsAtLeast(ui.BreakpointLG) {
+		// On MD or lower: hide "Weather:", "Terrain:", and "Hazards:" labels, keeping "|" separator
+		leftEnv = fmt.Sprintf("%s | %s | %s", c.data.Weather, c.data.Terrain, c.data.Hazards)
+	} else {
+		// On LG+: full labels
+		leftEnv = fmt.Sprintf("Weather: %s | Terrain: %s | Hazards: %s", c.data.Weather, c.data.Terrain, c.data.Hazards)
+	}
+
 	rightEnv := fmt.Sprintf("days passed: %d", c.data.DaysPassed)
 	envSpacing := c.width - lipgloss.Width(leftEnv) - lipgloss.Width(rightEnv)
 	if envSpacing < 1 {

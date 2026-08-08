@@ -149,7 +149,7 @@ func (m Model) View() string {
 	logComp := NewLogComponent(m.Theme, m.LogTitle, m.LogMessages, containerWidth)
 	heroCardsComp := NewHeroCardsComponent(m.Theme, m.Heroes, containerWidth, m.Responsive)
 	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth, m.Responsive)
-	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth)
+	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth, m.Responsive)
 
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "attack/action")),
