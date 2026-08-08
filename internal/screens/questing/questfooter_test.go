@@ -35,4 +35,13 @@ func TestQuestFooterComponent(t *testing.T) {
 	if !strings.Contains(view, "days passed: 12") {
 		t.Errorf("expected view to contain days passed, got:\n%s", view)
 	}
+
+	lines := strings.Split(view, "\n")
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines in quest footer view, got %d", len(lines))
+	}
+
+	if !strings.HasSuffix(lines[0], "21:00/25:00") {
+		t.Errorf("expected line 1 to end with right-aligned time, got:\n%s", lines[0])
+	}
 }

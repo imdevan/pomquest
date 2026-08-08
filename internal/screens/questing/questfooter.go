@@ -55,24 +55,21 @@ func (c QuestFooterComponent) View() string {
 	destStyle := lipgloss.NewStyle().Bold(true).Foreground(c.theme.Primary)
 	timeStyle := lipgloss.NewStyle().Foreground(c.theme.Secondary)
 
-	// Line 1: Dest & Timer flexed to width
-	destPadding := c.width - len("  Dest: ") - len(timeStr) - 3
-	if destPadding < 10 {
-		destPadding = 10
+	// Line 1: Dest on left, Timer aligned fully to right of container width
+	leftDest := fmt.Sprintf("Dest: %s", destStyle.Render(c.data.Destination))
+	rightTime := timeStyle.Render(timeStr)
+	destSpacing := c.width - lipgloss.Width(leftDest) - lipgloss.Width(rightTime)
+	if destSpacing < 1 {
+		destSpacing = 1
 	}
-	destLine := fmt.Sprintf("  Dest: %-*s %s", destPadding, destStyle.Render(c.data.Destination), timeStyle.Render(timeStr))
+	destLine := leftDest + strings.Repeat(" ", destSpacing) + rightTime
 
-	// Line 2: Progress bar using generic ui.ProgressBarComponent
-	barWidth := c.width - 6
-	if barWidth < 10 {
-		barWidth = 10
-	}
+	// Line 2: Progress bar matching full width of container
 	ratio := float64(c.data.CurrentSecs) / float64(c.data.TotalSecs)
+	progBar := ui.NewProgressBarComponent(c.theme, ratio, c.width)
+	barLine := progBar.View()
 
-	progBar := ui.NewProgressBarComponent(c.theme, ratio, barWidth)
-	barLine := "  " + progBar.View()
-
-	// Line 3: Environment & Days flexed to width
+	// Line 3: Environment on left, Days passed aligned fully to right of container width
 	if c.data.Weather == "" {
 		c.data.Weather = icon.GetNerdFont(icon.KeyWeather)
 	}
@@ -86,13 +83,13 @@ func (c QuestFooterComponent) View() string {
 		c.data.DaysPassed = 12
 	}
 
-	hazardsPadding := c.width - 45
-	if hazardsPadding < 10 {
-		hazardsPadding = 10
+	leftEnv := fmt.Sprintf("Weather: %s | Terrain: %s | Hazards: %s", c.data.Weather, c.data.Terrain, c.data.Hazards)
+	rightEnv := fmt.Sprintf("days passed: %d", c.data.DaysPassed)
+	envSpacing := c.width - lipgloss.Width(leftEnv) - lipgloss.Width(rightEnv)
+	if envSpacing < 1 {
+		envSpacing = 1
 	}
-
-	envLine := fmt.Sprintf("  Weather: %s | Terrain: %s | Hazards: %-*s days passed: %d",
-		c.data.Weather, c.data.Terrain, hazardsPadding, c.data.Hazards, c.data.DaysPassed)
+	envLine := leftEnv + strings.Repeat(" ", envSpacing) + rightEnv
 
 	return strings.Join([]string{destLine, barLine, envLine}, "\n")
 }
