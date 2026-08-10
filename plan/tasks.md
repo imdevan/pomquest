@@ -183,6 +183,19 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 22.3.2 create dedicated party screen in `internal/screens/party/party.go` with hero selection keybindings and unit tests in `party_test.go`
 
 
+## Feature 23: add reroll screen
+- [ ] 23.1 a dead hero can be "rerolled" from the party screen
+  - [ ] 23.1.1 navigates to reroll screen
+- [ ] 23.2 reroll screen looks very similar to party screen. showing a  list of for hero cards
+  - [ ] 23.2.1 hero careds with no name. 
+  - [ ] 23.2.2 the first card is always "random" and has ? for stats
+  - [ ] 23.2.3 the other three cards are 3 randomly selected classes from the class list
+  - this should programmatic and not "manual"
+- [ ] 23.3 reroll button
+  - [ ] 23.3.1 rerolls available class options, except random!
+  - [ ] 23.3.2 only 2 rerolls allowed
+- [ ] 23.4 after hero pics a hero class card they pick a name
+
 
 ## Feature 24: create ascii image library
 - [x] 24.1 use plan/ascii-art.md:575 for "treasure_hoard"
