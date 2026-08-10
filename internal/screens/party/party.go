@@ -18,6 +18,8 @@ type Model struct {
 	Theme             ui.Theme
 	Responsive        *ui.ResponsiveManager
 	Heroes            []ui.HeroCardData
+	MaxPartySize      int
+	CurrentPartySize  int
 	ActiveIndex       int
 	NavToReroll       bool
 	RerollTargetIndex int
@@ -86,17 +88,74 @@ func NewModel(cfg domain.Config) Model {
 	}
 
 	return Model{
-		Theme:       theme,
-		Responsive:  ui.NewResponsiveManager(80),
-		Heroes:      heroes,
-		ActiveIndex: 2, // pam is default active
-		Width:       80,
-		Height:      24,
+		Theme:            theme,
+		Responsive:       ui.NewResponsiveManager(80),
+		Heroes:           heroes,
+		MaxPartySize:     len(heroes),
+		CurrentPartySize: len(heroes),
+		ActiveIndex:      2, // pam is default active
+		Width:            80,
+		Height:           24,
+	}
+}
+
+// NewModelFromParty initializes the party screen model based on SQL database Party model.
+func NewModelFromParty(cfg domain.Config, party app.Party) Model {
+	theme := ui.ThemeFromConfig(cfg)
+	maxSize := party.MaxPartySize
+	if maxSize <= 0 {
+		maxSize = 1
+	}
+
+	var heroes []ui.HeroCardData
+	for i, h := range party.Heroes {
+		if i >= maxSize {
+			break
+		}
+		iconStr := h.Icon
+		if iconStr == "" {
+			iconStr = app.GetClassArchetype(h.Class).Icon(icon.ModeNerdFont)
+		}
+		heroes = append(heroes, ui.HeroCardData{
+			Name:          h.Name,
+			Class:         h.Class,
+			Level:         h.Level,
+			HP:            h.HP,
+			MaxHP:         h.MaxHP,
+			Attack:        h.Attack,
+			Armor:         h.Armor,
+			Status:        h.Status,
+			IsDead:        h.IsDead,
+			Icon:          iconStr,
+			Stats:         h.Stats,
+			ShowFullStats: true,
+		})
+	}
+
+	// Fill remaining slots up to party.MaxPartySize with empty hero slots
+	for len(heroes) < maxSize {
+		heroes = append(heroes, ui.HeroCardData{
+			IsEmptySlot:   true,
+			ShowFullStats: true,
+		})
+	}
+
+	return Model{
+		Theme:            theme,
+		Responsive:       ui.NewResponsiveManager(80),
+		Heroes:           heroes,
+		MaxPartySize:     maxSize,
+		CurrentPartySize: len(party.Heroes),
+		ActiveIndex:      0,
+		Width:            80,
+		Height:           24,
 	}
 }
 
 func (m *Model) ReplaceHero(index int, newHero ui.HeroCardData) {
 	if index >= 0 && index < len(m.Heroes) {
+		newHero.ShowFullStats = true
+		newHero.IsEmptySlot = false
 		m.Heroes[index] = newHero
 	}
 }
@@ -128,7 +187,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "r", "enter", "space":
-			if m.ActiveIndex >= 0 && m.ActiveIndex < len(m.Heroes) && m.Heroes[m.ActiveIndex].IsDead {
+			if m.ActiveIndex >= 0 && m.ActiveIndex < len(m.Heroes) && (m.Heroes[m.ActiveIndex].IsDead || m.Heroes[m.ActiveIndex].IsEmptySlot) {
 				m.NavToReroll = true
 				m.RerollTargetIndex = m.ActiveIndex
 				return m, tea.Quit
@@ -202,8 +261,12 @@ func (m Model) View() string {
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("←/→", "h/l"), key.WithHelp("←/→", "select hero")),
 	}
-	if m.ActiveIndex >= 0 && m.ActiveIndex < len(m.Heroes) && m.Heroes[m.ActiveIndex].IsDead {
-		helpKeys = append(helpKeys, key.NewBinding(key.WithKeys("r/enter"), key.WithHelp("r", "reroll dead hero")))
+	if m.ActiveIndex >= 0 && m.ActiveIndex < len(m.Heroes) {
+		if m.Heroes[m.ActiveIndex].IsEmptySlot {
+			helpKeys = append(helpKeys, key.NewBinding(key.WithKeys("r/enter"), key.WithHelp("r", "recruit hero")))
+		} else if m.Heroes[m.ActiveIndex].IsDead {
+			helpKeys = append(helpKeys, key.NewBinding(key.WithKeys("r/enter"), key.WithHelp("r", "reroll dead hero")))
+		}
 	}
 	helpKeys = append(helpKeys,
 		key.NewBinding(key.WithKeys("1-4"), key.WithHelp("1-4", "jump hero")),
