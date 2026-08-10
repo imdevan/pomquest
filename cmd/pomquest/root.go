@@ -16,6 +16,7 @@ import (
 	"github.com/pomquest/internal/screens/hoard"
 	"github.com/pomquest/internal/screens/party"
 	"github.com/pomquest/internal/screens/questing"
+	"github.com/pomquest/internal/screens/reroll"
 )
 
 // Metadata loaded from package.toml at build time
@@ -111,6 +112,7 @@ const (
 	screenDashboard screenState = iota
 	screenQuesting
 	screenParty
+	screenReroll
 	screenHoard
 )
 
@@ -120,6 +122,7 @@ type appModel struct {
 	dashboard   dashboard.Model
 	questing    questing.Model
 	party       party.Model
+	reroll      reroll.Model
 	hoard       hoard.Model
 	width       int
 	height      int
@@ -133,6 +136,7 @@ func newAppModel(cfg domain.Config) appModel {
 		dashboard: dashboard.NewModel(cfg),
 		questing:  questing.NewModel(cfg),
 		party:     party.NewModel(cfg),
+		reroll:    reroll.NewModel(cfg, 0),
 		hoard:     hoard.NewModel(cfg),
 		width:     80,
 		height:    24,
@@ -151,6 +155,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.dashboard.SetDimensions(msg.Width, msg.Height)
 		m.questing.SetDimensions(msg.Width, msg.Height)
 		m.party.SetDimensions(msg.Width, msg.Height)
+		m.reroll.SetDimensions(msg.Width, msg.Height)
 		m.hoard.SetDimensions(msg.Width, msg.Height)
 	}
 
@@ -207,11 +212,36 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		newP, cmd := m.party.Update(msg)
 		if pModel, ok := newP.(party.Model); ok {
 			m.party = pModel
+			if pModel.NavToReroll {
+				m.party.NavToReroll = false
+				m.state = screenReroll
+				m.reroll = reroll.NewModel(m.cfg, pModel.RerollTargetIndex)
+				m.reroll.SetDimensions(m.width, m.height)
+				return m, m.reroll.Init()
+			}
 			if pModel.Quitted {
 				m.state = screenDashboard
 				m.dashboard = dashboard.NewModel(m.cfg)
 				m.dashboard.SetDimensions(m.width, m.height)
 				return m, m.dashboard.Init()
+			}
+		}
+		return m, cmd
+
+	case screenReroll:
+		newR, cmd := m.reroll.Update(msg)
+		if rModel, ok := newR.(reroll.Model); ok {
+			m.reroll = rModel
+			if rModel.Completed {
+				m.party.ReplaceHero(rModel.TargetHeroIdx, rModel.NewHero)
+				m.state = screenParty
+				m.party.SetDimensions(m.width, m.height)
+				return m, m.party.Init()
+			}
+			if rModel.Quitted {
+				m.state = screenParty
+				m.party.SetDimensions(m.width, m.height)
+				return m, m.party.Init()
 			}
 		}
 		return m, cmd
@@ -241,6 +271,8 @@ func (m appModel) View() string {
 		return m.questing.View()
 	case screenParty:
 		return m.party.View()
+	case screenReroll:
+		return m.reroll.View()
 	case screenHoard:
 		return m.hoard.View()
 	default:
