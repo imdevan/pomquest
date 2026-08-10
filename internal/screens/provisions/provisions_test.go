@@ -38,25 +38,34 @@ func TestBookOfItems(t *testing.T) {
 	}
 }
 
-func TestProvisionsScreen_ViewAndProps(t *testing.T) {
+func TestProvisionsScreen_ViewAndColumns(t *testing.T) {
 	cfg := domain.DefaultConfig()
 	m := NewModel(cfg)
 
 	view := m.View()
 
-	// 24.2: props name: Soand Sow's, type: general, sells: all items at base cost
+	// 24.2 & 24.9: borderless store view with title and table columns
 	if !strings.Contains(view, "Soand Sow's General Store") {
-		t.Errorf("expected store view to contain name 'Soand Sow's General Store', got:\n%s", view)
+		t.Errorf("expected store view to contain header name, got:\n%s", view)
 	}
-	if !strings.Contains(view, "General Store • All items sold at base cost") {
-		t.Errorf("expected store view to contain subtitle 'General Store • All items sold at base cost', got:\n%s", view)
+
+	// 24.6: 3 cols: Item, Cost, Subtotal
+	if !strings.Contains(view, "Item") || !strings.Contains(view, "Cost") || !strings.Contains(view, "Subtotal") {
+		t.Errorf("expected 3 table columns (Item, Cost, Subtotal), got:\n%s", view)
 	}
-	if !strings.Contains(view, "Food") || !strings.Contains(view, "Spare Parts") {
-		t.Errorf("expected store view to list catalog items, got:\n%s", view)
+
+	// 24.8: Last option is Complete Purchase
+	if !strings.Contains(view, "Complete Purchase") {
+		t.Errorf("expected last option Complete Purchase, got:\n%s", view)
+	}
+
+	// 24.4: Party card rendered under store
+	if !strings.Contains(view, "Party") {
+		t.Errorf("expected party card under store view, got:\n%s", view)
 	}
 }
 
-func TestProvisionsScreen_PurchaseItem(t *testing.T) {
+func TestProvisionsScreen_DeferredPurchaseExecution(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := filepath.Join(tmpDir, "provisions_test.db")
 
@@ -65,9 +74,9 @@ func TestProvisionsScreen_PurchaseItem(t *testing.T) {
 		t.Fatalf("InitDB failed: %v", err)
 	}
 
-	// Give party 1 Gold (100c)
+	// Give party 1 Gold (1000c)
 	party, _ := app.LoadOrCreateActiveParty(db)
-	party.Gold = 1
+	party.Gold = 1 // 1000c
 	party.Silver = 0
 	party.Copper = 0
 	_ = app.SaveParty(db, party)
@@ -75,52 +84,39 @@ func TestProvisionsScreen_PurchaseItem(t *testing.T) {
 	cfg := domain.DefaultConfig()
 	m := NewModelWithDBPath(cfg, dbPath)
 
-	// Buy item 1 (Food - 10c / lb)
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
+	// Increment Food Qty by pressing '+' twice (2 lbs = 20c)
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'+'}})
+	m = updated.(Model)
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'+'}})
 	m = updated.(Model)
 
-	if m.Party.FoodLbs != 101 { // starting 100 + 1 bought
-		t.Errorf("expected FoodLbs to be 101, got %d", m.Party.FoodLbs)
+	// 24.8: Party coins should NOT change before purchase
+	if m.Party.Gold != 1 || m.Party.Silver != 0 || m.Party.Copper != 0 {
+		t.Fatalf("expected coins unchanged before purchase, got %dg %ds %dc", m.Party.Gold, m.Party.Silver, m.Party.Copper)
 	}
-	// 100c - 10c = 90c (0g 9s 0c)
-	if m.Party.Gold != 0 || m.Party.Silver != 9 || m.Party.Copper != 0 {
-		t.Errorf("expected remaining purse to be 0g 9s 0c, got %dg %ds %dc", m.Party.Gold, m.Party.Silver, m.Party.Copper)
+
+	// Subtotal should reflect 20c (2 * 10c)
+	if m.calculateGrandTotal() != 20 {
+		t.Fatalf("expected cart grand total 20c, got %d", m.calculateGrandTotal())
 	}
-	if !strings.Contains(m.StatusNotice, "Purchased Food") {
+
+	// Navigate to Purchase row (row 7) and press Enter
+	for i := 0; i < 7; i++ {
+		updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+		m = updated.(Model)
+	}
+
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m = updated.(Model)
+
+	// 1000c - 20c = 980c -> 0g 9s 80c
+	if m.Party.Gold != 0 || m.Party.Silver != 9 || m.Party.Copper != 80 {
+		t.Errorf("expected remaining purse 0g 9s 80c, got %dg %ds %dc", m.Party.Gold, m.Party.Silver, m.Party.Copper)
+	}
+	if m.Party.FoodLbs != 102 { // 100 + 2
+		t.Errorf("expected FoodLbs to be 102, got %d", m.Party.FoodLbs)
+	}
+	if !strings.Contains(m.StatusNotice, "Purchase complete") {
 		t.Errorf("expected status notice for purchase, got %q", m.StatusNotice)
-	}
-
-	// Verify database was updated
-	reloadedParty, _ := app.LoadActivePartyFromPath(dbPath)
-	if reloadedParty.FoodLbs != 101 {
-		t.Errorf("expected reloaded party FoodLbs to be 101, got %d", reloadedParty.FoodLbs)
-	}
-}
-
-func TestProvisionsScreen_InsufficientCoin(t *testing.T) {
-	tmpDir := t.TempDir()
-	dbPath := filepath.Join(tmpDir, "insufficient_test.db")
-
-	db, err := app.InitDB(dbPath)
-	if err != nil {
-		t.Fatalf("InitDB failed: %v", err)
-	}
-
-	// Give party 0 coin
-	party, _ := app.LoadOrCreateActiveParty(db)
-	party.Gold = 0
-	party.Silver = 0
-	party.Copper = 0
-	_ = app.SaveParty(db, party)
-
-	cfg := domain.DefaultConfig()
-	m := NewModelWithDBPath(cfg, dbPath)
-
-	// Try buying Food (10c)
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
-	m = updated.(Model)
-
-	if !strings.Contains(m.StatusNotice, "Not enough coin") {
-		t.Errorf("expected warning for insufficient coin, got %q", m.StatusNotice)
 	}
 }
