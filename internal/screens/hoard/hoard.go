@@ -145,27 +145,53 @@ func (m Model) View() string {
 	completedIcon := icon.GetNerdFont(icon.KeyQuestsCompleted)
 	timeIcon := icon.GetNerdFont(icon.KeyTimeFocused)
 
-	// Formatted values
-	goldStr := fmt.Sprintf("%s total gold: %sg", goldIcon, formatNumber(m.Data.TotalGold))
-	lootStr := fmt.Sprintf("%s total loot: %d", lootIcon, m.Data.TotalLoot)
-	treasureStr := fmt.Sprintf("%s total treasure: %d", treasureIcon, m.Data.TotalTreasure)
+	var goldStr, lootStr, treasureStr string
+	var hiredStr, lostStr, travelStr string
+	var startedStr, completedStr, timeStr string
 
-	hiredStr := fmt.Sprintf("%s heroes hired: %d", hiredIcon, m.Data.HeroesHired)
-	lostStr := fmt.Sprintf("%s heroes lost: %d", lostIcon, m.Data.HeroesLost)
-	travelStr := fmt.Sprintf("%s places traveled: %d", travelIcon, m.Data.PlacesTraveled)
+	if !rm.IsAtLeast(ui.BreakpointLG) {
+		// On MD and smaller: show icon: value
+		goldStr = fmt.Sprintf("%s: %sg", goldIcon, formatNumber(m.Data.TotalGold))
+		lootStr = fmt.Sprintf("%s: %d", lootIcon, m.Data.TotalLoot)
+		treasureStr = fmt.Sprintf("%s: %d", treasureIcon, m.Data.TotalTreasure)
 
-	startedStr := fmt.Sprintf("%s quests started: %d", startedIcon, m.Data.QuestsStarted)
-	completedStr := fmt.Sprintf("%s quests completed: %d", completedIcon, m.Data.QuestsCompleted)
-	timeStr := fmt.Sprintf("%s time focused: %dh %dm", timeIcon, m.Data.TimeFocusedMins/60, m.Data.TimeFocusedMins%60)
+		hiredStr = fmt.Sprintf("%s: %d", hiredIcon, m.Data.HeroesHired)
+		lostStr = fmt.Sprintf("%s: %d", lostIcon, m.Data.HeroesLost)
+		travelStr = fmt.Sprintf("%s: %d", travelIcon, m.Data.PlacesTraveled)
 
-	cardWidth := min(w, 80)
-	if cardWidth < 50 {
-		cardWidth = 50
+		startedStr = fmt.Sprintf("%s: %d", startedIcon, m.Data.QuestsStarted)
+		completedStr = fmt.Sprintf("%s: %d", completedIcon, m.Data.QuestsCompleted)
+		timeStr = fmt.Sprintf("%s: %dh %dm", timeIcon, m.Data.TimeFocusedMins/60, m.Data.TimeFocusedMins%60)
+	} else {
+		// On LG+: show full label names
+		goldStr = fmt.Sprintf("%s total gold: %sg", goldIcon, formatNumber(m.Data.TotalGold))
+		lootStr = fmt.Sprintf("%s total loot: %d", lootIcon, m.Data.TotalLoot)
+		treasureStr = fmt.Sprintf("%s total treasure: %d", treasureIcon, m.Data.TotalTreasure)
+
+		hiredStr = fmt.Sprintf("%s heroes hired: %d", hiredIcon, m.Data.HeroesHired)
+		lostStr = fmt.Sprintf("%s heroes lost: %d", lostIcon, m.Data.HeroesLost)
+		travelStr = fmt.Sprintf("%s places traveled: %d", travelIcon, m.Data.PlacesTraveled)
+
+		startedStr = fmt.Sprintf("%s quests started: %d", startedIcon, m.Data.QuestsStarted)
+		completedStr = fmt.Sprintf("%s quests completed: %d", completedIcon, m.Data.QuestsCompleted)
+		timeStr = fmt.Sprintf("%s time focused: %dh %dm", timeIcon, m.Data.TimeFocusedMins/60, m.Data.TimeFocusedMins%60)
 	}
 
-	innerTableWidth := cardWidth - 6
-	if innerTableWidth < 30 {
-		innerTableWidth = 30
+	padH := 2
+	cardMargin := 1
+	if !rm.IsAtLeast(ui.BreakpointLG) {
+		padH = 1
+		cardMargin = 0
+	}
+
+	cardWidth := min(w, 80)
+	if !rm.IsAtLeast(ui.BreakpointLG) {
+		cardWidth = w
+	}
+
+	innerTableWidth := cardWidth - 2 - (2 * padH)
+	if innerTableWidth < 20 {
+		innerTableWidth = 20
 	}
 
 	emptyBorder := lipgloss.Border{}
@@ -183,31 +209,37 @@ func (m Model) View() string {
 			return lipgloss.NewStyle().Foreground(m.Theme.Text).Align(lipgloss.Left)
 		})
 
-	card := ui.NewTexturedCard(m.Theme, cardWidth, t.Render()).Padding(1, 2)
+	card := ui.NewTexturedCard(m.Theme, cardWidth, t.Render()).Padding(1, padH)
 	card.TopLeft = ui.CornerText{
 		Text:         "Hoard",
-		Margin:       1,
+		Margin:       cardMargin,
 		PaddingLeft:  1,
 		PaddingRight: 1,
 	}
 	cardView := card.View()
+	cardContainer := lipgloss.NewStyle().
+		Width(w).
+		Align(lipgloss.Center).
+		Render(cardView)
 
-	// 3. Help component
+	// 3. Help component Container
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("q", "esc", "b"), key.WithHelp("q/esc", "back to menu")),
 	}
 	helpComp := ui.NewHelpComponent(m.Theme, helpKeys)
-	helpView := helpComp.View()
+	helpContainer := lipgloss.NewStyle().
+		Width(w).
+		Align(lipgloss.Center).
+		Render(helpComp.View())
 
 	var sb strings.Builder
-	sb.WriteString(asciiView)
+	sb.WriteString(asciiContainer)
 	sb.WriteString("\n\n")
-	sb.WriteString(cardView)
+	sb.WriteString(cardContainer)
 	sb.WriteString("\n")
-	sb.WriteString(helpView)
+	sb.WriteString(helpContainer)
 
-	contentStyle := lipgloss.NewStyle().Align(lipgloss.Center)
-	content := contentStyle.Render(sb.String())
+	content := sb.String()
 
 	if m.Width > 0 && m.Height > 0 {
 		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
@@ -240,4 +272,26 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func cropAsciiArt(art string, maxWidth int) string {
+	if maxWidth <= 0 {
+		return art
+	}
+	lines := strings.Split(art, "\n")
+	var cropped []string
+	for _, line := range lines {
+		runes := []rune(line)
+		if len(runes) > maxWidth {
+			excess := len(runes) - maxWidth
+			start := excess / 2
+			end := start + maxWidth
+			if end > len(runes) {
+				end = len(runes)
+			}
+			line = string(runes[start:end])
+		}
+		cropped = append(cropped, line)
+	}
+	return strings.Join(cropped, "\n")
 }

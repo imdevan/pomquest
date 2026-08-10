@@ -40,6 +40,35 @@ func TestHoardScreenView(t *testing.T) {
 	}
 }
 
+func TestHoardScreenView_MD(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	model := NewModel(cfg)
+	model.SetDimensions(70, 30) // MD breakpoint
+
+	view := model.View()
+
+	if !strings.Contains(view, "1,250g") {
+		t.Errorf("expected MD hoard view to contain '1,250g', got:\n%s", view)
+	}
+
+	// In MD mode, full text labels like "total gold:" should not be present
+	if strings.Contains(view, "total gold:") {
+		t.Errorf("expected MD hoard view NOT to contain 'total gold:', got:\n%s", view)
+	}
+}
+
+func TestHoardScreenView_58Width(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	model := NewModel(cfg)
+	model.SetDimensions(58, 25)
+
+	view := model.View()
+
+	if !strings.Contains(view, "1,250g") {
+		t.Errorf("expected 58 width hoard view to contain '1,250g', got:\n%s", view)
+	}
+}
+
 func TestHoardScreen_SmallScreenUnsupported(t *testing.T) {
 	cfg := domain.DefaultConfig()
 	model := NewModel(cfg)
@@ -66,5 +95,13 @@ func TestHoardScreen_Quit(t *testing.T) {
 	}
 	if updatedModel.View() != "" {
 		t.Errorf("expected View() to return empty string when Quitted is true")
+	}
+}
+
+func TestCropAsciiArt(t *testing.T) {
+	sample := "12345678901234567890" // 20 runes
+	cropped := cropAsciiArt(sample, 10)
+	if len([]rune(cropped)) != 10 {
+		t.Errorf("expected cropped rune length to be 10, got %d", len([]rune(cropped)))
 	}
 }
