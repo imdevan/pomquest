@@ -1,5 +1,7 @@
 package app
 
+import "github.com/pomquest/internal/adapters/icon"
+
 // ItemDef represents a purchasable item in the General Store book of items.
 type ItemDef struct {
 	ID             string
@@ -8,7 +10,7 @@ type ItemDef struct {
 	BaseCostCopper int
 	DisplayCost    string
 	Description    string
-	Icon           string
+	IconKey        icon.IconKey
 }
 
 // BookOfItems returns the list of all items available at Soand Sow's General Store.
@@ -21,7 +23,7 @@ func BookOfItems() []ItemDef {
 			BaseCostCopper: 10, // 10c / lb
 			DisplayCost:    "10c / lb",
 			Description:    "Basic provisions to sustain party members on journeys.",
-			Icon:           "🍞",
+			IconKey:        icon.KeyFood,
 		},
 		{
 			ID:             "spare_parts",
@@ -30,7 +32,7 @@ func BookOfItems() []ItemDef {
 			BaseCostCopper: 60, // 60c / part
 			DisplayCost:    "60c / part",
 			Description:    "Essential wagon parts to repair breakdowns on the trail.",
-			Icon:           "⚙",
+			IconKey:        icon.KeySpareParts,
 		},
 		{
 			ID:             "ox",
@@ -39,7 +41,7 @@ func BookOfItems() []ItemDef {
 			BaseCostCopper: 200, // 20s = 200c per yoke (3 ox)
 			DisplayCost:    "20s / yoke (3 ox)",
 			Description:    "Strong oxen to pull wagons through rugged biomes.",
-			Icon:           "🐂",
+			IconKey:        icon.KeyOx,
 		},
 		{
 			ID:             "potions",
@@ -48,7 +50,7 @@ func BookOfItems() []ItemDef {
 			BaseCostCopper: 200, // 20s = 200c / pot
 			DisplayCost:    "20s / pot",
 			Description:    "Restores HP and cures status ailments during quests.",
-			Icon:           "🧪",
+			IconKey:        icon.KeyPotion,
 		},
 		{
 			ID:             "bombs",
@@ -57,7 +59,7 @@ func BookOfItems() []ItemDef {
 			BaseCostCopper: 50, // 50c / bomb
 			DisplayCost:    "50c / bomb",
 			Description:    "Explosives to clear obstacles or blast groups of enemies.",
-			Icon:           "💣",
+			IconKey:        icon.KeyBomb,
 		},
 		{
 			ID:             "shovels",
@@ -66,7 +68,7 @@ func BookOfItems() []ItemDef {
 			BaseCostCopper: 20, // 20c / shovel
 			DisplayCost:    "20c / shovel",
 			Description:    "Dig through rockslides and unearth hidden treasure.",
-			Icon:           "⛏",
+			IconKey:        icon.KeyShovel,
 		},
 		{
 			ID:             "rope",
@@ -75,7 +77,7 @@ func BookOfItems() []ItemDef {
 			BaseCostCopper: 10, // 10c / 50ft
 			DisplayCost:    "10c / 50ft",
 			Description:    "Heavy hemp rope to scale cliffs and cross chasms.",
-			Icon:           "🪢",
+			IconKey:        icon.KeyRope,
 		},
 	}
 }
