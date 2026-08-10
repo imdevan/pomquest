@@ -157,6 +157,14 @@ func (m *Model) ReplaceHero(index int, newHero ui.HeroCardData) {
 		newHero.ShowFullStats = true
 		newHero.IsEmptySlot = false
 		m.Heroes[index] = newHero
+
+		var count int
+		for _, h := range m.Heroes {
+			if !h.IsEmptySlot && !h.IsDead {
+				count++
+			}
+		}
+		m.CurrentPartySize = count
 	}
 }
 
