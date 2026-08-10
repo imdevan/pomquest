@@ -19,8 +19,8 @@ func TestIconRegistry(t *testing.T) {
 	}
 
 	// Test coin icons
-	if got := GetNerdFont(KeyCoins); got != "🪙" {
-		t.Errorf("expected KeyCoins NerdFont to be 🪙, got %s", got)
+	if got := GetNerdFont(KeyCoins); got != "" {
+		t.Errorf("expected KeyCoins NerdFont to be , got %s", got)
 	}
 
 	// Test party stat static icons
