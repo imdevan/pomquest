@@ -14,6 +14,7 @@ import (
 	pkg "github.com/pomquest/internal/package"
 	"github.com/pomquest/internal/screens/dashboard"
 	"github.com/pomquest/internal/screens/hoard"
+	"github.com/pomquest/internal/screens/party"
 	"github.com/pomquest/internal/screens/questing"
 )
 
@@ -109,6 +110,7 @@ type screenState int
 const (
 	screenDashboard screenState = iota
 	screenQuesting
+	screenParty
 	screenHoard
 )
 
@@ -117,6 +119,7 @@ type appModel struct {
 	state       screenState
 	dashboard   dashboard.Model
 	questing    questing.Model
+	party       party.Model
 	hoard       hoard.Model
 	width       int
 	height      int
@@ -129,6 +132,7 @@ func newAppModel(cfg domain.Config) appModel {
 		state:     screenDashboard,
 		dashboard: dashboard.NewModel(cfg),
 		questing:  questing.NewModel(cfg),
+		party:     party.NewModel(cfg),
 		hoard:     hoard.NewModel(cfg),
 		width:     80,
 		height:    24,
@@ -146,6 +150,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.dashboard.SetDimensions(msg.Width, msg.Height)
 		m.questing.SetDimensions(msg.Width, msg.Height)
+		m.party.SetDimensions(msg.Width, msg.Height)
 		m.hoard.SetDimensions(msg.Width, msg.Height)
 	}
 
@@ -161,14 +166,19 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.questing = questing.NewModel(m.cfg)
 					m.questing.SetDimensions(m.width, m.height)
 					return m, m.questing.Init()
+				case dashboard.ChoiceParty:
+					m.state = screenParty
+					m.party = party.NewModel(m.cfg)
+					m.party.SetDimensions(m.width, m.height)
+					return m, m.party.Init()
+				case dashboard.ChoiceProvision:
+					m.exitMessage = "🎒 Provisions: 100 lbs Food, 4 Oxen, 2 Spare Parts"
+					return m, tea.Quit
 				case dashboard.ChoiceHoard:
 					m.state = screenHoard
 					m.hoard = hoard.NewModel(m.cfg)
 					m.hoard.SetDimensions(m.width, m.height)
 					return m, m.hoard.Init()
-				case dashboard.ChoiceProvision:
-					m.exitMessage = "🎒 Party Provisions: 100 lbs Food, 4 Oxen, 2 Spare Parts"
-					return m, tea.Quit
 				case dashboard.ChoiceSettings:
 					m.exitMessage = "⚙ Settings / Config options"
 					return m, tea.Quit
@@ -185,6 +195,19 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if qModel, ok := newQ.(questing.Model); ok {
 			m.questing = qModel
 			if qModel.Quitted {
+				m.state = screenDashboard
+				m.dashboard = dashboard.NewModel(m.cfg)
+				m.dashboard.SetDimensions(m.width, m.height)
+				return m, m.dashboard.Init()
+			}
+		}
+		return m, cmd
+
+	case screenParty:
+		newP, cmd := m.party.Update(msg)
+		if pModel, ok := newP.(party.Model); ok {
+			m.party = pModel
+			if pModel.Quitted {
 				m.state = screenDashboard
 				m.dashboard = dashboard.NewModel(m.cfg)
 				m.dashboard.SetDimensions(m.width, m.height)
@@ -216,6 +239,8 @@ func (m appModel) View() string {
 		return m.dashboard.View()
 	case screenQuesting:
 		return m.questing.View()
+	case screenParty:
+		return m.party.View()
 	case screenHoard:
 		return m.hoard.View()
 	default:

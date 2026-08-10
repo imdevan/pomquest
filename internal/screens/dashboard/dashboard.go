@@ -16,8 +16,9 @@ type Choice int
 
 const (
 	ChoiceQuest Choice = iota
-	ChoiceHoard
+	ChoiceParty
 	ChoiceProvision
+	ChoiceHoard
 	ChoiceSettings
 	ChoiceQuit
 )
@@ -43,10 +44,11 @@ func NewModel(cfg domain.Config) Model {
 		Responsive: ui.NewResponsiveManager(80),
 		Choices: []string{
 			"1. ⚔  Quest! (Start Journey)",
-			"2. 💎 View Dragon Hoard",
-			"3. 🎒 Provisions & Party",
-			"4. ⚙  Settings & Config",
-			"5. 🚪 Quit",
+			"2. 👥 Party",
+			"3. 🎒 Provisions",
+			"4. 💎 View Dragon Hoard",
+			"5. ⚙  Settings & Config",
+			"6. 🚪 Quit",
 		},
 		Cursor:   0,
 		Selected: -1,
@@ -102,7 +104,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "2":
 			m.Cursor = 1
-			m.Selected = ChoiceHoard
+			m.Selected = ChoiceParty
 			return m, tea.Quit
 		case "3":
 			m.Cursor = 2
@@ -110,10 +112,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "4":
 			m.Cursor = 3
-			m.Selected = ChoiceSettings
+			m.Selected = ChoiceHoard
 			return m, tea.Quit
 		case "5":
 			m.Cursor = 4
+			m.Selected = ChoiceSettings
+			return m, tea.Quit
+		case "6":
+			m.Cursor = 5
 			m.Selected = ChoiceQuit
 			return m, tea.Quit
 
@@ -139,7 +145,7 @@ func (m Model) View() string {
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("up/down", "j/k"), key.WithHelp("↑/↓", "navigate")),
 		key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "select")),
-		key.NewBinding(key.WithKeys("1-5"), key.WithHelp("1-5", "quick select")),
+		key.NewBinding(key.WithKeys("1-6"), key.WithHelp("1-6", "quick select")),
 		key.NewBinding(key.WithKeys("q"), key.WithHelp("q", "quit")),
 	}
 
