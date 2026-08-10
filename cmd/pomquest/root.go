@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
+	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/config"
 	"github.com/pomquest/internal/domain"
 	pkg "github.com/pomquest/internal/package"
@@ -17,6 +18,7 @@ import (
 	"github.com/pomquest/internal/screens/party"
 	"github.com/pomquest/internal/screens/questing"
 	"github.com/pomquest/internal/screens/reroll"
+	"github.com/pomquest/internal/screens/settings"
 )
 
 // Metadata loaded from package.toml at build time
@@ -114,33 +116,71 @@ const (
 	screenParty
 	screenReroll
 	screenHoard
+	screenSettings
 )
 
 type appModel struct {
 	cfg         domain.Config
+	dbPath      string
 	state       screenState
 	dashboard   dashboard.Model
 	questing    questing.Model
 	party       party.Model
 	reroll      reroll.Model
 	hoard       hoard.Model
+	settings    settings.Model
 	width       int
 	height      int
 	exitMessage string
 }
 
 func newAppModel(cfg domain.Config) appModel {
+	return newAppModelWithDB(cfg, app.DefaultDBPath())
+}
+
+func newAppModelWithDB(cfg domain.Config, dbPath string) appModel {
+	db, err := app.InitDB(dbPath)
+	var activeParty app.Party
+	if err == nil && db != nil {
+		activeParty, _ = app.LoadOrCreateActiveParty(db)
+	} else {
+		activeParty = app.Party{
+			Name:             "Adventuring Party",
+			CurrentPartySize: 0,
+			MaxPartySize:     1,
+			Gold:             1,
+		}
+	}
+
+	dbModel := dashboard.NewModelFromParty(cfg, activeParty)
+	partyModel := party.NewModelFromParty(cfg, activeParty)
+
 	return appModel{
 		cfg:       cfg,
+		dbPath:    dbPath,
 		state:     screenDashboard,
-		dashboard: dashboard.NewModel(cfg),
+		dashboard: dbModel,
 		questing:  questing.NewModel(cfg),
-		party:     party.NewModel(cfg),
+		party:     partyModel,
 		reroll:    reroll.NewModel(cfg, 0),
 		hoard:     hoard.NewModel(cfg),
+		settings:  settings.NewModelWithDBPath(cfg, dbPath),
 		width:     80,
 		height:    24,
 	}
+}
+
+func (m appModel) returnToDashboard() (tea.Model, tea.Cmd) {
+	m.state = screenDashboard
+	var activeParty app.Party
+	if m.dbPath != "" {
+		if db, err := app.InitDB(m.dbPath); err == nil && db != nil {
+			activeParty, _ = app.LoadOrCreateActiveParty(db)
+		}
+	}
+	m.dashboard = dashboard.NewModelFromParty(m.cfg, activeParty)
+	m.dashboard.SetDimensions(m.width, m.height)
+	return m, m.dashboard.Init()
 }
 
 func (m appModel) Init() tea.Cmd {
@@ -157,6 +197,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.party.SetDimensions(msg.Width, msg.Height)
 		m.reroll.SetDimensions(msg.Width, msg.Height)
 		m.hoard.SetDimensions(msg.Width, msg.Height)
+		m.settings.SetDimensions(msg.Width, msg.Height)
 	}
 
 	switch m.state {
@@ -173,7 +214,11 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, m.questing.Init()
 				case dashboard.ChoiceParty:
 					m.state = screenParty
-					m.party = party.NewModel(m.cfg)
+					if db, err := app.InitDB(m.dbPath); err == nil && db != nil {
+						if activeParty, err := app.LoadOrCreateActiveParty(db); err == nil {
+							m.party = party.NewModelFromParty(m.cfg, activeParty)
+						}
+					}
 					m.party.SetDimensions(m.width, m.height)
 					return m, m.party.Init()
 				case dashboard.ChoiceProvision:
@@ -185,8 +230,10 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.hoard.SetDimensions(m.width, m.height)
 					return m, m.hoard.Init()
 				case dashboard.ChoiceSettings:
-					m.exitMessage = "⚙ Settings / Config options"
-					return m, tea.Quit
+					m.state = screenSettings
+					m.settings = settings.NewModelWithDBPath(m.cfg, m.dbPath)
+					m.settings.SetDimensions(m.width, m.height)
+					return m, m.settings.Init()
 				case dashboard.ChoiceQuit:
 					m.exitMessage = "Goodbye, Dark Lord!"
 					return m, tea.Quit
@@ -200,10 +247,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if qModel, ok := newQ.(questing.Model); ok {
 			m.questing = qModel
 			if qModel.Quitted {
-				m.state = screenDashboard
-				m.dashboard = dashboard.NewModel(m.cfg)
-				m.dashboard.SetDimensions(m.width, m.height)
-				return m, m.dashboard.Init()
+				return m.returnToDashboard()
 			}
 		}
 		return m, cmd
@@ -220,10 +264,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.reroll.Init()
 			}
 			if pModel.Quitted {
-				m.state = screenDashboard
-				m.dashboard = dashboard.NewModel(m.cfg)
-				m.dashboard.SetDimensions(m.width, m.height)
-				return m, m.dashboard.Init()
+				return m.returnToDashboard()
 			}
 		}
 		return m, cmd
@@ -251,10 +292,17 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if hModel, ok := newH.(hoard.Model); ok {
 			m.hoard = hModel
 			if hModel.Quitted {
-				m.state = screenDashboard
-				m.dashboard = dashboard.NewModel(m.cfg)
-				m.dashboard.SetDimensions(m.width, m.height)
-				return m, m.dashboard.Init()
+				return m.returnToDashboard()
+			}
+		}
+		return m, cmd
+
+	case screenSettings:
+		newS, cmd := m.settings.Update(msg)
+		if sModel, ok := newS.(settings.Model); ok {
+			m.settings = sModel
+			if sModel.Quitted {
+				return m.returnToDashboard()
 			}
 		}
 		return m, cmd
@@ -275,6 +323,8 @@ func (m appModel) View() string {
 		return m.reroll.View()
 	case screenHoard:
 		return m.hoard.View()
+	case screenSettings:
+		return m.settings.View()
 	default:
 		return ""
 	}
