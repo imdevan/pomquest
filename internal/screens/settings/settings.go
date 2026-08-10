@@ -59,7 +59,7 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 		},
 		Cursor:          0,
 		State:           StateMain,
-		ConfirmReset:    ui.NewConfirmationModel("Reset Game Data?", "Are you sure you want to reset all game data and auto-migrate the database?", theme),
+		ConfirmReset:    ui.NewConfirmationModel("Reset Game Data?", "Are you sure you want to reset all game data and auto-migrate the database?", theme).WithBorderless(true),
 		AudioSFXEnabled: true,
 		AudioMusicMuted: true,
 		Width:           80,
@@ -155,7 +155,7 @@ func (m *Model) selectCurrentChoice() {
 			"Reset Game Data?",
 			"Are you sure you want to reset all game data and auto-migrate the database?",
 			m.Theme,
-		)
+		).WithBorderless(true)
 	case 1: // Audio
 		m.State = StateAudio
 	case 2: // Credits
@@ -293,10 +293,14 @@ func (m Model) View() string {
 	}
 
 	containerStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(m.Theme.Border).
 		Padding(1, 2).
 		Width(paneWidth)
+
+	if m.State != StateConfirmReset {
+		containerStyle = containerStyle.
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(m.Theme.Border)
+	}
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
