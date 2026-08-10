@@ -32,6 +32,11 @@ func ConfigPathLocal(cwd string) string {
 	return filepath.Join(cwd, "."+pkg.Name(), "config.toml")
 }
 
+// DBPathGlobal returns the default global database file path.
+func DBPathGlobal() string {
+	return filepath.Join(XDGDataHome(), pkg.Name(), "pomquest.db")
+}
+
 func xdgHome(envKey, fallbackSuffix string) string {
 	if value := os.Getenv(envKey); value != "" {
 		return value

@@ -114,3 +114,17 @@ func TestConfigPathLocal(t *testing.T) {
 		t.Errorf("ConfigPathLocal(%q) = %q, should end with config.toml", cwd, got)
 	}
 }
+
+func TestDBPathGlobal(t *testing.T) {
+	t.Setenv("XDG_DATA_HOME", "/test/data")
+
+	got := DBPathGlobal()
+
+	if !filepath.HasPrefix(got, "/test/data") {
+		t.Errorf("DBPathGlobal() = %q, should start with /test/data", got)
+	}
+
+	if filepath.Base(got) != "pomquest.db" {
+		t.Errorf("DBPathGlobal() = %q, should end with pomquest.db", got)
+	}
+}
