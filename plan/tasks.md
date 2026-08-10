@@ -136,10 +136,10 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 19.1.1 on md: remove name from party status labels such that party card has `icon: value`
   - [x] 19.1.2 on md: remove space between icon atk and icon def on hero cards
   - [x] 19.1.3 on lg +: keep full label names and standard icon spacing
-  - [ ] 19.1.4 on sm: show only active hero card. 
-  - show all heros as a list on the left side with the active hero selected
-  - use '| heroname' to indicate active hero
-  - [ ] 19.1.5 on xs: show a message saying this terminal width is not currently supported
+  - [x] 19.1.4 on sm -: show a message saying this terminal width is not currently supported with full pane border
+    - [x] 19.1.5.1 update `QuestContainerComponent.Render` in `internal/screens/questing/container.go` to check for `sm -` breakpoints (`IsAtMost(ui.BreakpointSM)`)
+    - [x] 19.1.5.2 render unsupported terminal width message with full pane border
+    - [x] 19.1.5.3 add unit test `TestQuestContainerComponent_SmallScreenUnsupported` in `internal/screens/questing/container_test.go`
 
 ## Feature 20: fix screen transitions
 - [x] 20.1 currently there is a blink where all text seems to be shifted to left side col when going from home to questing.
@@ -147,3 +147,43 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 20.1.2 clear terminal screen on model Init to prevent transition flash
 
 
+## Feature 21: add hoard screen
+- [x] 21.1 hoard screen implementation
+  - [x] 21.1.1 top section shows `treasure_hoard` ASCII art from `plan/ascii-art.md:575`
+  - [x] 21.1.2 bottom section rendered in `TexturedCard` with `"Hoard"` header on top-left
+  - [x] 21.1.3 3-column table showing total gold, total loot, total treasure, heroes hired, heroes lost, places traveled, quests started, quests completed, and time focused
+  - [x] 21.1.4 define icon keys for hoard stats reusing gold, loot, and treasure icons from party card
+  - [x] 21.1.5 unit test coverage in `internal/screens/hoard/hoard_test.go` and app integration in `cmd/pomquest/root.go`
+
+## Feature 22: add party screen
+- [x] 22.1 order dashboard quest, party, provisions, hoard, settings, quit
+  - [x] 22.1.1 split provisions and party to party and provisions in `internal/screens/dashboard/dashboard.go`
+  - [x] 22.1.2 wire `screenParty` navigation state in `cmd/pomquest/root.go`
+- [x] 22.2 show full hero card stat blocks
+  - [x] 22.2.1 support 10 RPG stat block view (`str`, `dex`, `cha`, `sur`, `con`, `wil`, `int`, `per`, `hel`, `luc`) when `ShowFullStats` is true in `internal/ui/herocard.go`
+  - [x] 22.2.2 show active indicator icon in row below hero card
+  - see example below:
+```
+╭─────────────╮ 
+│pam         1│ 
+│ranger       │ 
+├─────────────┤ 
+│str 0   dex 1│ 
+│cha 0   sur 1│ 
+│con 0   wil 0│ 
+│int 0   per 1│ 
+│hel 1   luc 0│ 
+│             │ 
+│󱡁 3🛡0    6/8│ 
+╰─────────────╯ 
+ 󱐠              
+```
+- [x] 22.3 active hero card should have raised/hover effect by moving the card 2 col left and 1 col up
+  - [x] 22.3.1 composite `compositeActiveOffsetCard2x1` to keep old border underneath while raising active card 2 cols left and 1 row up
+  - [x] 22.3.2 create dedicated party screen in `internal/screens/party/party.go` with hero selection keybindings and unit tests in `party_test.go`
+
+
+
+## Feature 24: create ascii image library
+- [x] 24.1 use plan/ascii-art.md:575 for "treasure_hoard"
+  - [x] 24.1.1 embed `TreasureHoardASCII` art in `internal/screens/hoard/hoard.go`
