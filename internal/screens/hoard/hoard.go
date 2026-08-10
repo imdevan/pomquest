@@ -9,30 +9,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 
+	"github.com/pomquest/internal/adapters/ascii"
 	"github.com/pomquest/internal/adapters/icon"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/ui"
 )
-
-// TreasureHoardASCII contains the ASCII art representation for the dragon hoard screen (from plan/ascii-art.md:575).
-const TreasureHoardASCII = `⠀⢀⠀⠀⣀⡤⠤⠚⠳⢤⣀⣀⣀⡀⠀⠀⠀⣠⣎⣁⠀⢀⡀⠀⠄⠂⠀⠀⢀⠤⠀⠀⠑⢝⢟⣮⣣⡀⠀⠀⣠⠄⠢⡀⠀⠈⠺⣒⢮⣑⢄⢺⣦⡀⠢⢄⣰⠑⢄⡀⢀⠀⢀⠀⠀
-⠀⡇⢀⡞⠁⠀⠀⢀⣀⣀⣀⣀⠀⠑⣄⣆⡼⠉⠁⢀⣉⣙⢆⣀⡀⠀⠀⢀⣯⠀⣠⣰⠗⠉⠑⣝⡙⣿⣦⠊⠀⠀⠀⠸⡑⢤⡀⠈⠳⣌⣓⠓⣷⣽⣦⣀⣉⣢⣀⣉⣙⡄⠀⡗⠀
-⡰⢣⠎⠀⠀⣠⡴⠚⢿⠀⠀⠀⡝⢤⡈⠁⢠⠋⠑⡞⠀⠜⠈⢣⣱⣄⣰⣋⣜⡤⠛⠛⡉⠭⠉⠛⠻⣾⣧⡏⠉⠭⠭⣭⣙⢿⣛⣫⣤⣌⣻⣷⣌⠪⣻⣆⣋⣉⣩⠄⣥⣹⣤⡇⠀
-⢀⡜⠀⢀⣼⠛⢦⣀⠬⠷⣶⠴⢅⢀⠟⢆⢰⢳⡖⢃⣼⠀⠐⢢⢧⣴⣶⣢⡟⠛⢻⣛⠟⠉⠉⠉⠉⠉⠉⠉⡍⠉⠉⠉⠉⠉⢫⠙⠉⣉⣉⠉⢹⠁⣇⣿⠀⡀⣀⡯⢀⠀⢹⠸⡄
-⢈⡇⢀⣾⢇⣀⡼⠁⠀⠀⠀⠉⣎⠙⣄⢈⣏⠉⠀⢨⣿⡆⢸⠉⣾⣽⣿⣿⠀⣠⠏⢠⣤⠀⡀⢀⣤⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠉⡶⢥⣤⣠⢸⢰⡿⢹⢸⣀⣼⠀⣻⣷⠘⣇⢣
-⠎⠀⢸⡇⠀⣸⠀⠀⠀⠀⠀⠀⠘⡆⠘⡁⢸⡄⠀⢸⣿⡟⠈⠉⢹⣿⣿⣿⠑⠁⠀⡏⢀⣿⠛⣶⠙⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠤⠴⡧⢤⠘⣼⡇⣿⠉⢀⢿⠀⢿⣻⡇⠘⡆
-⠀⡤⢼⡏⠉⡇⠀⠀⠀⠀⠀⠀⠀⡗⠚⡟⠛⡇⢸⣿⣿⠁⠀⠀⢸⢹⡿⣿⠄⢄⠛⣿⡟⠓⠛⠛⣿⡟⠀⠀⠀⠀⠀⠀⠀⠀⢀⠤⠐⠂⢌⣉⢰⠈⡵⣼⠉⡹⠀⢣⠈⢻⣷⣶⠘
-⡔⠛⣿⡇⠀⡇⠀⠀⠀⠀⠀⠀⠀⡧⠤⡧⠤⡇⠘⢻⡇⣀⣸⣉⣿⡟⣧⣿⢩⠋⠒⣬⠥⡄⠀⠀⠈⠁⠀⠀⠀⢠⣤⡤⠒⠊⠁⠀⠀⠀⠀⠀⠙⠢⣇⣿⠛⠁⣀⡠⢷⡀⢻⣿⠀
-⢇⣀⣸⡗⠒⡇⠀⠀⠀⠀⠀⠀⠀⣇⣀⣇⣀⡧⢤⡰⠇⠀⠧⢼⣇⡏⣟⠘⠓⣾⠉⣇⠁⠀⠀⣀⣼⡿⣟⣛⣿⣛⣻⠿⠶⣶⣦⡀⠀⠀⠀⣤⠶⠬⣽⣶⣎⠁⠀⠀⢳⣒⠭⠆
-⠀⠀⢘⠃⠀⡇⠀⠀⠀⠀⠀⢀⡠⡇⠈⡇⠀⡧⠼⢒⣳⡖⣦⣠⡞⣏⣏⡏⣴⠶⣿⣉⣉⠗⠒⠈⠀⣿⣷⣿⣴⣿⣒⣒⣒⣸⣿⢿⡇⠀⠀⠴⢟⣿⢾⡿⣿⡈⠁⠀⠀⠀⠈⠑⠤
-⠀⠀⠸⡧⠐⡇⠀⠀⠀⣀⡴⠊⠀⡏⠑⡖⠊⣇⣶⢿⣿⠃⠙⡏⢸⠟⢫⣻⢿⢛⡿⠟⠁⢀⣠⣾⡿⣯⠳⢾⣷⣿⣛⠟⢦⣾⣿⡟⠁⠀⠀⠀⠀⠀⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⢰⡇⠀⡿⣩⠖⠋⠀⠀⠀⠀⡗⠂⣇⠒⠇⢻⠀⠘⣦⠤⠓⠛⠒⠚⠉⠺⢅⠀⠀⠀⡿⣟⡛⠿⠿⠷⣶⣻⡮⣿⣾⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀
-⠤⢄⡘⡏⠀⢱⠀⠈⠉⠑⠢⢤⣀⣇⣀⡏⡠⠔⠉⠓⠚⠁⠀⠀⠀⠀⠀⠀⠀⣀⠤⠒⠊⣿⣧⣤⠉⣒⣤⡀⠒⠛⣿⣻⢿⡏⠑⢄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠴⠊⠉⠀
-⠀⢀⣽⡷⠶⠼⠶⢒⣀⣈⡭⢽⣦⣒⣊⣉⢩⣤⠴⠒⢒⣒⠦⠤⢄⣠⠤⠖⠉⠀⠀⠀⠀⠈⠉⠉⠛⠻⠶⠿⢿⣿⣿⠿⠋⠁⠀⠀⠈⠳⢤⡀⠀⣀⣀⣀⠀⠤⠤⠾⠷⣦⡀⠀⠀
-⠀⣾⡏⠀⠀⠀⢠⣺⠟⠛⢻⣶⡈⠀⠀⢀⣠⠤⠝⠿⢥⣤⠠⠦⣍⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣼⡟⠘⣿⢧⠀⠀⠀⠀⠘⡿⡄⠀
-⠀⣿⣿⣿⣶⣦⣼⡿⣴⣾⣿⣿⠈⠉⠛⠦⢄⡀⠀⠀⠀⠀⠀⢀⡠⠄⠒⠉⠉⠉⣳⠤⠤⣄⣀⣀⣀⣀⣤⣀⣀⠀⠀⠀⠀⠀⠀⣀⠤⠒⠊⠉⣿⣿⣶⡼⡇⠦⣔⣲⠾⣿⣿⡇⠀
-⠀⠸⣇⡀⠈⠙⢻⡿⠋⠁⠀⣿⠀⠀⠀⠀⠀⠈⠉⠙⠓⠒⠋⢄⡀⢀⣀⣠⣞⣉⡀⠀⣀⣠⠴⣮⣅⣀⣀⠀⠀⠀⣀⡭⠓⠋⠉⠀⠀⠀⠀⠀⣿⠀⠉⢻⡟⠛⠋⠉⠀⢰⣿⣁⠀
-⠀⠀⠀⠈⠁⠲⢬⣹⣆⡴⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠯⣁⡀⠀⢉⣩⡿⠛⠉⠀⠀⣀⡠⠬⠵⠛⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠢⣼⣷⡠⠔⠒⠊⠉⠉⠀⠀`
 
 // HoardData holds overall statistics for the Dragon Hoard.
 type HoardData struct {
@@ -145,13 +126,15 @@ func (m Model) View() string {
 		return content
 	}
 
-	// 1. Top Section: ASCII Art
-	asciiStyle := lipgloss.NewStyle().
-		Foreground(m.Theme.Secondary).
-		Align(lipgloss.Center)
-	asciiView := asciiStyle.Render(TreasureHoardASCII)
+	// 1. Top Section: ASCII Art Container
+	asciiArt := ascii.Get(ascii.KeyTreasureHoard)
+	croppedArt := cropAsciiArt(asciiArt, w)
+	asciiContainer := lipgloss.NewStyle().
+		Width(w).
+		Align(lipgloss.Center).
+		Render(lipgloss.NewStyle().Foreground(m.Theme.Secondary).Render(croppedArt))
 
-	// 2. Bottom Section: Textured Card with 3-column table
+	// 2. Bottom Section: Textured Card Container with 3-column table
 	goldIcon := icon.GetNerdFont(icon.KeyCoins)
 	lootIcon := icon.GetNerdFont(icon.KeyLoot)
 	treasureIcon := icon.GetNerdFont(icon.KeyTreasure)
