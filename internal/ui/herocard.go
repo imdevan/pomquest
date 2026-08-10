@@ -11,20 +11,21 @@ import (
 
 // HeroCardData holds values for a single hero card display.
 type HeroCardData struct {
-	Name          string
-	Class         string
-	Level         int
-	HP            int
-	MaxHP         int
-	Attack        int
-	Armor         int
-	Status        string
-	Icon          string
-	IsActive      bool
-	IsDead        bool
-	Stats         app.Stats
-	ShowFullStats bool
+	Name           string
+	Class          string
+	Level          int
+	HP             int
+	MaxHP          int
+	Attack         int
+	Armor          int
+	Status         string
+	Icon           string
+	IsActive       bool
+	IsDead         bool
+	Stats          app.Stats
+	ShowFullStats  bool
 	IsUnknownStats bool
+	IsEmptySlot    bool
 }
 
 // HeroCardComponent renders hero cards according to design specs.
@@ -47,6 +48,9 @@ func NewHeroCardComponent(theme Theme, data HeroCardData, responsive ...*Respons
 }
 
 func (c HeroCardComponent) View() string {
+	if c.DataModel.IsEmptySlot {
+		return c.renderEmptySlotCard()
+	}
 	if c.DataModel.ShowFullStats {
 		return c.renderFullStatCard()
 	}
@@ -162,7 +166,7 @@ func (c HeroCardComponent) View() string {
 	var sb strings.Builder
 	sb.WriteString(topLine + "\n")
 	sb.WriteString(classStr + "\n")
-	sb.WriteString("\n")          // Extra line of space between hero class and status
+	sb.WriteString("\n")         // Extra line of space between hero class and status
 	sb.WriteString(line3 + "\n") // Line reserved for status effects
 	sb.WriteString(bottomLine)
 
@@ -414,4 +418,76 @@ func compositeActiveOffsetCard2x1(frontCard string, borderColor lipgloss.Color) 
 	}
 
 	return strings.Join(result, "\n")
+}
+
+func (c HeroCardComponent) renderEmptySlotCard() string {
+	rm := c.Responsive
+	if rm == nil {
+		rm = NewResponsiveManager(80)
+	}
+
+	innerWidth := 13
+	paddingV := 0
+	paddingH := 0
+	if rm.IsAtLeast(BreakpointLG) {
+		paddingV = 1
+		paddingH = 2
+	}
+
+	cardStyle := lipgloss.NewStyle().
+		Border(lipgloss.Border{
+			Top:         "┈",
+			Bottom:      "┈",
+			Left:        "┊",
+			Right:       "┊",
+			TopLeft:     "╭",
+			TopRight:    "╮",
+			BottomLeft:  "╰",
+			BottomRight: "╯",
+		}).
+		BorderForeground(c.Theme.Border).
+		Padding(paddingV, paddingH).
+		Width(innerWidth + paddingH*2)
+
+	if c.DataModel.IsActive {
+		cardStyle = cardStyle.BorderForeground(c.Theme.Primary)
+	}
+
+	var btnBorder lipgloss.Style
+	if c.DataModel.IsActive {
+		btnBorder = lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Primary)
+	} else {
+		btnBorder = lipgloss.NewStyle().Foreground(c.Theme.Muted)
+	}
+
+	bTop := btnBorder.Render("┌───────────┐")
+	bMid1 := btnBorder.Render("│  Recruit  │")
+	bMid2 := btnBorder.Render("│   Hero    │")
+	bBot := btnBorder.Render("└───────────┘")
+
+	blankRow := strings.Repeat(" ", innerWidth)
+
+	var sb strings.Builder
+	sb.WriteString(blankRow + "\n")
+	sb.WriteString(blankRow + "\n")
+	sb.WriteString(blankRow + "\n")
+	sb.WriteString(bTop + "\n")
+	sb.WriteString(bMid1 + "\n")
+	sb.WriteString(bMid2 + "\n")
+	sb.WriteString(bBot + "\n")
+	sb.WriteString(blankRow + "\n")
+	sb.WriteString(blankRow + "\n")
+	sb.WriteString(blankRow)
+
+	frontCard := cardStyle.Render(sb.String())
+
+	var cardResult string
+	if c.DataModel.IsActive {
+		cardResult = compositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
+	} else {
+		cardResult = "  \n" + frontCard
+	}
+
+	cardResult += "\n"
+	return cardResult
 }

@@ -185,5 +185,29 @@ func TestHeroCardComponent_LG_Padding(t *testing.T) {
 	}
 }
 
+func TestHeroCardComponent_EmptySlotCard(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	emptySlot := HeroCardData{
+		IsEmptySlot:   true,
+		ShowFullStats: true,
+		IsActive:      true,
+	}
+
+	comp := NewHeroCardComponent(theme, emptySlot)
+	view := comp.View()
+
+	// Dotted border contains dotted line characters ("┈", "┊")
+	if !strings.Contains(view, "┈") || !strings.Contains(view, "┊") {
+		t.Errorf("expected empty hero card slot to render dotted border, got:\n%s", view)
+	}
+
+	// Bordered button inside reads "Recruit Hero"
+	if !strings.Contains(view, "Recruit") || !strings.Contains(view, "Hero") {
+		t.Errorf("expected empty hero card slot to contain 'Recruit Hero' button inside, got:\n%s", view)
+	}
+}
+
 
 
