@@ -24,6 +24,7 @@ type HeroCardData struct {
 	IsDead        bool
 	Stats         app.Stats
 	ShowFullStats bool
+	IsUnknownStats bool
 }
 
 // HeroCardComponent renders hero cards according to design specs.
@@ -301,23 +302,38 @@ func (c HeroCardComponent) renderFullStatCard() string {
 
 	divider := lipgloss.NewStyle().Foreground(c.Theme.Border).Render(strings.Repeat("─", innerWidth))
 
-	st := c.DataModel.Stats
-	statRow1 := statStyle.Render(fmt.Sprintf("str %-1d   dex %-1d", st.Str, st.Dex))
-	statRow2 := statStyle.Render(fmt.Sprintf("cha %-1d   sur %-1d", st.Cha, st.Sur))
-	statRow3 := statStyle.Render(fmt.Sprintf("con %-1d   wil %-1d", st.Con, st.Wil))
-	statRow4 := statStyle.Render(fmt.Sprintf("int %-1d   per %-1d", st.Int, st.Per))
-	statRow5 := statStyle.Render(fmt.Sprintf("hel %-1d   luc %-1d", st.Hel, st.Luc))
+	var statRow1, statRow2, statRow3, statRow4, statRow5 string
+	var leftFooter, rightFooter string
+	armIcon := icon.GetNerdFont(icon.KeyArmor)
+
+	if c.DataModel.IsUnknownStats {
+		statRow1 = statStyle.Render("str ?   dex ?")
+		statRow2 = statStyle.Render("cha ?   sur ?")
+		statRow3 = statStyle.Render("con ?   wil ?")
+		statRow4 = statStyle.Render("int ?   per ?")
+		statRow5 = statStyle.Render("hel ?   luc ?")
+		if rm.IsAtLeast(BreakpointLG) {
+			leftFooter = fmt.Sprintf("%s ? %s ?", classIcon, armIcon)
+		} else {
+			leftFooter = fmt.Sprintf("%s ?%s?", classIcon, armIcon)
+		}
+		rightFooter = "?/?"
+	} else {
+		st := c.DataModel.Stats
+		statRow1 = statStyle.Render(fmt.Sprintf("str %-1d   dex %-1d", st.Str, st.Dex))
+		statRow2 = statStyle.Render(fmt.Sprintf("cha %-1d   sur %-1d", st.Cha, st.Sur))
+		statRow3 = statStyle.Render(fmt.Sprintf("con %-1d   wil %-1d", st.Con, st.Wil))
+		statRow4 = statStyle.Render(fmt.Sprintf("int %-1d   per %-1d", st.Int, st.Per))
+		statRow5 = statStyle.Render(fmt.Sprintf("hel %-1d   luc %-1d", st.Hel, st.Luc))
+		if rm.IsAtLeast(BreakpointLG) {
+			leftFooter = fmt.Sprintf("%s %d %s %d", classIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor)
+		} else {
+			leftFooter = fmt.Sprintf("%s %d%s%d", classIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor)
+		}
+		rightFooter = fmt.Sprintf("%d/%d", c.DataModel.HP, c.DataModel.MaxHP)
+	}
 
 	blankRow := strings.Repeat(" ", innerWidth)
-
-	armIcon := icon.GetNerdFont(icon.KeyArmor)
-	var leftFooter string
-	if rm.IsAtLeast(BreakpointLG) {
-		leftFooter = fmt.Sprintf("%s %d %s %d", classIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor)
-	} else {
-		leftFooter = fmt.Sprintf("%s %d%s%d", classIcon, c.DataModel.Attack, armIcon, c.DataModel.Armor)
-	}
-	rightFooter := fmt.Sprintf("%d/%d", c.DataModel.HP, c.DataModel.MaxHP)
 	footerRow := spaceBetween(statStyle.Render(leftFooter), statStyle.Render(rightFooter), innerWidth)
 
 	var sb strings.Builder
