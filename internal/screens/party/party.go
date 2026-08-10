@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/pomquest/internal/adapters/icon"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/ui"
@@ -14,13 +15,15 @@ import (
 
 // Model represents the dedicated Party Screen UI.
 type Model struct {
-	Theme       ui.Theme
-	Responsive  *ui.ResponsiveManager
-	Heroes      []ui.HeroCardData
-	ActiveIndex int
-	Quitted     bool
-	Width       int
-	Height      int
+	Theme             ui.Theme
+	Responsive        *ui.ResponsiveManager
+	Heroes            []ui.HeroCardData
+	ActiveIndex       int
+	NavToReroll       bool
+	RerollTargetIndex int
+	Quitted           bool
+	Width             int
+	Height            int
 }
 
 // NewModel initializes the party screen model with default party roster data.
@@ -36,7 +39,7 @@ func NewModel(cfg domain.Config) Model {
 			Attack:        2,
 			Armor:         2,
 			Status:        "Healthy",
-			Icon:          "⚔",
+			Icon:          app.GetClassArchetype("fighter").Icon(icon.ModeNerdFont),
 			Stats:         app.Stats{Str: 2, Dex: 1, Cha: 0, Sur: 0, Con: 2, Wil: 0, Int: 0, Per: 0, Hel: 2, Luc: 0},
 			ShowFullStats: true,
 		},
@@ -49,7 +52,7 @@ func NewModel(cfg domain.Config) Model {
 			Attack:        3,
 			Armor:         0,
 			Status:        "Healthy",
-			Icon:          "",
+			Icon:          app.GetClassArchetype("wizard").Icon(icon.ModeNerdFont),
 			Stats:         app.Stats{Str: 0, Dex: 1, Cha: 0, Sur: 0, Con: 0, Wil: 1, Int: 3, Per: 1, Hel: 0, Luc: 1},
 			ShowFullStats: true,
 		},
@@ -62,7 +65,7 @@ func NewModel(cfg domain.Config) Model {
 			Attack:        3,
 			Armor:         0,
 			Status:        "Healthy",
-			Icon:          "󱡁",
+			Icon:          app.GetClassArchetype("ranger").Icon(icon.ModeNerdFont),
 			Stats:         app.Stats{Str: 0, Dex: 1, Cha: 0, Sur: 1, Con: 0, Wil: 0, Int: 0, Per: 1, Hel: 1, Luc: 0},
 			ShowFullStats: true,
 		},
@@ -76,7 +79,7 @@ func NewModel(cfg domain.Config) Model {
 			Armor:         0,
 			Status:        "Dead",
 			IsDead:        true,
-			Icon:          "🗡",
+			Icon:          app.GetClassArchetype("rogue").Icon(icon.ModeNerdFont),
 			Stats:         app.Stats{Str: 0, Dex: 3, Cha: 1, Sur: 0, Con: 0, Wil: 0, Int: 0, Per: 1, Hel: 0, Luc: 1},
 			ShowFullStats: true,
 		},
@@ -89,6 +92,12 @@ func NewModel(cfg domain.Config) Model {
 		ActiveIndex: 2, // pam is default active
 		Width:       80,
 		Height:      24,
+	}
+}
+
+func (m *Model) ReplaceHero(index int, newHero ui.HeroCardData) {
+	if index >= 0 && index < len(m.Heroes) {
+		m.Heroes[index] = newHero
 	}
 }
 
@@ -117,6 +126,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "esc", "ctrl+c":
 			m.Quitted = true
 			return m, tea.Quit
+
+		case "r", "enter", "space":
+			if m.ActiveIndex >= 0 && m.ActiveIndex < len(m.Heroes) && m.Heroes[m.ActiveIndex].IsDead {
+				m.NavToReroll = true
+				m.RerollTargetIndex = m.ActiveIndex
+				return m, tea.Quit
+			}
 
 		case "left", "h", "up", "k":
 			if m.ActiveIndex > 0 {
@@ -185,9 +201,14 @@ func (m Model) View() string {
 
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("←/→", "h/l"), key.WithHelp("←/→", "select hero")),
+	}
+	if m.ActiveIndex >= 0 && m.ActiveIndex < len(m.Heroes) && m.Heroes[m.ActiveIndex].IsDead {
+		helpKeys = append(helpKeys, key.NewBinding(key.WithKeys("r/enter"), key.WithHelp("r", "reroll dead hero")))
+	}
+	helpKeys = append(helpKeys,
 		key.NewBinding(key.WithKeys("1-4"), key.WithHelp("1-4", "jump hero")),
 		key.NewBinding(key.WithKeys("q"), key.WithHelp("q", "back to hearth")),
-	}
+	)
 
 	helpComp := ui.NewHelpComponent(m.Theme, helpKeys)
 
