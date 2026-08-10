@@ -16,6 +16,7 @@ import (
 	"github.com/pomquest/internal/screens/dashboard"
 	"github.com/pomquest/internal/screens/hoard"
 	"github.com/pomquest/internal/screens/party"
+	"github.com/pomquest/internal/screens/provisions"
 	"github.com/pomquest/internal/screens/questing"
 	"github.com/pomquest/internal/screens/reroll"
 	"github.com/pomquest/internal/screens/settings"
@@ -117,6 +118,7 @@ const (
 	screenReroll
 	screenHoard
 	screenSettings
+	screenProvisions
 )
 
 type appModel struct {
@@ -129,6 +131,7 @@ type appModel struct {
 	reroll      reroll.Model
 	hoard       hoard.Model
 	settings    settings.Model
+	provisions  provisions.Model
 	width       int
 	height      int
 	exitMessage string
@@ -139,45 +142,29 @@ func newAppModel(cfg domain.Config) appModel {
 }
 
 func newAppModelWithDB(cfg domain.Config, dbPath string) appModel {
-	db, err := app.InitDB(dbPath)
-	var activeParty app.Party
-	if err == nil && db != nil {
-		activeParty, _ = app.LoadOrCreateActiveParty(db)
-	} else {
-		activeParty = app.Party{
-			Name:             "Adventuring Party",
-			CurrentPartySize: 0,
-			MaxPartySize:     1,
-			Gold:             1,
-		}
-	}
-
+	activeParty, _ := app.LoadActivePartyFromPath(dbPath)
 	dbModel := dashboard.NewModelFromParty(cfg, activeParty)
 	partyModel := party.NewModelFromParty(cfg, activeParty)
 
 	return appModel{
-		cfg:       cfg,
-		dbPath:    dbPath,
-		state:     screenDashboard,
-		dashboard: dbModel,
-		questing:  questing.NewModel(cfg),
-		party:     partyModel,
-		reroll:    reroll.NewModel(cfg, 0),
-		hoard:     hoard.NewModel(cfg),
-		settings:  settings.NewModelWithDBPath(cfg, dbPath),
-		width:     80,
-		height:    24,
+		cfg:        cfg,
+		dbPath:     dbPath,
+		state:      screenDashboard,
+		dashboard:  dbModel,
+		questing:   questing.NewModel(cfg),
+		party:      partyModel,
+		reroll:     reroll.NewModel(cfg, 0),
+		hoard:      hoard.NewModel(cfg),
+		settings:   settings.NewModelWithDBPath(cfg, dbPath),
+		provisions: provisions.NewModelWithDBPath(cfg, dbPath),
+		width:      80,
+		height:     24,
 	}
 }
 
 func (m appModel) returnToDashboard() (tea.Model, tea.Cmd) {
 	m.state = screenDashboard
-	var activeParty app.Party
-	if m.dbPath != "" {
-		if db, err := app.InitDB(m.dbPath); err == nil && db != nil {
-			activeParty, _ = app.LoadOrCreateActiveParty(db)
-		}
-	}
+	activeParty, _ := app.LoadActivePartyFromPath(m.dbPath)
 	m.dashboard = dashboard.NewModelFromParty(m.cfg, activeParty)
 	m.dashboard.SetDimensions(m.width, m.height)
 	return m, m.dashboard.Init()
@@ -198,6 +185,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.reroll.SetDimensions(msg.Width, msg.Height)
 		m.hoard.SetDimensions(msg.Width, msg.Height)
 		m.settings.SetDimensions(msg.Width, msg.Height)
+		m.provisions.SetDimensions(msg.Width, msg.Height)
 	}
 
 	switch m.state {
@@ -214,16 +202,15 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, m.questing.Init()
 				case dashboard.ChoiceParty:
 					m.state = screenParty
-					if db, err := app.InitDB(m.dbPath); err == nil && db != nil {
-						if activeParty, err := app.LoadOrCreateActiveParty(db); err == nil {
-							m.party = party.NewModelFromParty(m.cfg, activeParty)
-						}
-					}
+					activeParty, _ := app.LoadActivePartyFromPath(m.dbPath)
+					m.party = party.NewModelFromParty(m.cfg, activeParty)
 					m.party.SetDimensions(m.width, m.height)
 					return m, m.party.Init()
 				case dashboard.ChoiceProvision:
-					m.exitMessage = "🎒 Provisions: 100 lbs Food, 4 Oxen, 2 Spare Parts"
-					return m, tea.Quit
+					m.state = screenProvisions
+					m.provisions = provisions.NewModelWithDBPath(m.cfg, m.dbPath)
+					m.provisions.SetDimensions(m.width, m.height)
+					return m, m.provisions.Init()
 				case dashboard.ChoiceHoard:
 					m.state = screenHoard
 					m.hoard = hoard.NewModel(m.cfg)
@@ -275,6 +262,23 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.reroll = rModel
 			if rModel.Completed {
 				m.party.ReplaceHero(rModel.TargetHeroIdx, rModel.NewHero)
+				h := app.Hero{
+					Creature: app.Creature{
+						Noun: app.Noun{
+							Name: rModel.NewHero.Name,
+							Icon: rModel.NewHero.Icon,
+						},
+						HP:     rModel.NewHero.HP,
+						MaxHP:  rModel.NewHero.MaxHP,
+						Attack: rModel.NewHero.Attack,
+						Armor:  rModel.NewHero.Armor,
+					},
+					Class:  rModel.NewHero.Class,
+					Level:  1,
+					Status: "Healthy",
+					Stats:  rModel.NewHero.Stats,
+				}
+				_ = app.SaveRecruitedHeroToPath(m.dbPath, rModel.TargetHeroIdx, h)
 				m.state = screenParty
 				m.party.SetDimensions(m.width, m.height)
 				return m, m.party.Init()
@@ -306,6 +310,16 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		return m, cmd
+
+	case screenProvisions:
+		newP, cmd := m.provisions.Update(msg)
+		if pModel, ok := newP.(provisions.Model); ok {
+			m.provisions = pModel
+			if pModel.Quitted {
+				return m.returnToDashboard()
+			}
+		}
+		return m, cmd
 	}
 
 	return m, nil
@@ -325,6 +339,8 @@ func (m appModel) View() string {
 		return m.hoard.View()
 	case screenSettings:
 		return m.settings.View()
+	case screenProvisions:
+		return m.provisions.View()
 	default:
 		return ""
 	}
