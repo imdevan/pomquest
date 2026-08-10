@@ -59,6 +59,29 @@ func TestAutoMigrateDataModels(t *testing.T) {
 	if fetched.ItemUsage != "sparse" || fetched.Greed != "low" {
 		t.Errorf("unexpected item usage or greed: %+v", fetched)
 	}
+	if fetched.CurrentPartySize != 0 {
+		t.Errorf("expected default CurrentPartySize to be 0, got %d", fetched.CurrentPartySize)
+	}
+	if fetched.MaxPartySize != 1 {
+		t.Errorf("expected default MaxPartySize to be 1, got %d", fetched.MaxPartySize)
+	}
+
+	customParty := Party{
+		Name:             "Custom Party",
+		CurrentPartySize: 3,
+		MaxPartySize:     5,
+	}
+	if err := db.Create(&customParty).Error; err != nil {
+		t.Fatalf("failed to create custom party record: %v", err)
+	}
+
+	var fetchedCustom Party
+	if err := db.First(&fetchedCustom, customParty.ID).Error; err != nil {
+		t.Fatalf("failed to fetch custom party record: %v", err)
+	}
+	if fetchedCustom.CurrentPartySize != 3 || fetchedCustom.MaxPartySize != 5 {
+		t.Errorf("expected party size 3/5, got %d/%d", fetchedCustom.CurrentPartySize, fetchedCustom.MaxPartySize)
+	}
 }
 
 func TestCreatureAndNounEmbedding(t *testing.T) {

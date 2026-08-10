@@ -30,8 +30,10 @@ type PartyCardData struct {
 	Shovels        int
 	ItemUsage      string
 	Greed          string
-	CurrentHP      int
-	MaxHP          int
+	CurrentHP        int
+	MaxHP            int
+	CurrentPartySize int
+	MaxPartySize     int
 }
 
 // PartyCardComponent is a generic party resources card widget rendered using TexturedCard.
