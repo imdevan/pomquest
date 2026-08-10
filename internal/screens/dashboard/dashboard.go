@@ -1,12 +1,14 @@
 package dashboard
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/ui"
 )
@@ -25,15 +27,18 @@ const (
 
 // Model represents the main menu / hearth dashboard UI screen.
 type Model struct {
-	Theme        ui.Theme
-	Responsive   *ui.ResponsiveManager
-	Choices      []string
-	Cursor       int
-	Selected     Choice
-	Quitted      bool
-	StatusNotice string
-	Width        int
-	Height       int
+	Theme            ui.Theme
+	Responsive       *ui.ResponsiveManager
+	Choices          []string
+	Cursor           int
+	Selected         Choice
+	CurrentPartySize int
+	MaxPartySize     int
+	PartyGold        int
+	Quitted          bool
+	StatusNotice     string
+	Width            int
+	Height           int
 }
 
 // NewModel initializes a dashboard UI with default menu items.
@@ -50,11 +55,38 @@ func NewModel(cfg domain.Config) Model {
 			"5. ⚙  Settings & Config",
 			"6. 🚪 Quit",
 		},
-		Cursor:   0,
-		Selected: -1,
-		Width:    80,
-		Height:   24,
+		Cursor:           0,
+		Selected:         -1,
+		CurrentPartySize: 0,
+		MaxPartySize:     1,
+		PartyGold:        1,
+		Width:            80,
+		Height:           24,
 	}
+}
+
+// NewModelFromParty initializes a dashboard UI with data populated from DB Party model.
+func NewModelFromParty(cfg domain.Config, party app.Party) Model {
+	m := NewModel(cfg)
+	m.UpdatePartyData(party)
+	return m
+}
+
+// UpdatePartyData updates party stats displayed on the dashboard.
+func (m *Model) UpdatePartyData(party app.Party) {
+	var activeCount int
+	for _, h := range party.Heroes {
+		if !h.IsDead {
+			activeCount++
+		}
+	}
+	m.CurrentPartySize = activeCount
+	maxSize := party.MaxPartySize
+	if maxSize <= 0 {
+		maxSize = 1
+	}
+	m.MaxPartySize = maxSize
+	m.PartyGold = party.Gold
 }
 
 func (m *Model) SetDimensions(width, height int) {
@@ -100,36 +132,40 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "1":
 			m.Cursor = 0
-			m.Selected = ChoiceQuest
-			return m, tea.Quit
+			return m.handleChoiceSelection(ChoiceQuest)
 		case "2":
 			m.Cursor = 1
-			m.Selected = ChoiceParty
-			return m, tea.Quit
+			return m.handleChoiceSelection(ChoiceParty)
 		case "3":
 			m.Cursor = 2
-			m.Selected = ChoiceProvision
-			return m, tea.Quit
+			return m.handleChoiceSelection(ChoiceProvision)
 		case "4":
 			m.Cursor = 3
-			m.Selected = ChoiceHoard
-			return m, tea.Quit
+			return m.handleChoiceSelection(ChoiceHoard)
 		case "5":
 			m.Cursor = 4
-			m.Selected = ChoiceSettings
-			return m, tea.Quit
+			return m.handleChoiceSelection(ChoiceSettings)
 		case "6":
 			m.Cursor = 5
-			m.Selected = ChoiceQuit
-			return m, tea.Quit
+			return m.handleChoiceSelection(ChoiceQuit)
 
 		case "enter", "space":
-			m.Selected = Choice(m.Cursor)
-			return m, tea.Quit
+			return m.handleChoiceSelection(Choice(m.Cursor))
 		}
 	}
 
 	return m, nil
+}
+
+func (m Model) handleChoiceSelection(choice Choice) (tea.Model, tea.Cmd) {
+	if choice == ChoiceQuest && m.CurrentPartySize <= 0 {
+		m.Selected = -1
+		m.StatusNotice = "⚠️ Cannot start a quest with 0 party members! Recruit heroes in Party screen first."
+		return m, nil
+	}
+
+	m.Selected = choice
+	return m, tea.Quit
 }
 
 func (m Model) View() string {
@@ -155,6 +191,13 @@ func (m Model) View() string {
 	sb.WriteString(headerComp.View())
 	sb.WriteString(statusComp.View())
 	sb.WriteString(menuComp.View())
+
+	// Show party current/max size and coins right under options
+	partyInfoStyle := lipgloss.NewStyle().
+		MarginTop(1).
+		Foreground(m.Theme.Secondary)
+	partyInfoText := fmt.Sprintf("👥 Party: %d/%d Members   💰 Coins: %d Gold", m.CurrentPartySize, m.MaxPartySize, m.PartyGold)
+	sb.WriteString("\n" + partyInfoStyle.Render(partyInfoText) + "\n")
 
 	if m.StatusNotice != "" {
 		sb.WriteString("\n" + lipgloss.NewStyle().Foreground(m.Theme.TextHighlight).Render(m.StatusNotice) + "\n")
