@@ -57,11 +57,18 @@ import (
 //	    return m.confirm.View()
 //	}
 type ConfirmationModel struct {
-	title   string
-	prompt  string
-	choice  *bool
-	confirm *huh.Confirm
-	theme   Theme
+	title      string
+	prompt     string
+	choice     *bool
+	confirm    *huh.Confirm
+	theme      Theme
+	borderless bool
+}
+
+// WithBorderless configures whether the dialog is rendered without a border.
+func (m ConfirmationModel) WithBorderless(borderless bool) ConfirmationModel {
+	m.borderless = borderless
+	return m
 }
 
 // NewConfirmationModel creates a new confirmation dialog
@@ -153,12 +160,16 @@ func (m ConfirmationModel) View() string {
 		help,
 	}, "\n")
 
-	return lipgloss.NewStyle().
+	style := lipgloss.NewStyle().
 		Margin(1, 1).
-		Padding(1, 2).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(m.theme.Border).
-		Render(content)
+		Padding(1, 2)
+	if !m.borderless {
+		style = style.
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(m.theme.Border)
+	}
+
+	return style.Render(content)
 }
 
 // ChoiceValue returns the user's choice
