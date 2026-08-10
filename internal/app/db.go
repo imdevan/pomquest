@@ -211,3 +211,55 @@ func ReplaceOrAddHeroInParty(db *gorm.DB, index int, hero Hero) error {
 
 	return nil
 }
+
+// LoadActivePartyFromPath opens/connects to the SQLite DB at dbPath and loads or creates the active party.
+func LoadActivePartyFromPath(dbPath string) (Party, error) {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return Party{
+			Name:             "Adventuring Party",
+			CurrentPartySize: 0,
+			MaxPartySize:     1,
+			Gold:             1,
+		}, err
+	}
+	return LoadOrCreateActiveParty(db)
+}
+
+// SaveRecruitedHeroToPath opens/connects to the SQLite DB at dbPath and saves/replaces a hero in the active party.
+func SaveRecruitedHeroToPath(dbPath string, targetIndex int, hero Hero) error {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return err
+	}
+	return ReplaceOrAddHeroInParty(db, targetIndex, hero)
+}
+
+// SaveParty saves or updates party inventory supplies and coin totals in SQLite DB.
+func SaveParty(db *gorm.DB, party Party) error {
+	if party.ID == 0 {
+		existing, err := LoadOrCreateActiveParty(db)
+		if err == nil && existing.ID != 0 {
+			party.ID = existing.ID
+		}
+	}
+	return db.Save(&party).Error
+}
+
+// SavePartyToPath opens DB at dbPath and saves party inventory supplies and coins.
+func SavePartyToPath(dbPath string, party Party) error {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return err
+	}
+	return SaveParty(db, party)
+}
