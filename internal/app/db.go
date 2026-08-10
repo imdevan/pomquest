@@ -183,3 +183,31 @@ func ResetAndMigrateDB(dbPath string) (*gorm.DB, error) {
 
 	return db, nil
 }
+
+// ReplaceOrAddHeroInParty saves a recruited hero into the active party in SQLite DB as passed.
+func ReplaceOrAddHeroInParty(db *gorm.DB, index int, hero Hero) error {
+	party, err := LoadOrCreateActiveParty(db)
+	if err != nil {
+		return err
+	}
+
+	hero.PartyID = &party.ID
+
+	if index >= 0 && index < len(party.Heroes) {
+		existingID := party.Heroes[index].ID
+		hero.ID = existingID
+		if err := db.Save(&hero).Error; err != nil {
+			return err
+		}
+	} else {
+		if err := db.Create(&hero).Error; err != nil {
+			return err
+		}
+	}
+
+	var activeCount int64
+	db.Model(&Hero{}).Where("party_id = ? AND is_dead = ?", party.ID, false).Count(&activeCount)
+	db.Model(&Party{}).Where("id = ?", party.ID).Update("current_party_size", activeCount)
+
+	return nil
+}

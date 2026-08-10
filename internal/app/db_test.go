@@ -66,3 +66,45 @@ func TestResetAndMigrateDB_InMemory(t *testing.T) {
 		t.Fatalf("expected 1 initial party after in-memory reset, got %d", count)
 	}
 }
+
+func TestReplaceOrAddHeroInParty(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "recruitment_test.db")
+
+	db, err := InitDB(dbPath)
+	if err != nil {
+		t.Fatalf("InitDB failed: %v", err)
+	}
+
+	party, err := LoadOrCreateActiveParty(db)
+	if err != nil {
+		t.Fatalf("LoadOrCreateActiveParty failed: %v", err)
+	}
+	if party.CurrentPartySize != 0 {
+		t.Fatalf("expected initial party size 0, got %d", party.CurrentPartySize)
+	}
+
+	hero := Hero{
+		Creature: Creature{
+			Noun:  Noun{Name: "Conan"},
+			HP:    12,
+			MaxHP: 12,
+		},
+		Class: "barbarian",
+	}
+
+	if err := ReplaceOrAddHeroInParty(db, 0, hero); err != nil {
+		t.Fatalf("ReplaceOrAddHeroInParty failed: %v", err)
+	}
+
+	updatedParty, err := LoadOrCreateActiveParty(db)
+	if err != nil {
+		t.Fatalf("failed to reload party: %v", err)
+	}
+	if updatedParty.CurrentPartySize != 1 {
+		t.Fatalf("expected updated party size 1, got %d", updatedParty.CurrentPartySize)
+	}
+	if len(updatedParty.Heroes) != 1 || updatedParty.Heroes[0].Name != "Conan" {
+		t.Fatalf("expected hero Conan in party, got %+v", updatedParty.Heroes)
+	}
+}
