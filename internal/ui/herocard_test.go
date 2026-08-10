@@ -27,9 +27,9 @@ func TestHeroCardComponentView_LG(t *testing.T) {
 	comp := NewHeroCardComponent(theme, hero, rmLG)
 	view := comp.View()
 
-	// On LG+: expect space between icon and attack value ("⚔ 2 🛡 2")
-	if !strings.Contains(view, "2 🛡 2") {
-		t.Errorf("expected LG hero card view to contain '2 🛡 2' with spaces, got:\n%s", view)
+	// On LG+: expect space between icon and attack value ("⚔ 2 󰒘 2")
+	if !strings.Contains(view, "2 󰒘 2") {
+		t.Errorf("expected LG hero card view to contain '2 󰒘 2' with spaces, got:\n%s", view)
 	}
 	// Expect class icon next to class name ("⚔ fighter")
 	if !strings.Contains(view, "⚔ fighter") {
@@ -56,12 +56,12 @@ func TestHeroCardComponentView_MD(t *testing.T) {
 	comp := NewHeroCardComponent(theme, hero, rmMD)
 	view := comp.View()
 
-	// On MD: expect no space between icon and attack/armor value ("󰓥2🛡2")
-	if !strings.Contains(view, "󰓥2🛡2") {
-		t.Errorf("expected MD hero card view to contain '󰓥2🛡2' without spaces, got:\n%s", view)
+	// On MD: expect no space between icon and attack/armor value ("󰓥2󰒘2")
+	if !strings.Contains(view, "󰓥2󰒘2") {
+		t.Errorf("expected MD hero card view to contain '󰓥2󰒘2' without spaces, got:\n%s", view)
 	}
-	if strings.Contains(view, "2 🛡 2") {
-		t.Errorf("expected MD hero card view NOT to contain '2 🛡 2', got:\n%s", view)
+	if strings.Contains(view, "2 󰒘 2") {
+		t.Errorf("expected MD hero card view NOT to contain '2 󰒘 2', got:\n%s", view)
 	}
 
 	// On MD: expect abbreviated name ("jim.")
