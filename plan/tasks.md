@@ -184,19 +184,22 @@ start with 1 monster, bats... 1hp 0def 1 atk
 
 
 ## Feature 23: add reroll screen
-- [ ] 23.1 a dead hero can be "rerolled" from the party screen
-  - [ ] 23.1.1 navigates to reroll screen
-- [ ] 23.2 reroll screen looks very similar to party screen. showing a  list of for hero cards
-  - [ ] 23.2.1 hero careds with no name. 
-  - [ ] 23.2.2 the first card is always "random" and has ? for stats
-  - [ ] 23.2.3 the other three cards are 3 randomly selected classes from the class list
-  - this should programmatic and not "manual"
-- [ ] 23.3 reroll button
-  - [ ] 23.3.1 rerolls available class options, except random!
-  - [ ] 23.3.2 only 2 rerolls allowed
-- [ ] 23.4 after hero pics a hero class card they pick a name
+- [x] 23.1 a dead hero can be "rerolled" from the party screen
+  - [x] 23.1.1 navigates to reroll screen when `r` or `enter` is pressed on a dead hero in `internal/screens/party/party.go`
+- [x] 23.2 reroll screen looks very similar to party screen, showing a list of four hero cards
+  - [x] 23.2.1 hero cards with no name
+  - [x] 23.2.2 the first card is always "random" and has `?` for stats (`IsUnknownStats = true` in `internal/ui/herocard.go`)
+  - [x] 23.2.3 the other three cards are 3 randomly selected classes from the class catalog programmatically
+- [x] 23.3 reroll button
+  - [x] 23.3.1 `[r]` rerolls available class options (cards 1, 2, 3), keeping card 0 ("random") untouched
+  - [x] 23.3.2 only 2 rerolls allowed (`RerollsLeft` counter tracked and rendered in header)
+- [x] 23.4 after hero picks a hero class card they pick a name
+  - [x] 23.4.1 prompts for hero name input after card selection, replaces dead hero in party, and returns to party screen
 
 
-## Feature 24: create ascii image library
-- [x] 24.1 use plan/ascii-art.md:575 for "treasure_hoard"
-  - [x] 24.1.1 embed `TreasureHoardASCII` art in `internal/screens/hoard/hoard.go`
+## Feature 24: add provisions screen
+
+
+## Feature 25: create ascii image library
+- [x] 25.1 use plan/ascii-art.md:575 for "treasure_hoard"
+  - [x] 25.1.1 embed `TreasureHoardASCII` art in `internal/screens/hoard/hoard.go`
