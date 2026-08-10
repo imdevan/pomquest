@@ -69,12 +69,9 @@ func TestHeroCardComponentView_MD(t *testing.T) {
 		t.Errorf("expected MD hero card view to contain abbreviated name 'jim.', got:\n%s", view)
 	}
 
-	// On MD: expect class icon only ("⚔") and NOT full class text ("fighter")
-	if strings.Contains(view, "fighter") {
-		t.Errorf("expected MD hero card view NOT to contain class text 'fighter', got:\n%s", view)
-	}
-	if !strings.Contains(view, "⚔") {
-		t.Errorf("expected MD hero card view to contain class icon '⚔', got:\n%s", view)
+	// On MD: expect class icon next to class name ("⚔ fighter")
+	if !strings.Contains(view, "⚔ fighter") {
+		t.Errorf("expected MD hero card view to contain '⚔ fighter', got:\n%s", view)
 	}
 }
 
@@ -116,4 +113,77 @@ func TestHeroCardsComponent_Fit58Columns(t *testing.T) {
 		}
 	}
 }
+
+func TestHeroCardComponent_FullStats(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	hero := HeroCardData{
+		Name:          "pam",
+		Class:         "ranger",
+		Level:         1,
+		HP:            6,
+		MaxHP:         8,
+		Attack:        3,
+		Armor:         0,
+		Status:        "Healthy",
+		IsActive:      true,
+		ShowFullStats: true,
+	}
+
+	comp := NewHeroCardComponent(theme, hero)
+	view := comp.View()
+
+	// Verify all 10 stats are present in the full stat card view
+	stats := []string{"str", "dex", "cha", "sur", "con", "wil", "int", "per", "hel", "luc"}
+	for _, s := range stats {
+		if !strings.Contains(view, s) {
+			t.Errorf("expected full stat hero card to contain %q, got:\n%s", s, view)
+		}
+	}
+
+	// Verify active offset (top right corner '╮' from old box underneath)
+	if !strings.Contains(view, "╮") {
+		t.Errorf("expected active full stat hero card to contain raised border '╮', got:\n%s", view)
+	}
+
+	// Verify class icon is shown next to class name ("󱡁 ranger")
+	if !strings.Contains(view, "󱡁 ranger") {
+		t.Errorf("expected full stat card to show class icon next to class '󱡁 ranger', got:\n%s", view)
+	}
+}
+
+func TestHeroCardComponent_LG_Padding(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	hero := HeroCardData{
+		Name:          "pam",
+		Class:         "ranger",
+		Level:         1,
+		HP:            6,
+		MaxHP:         8,
+		Attack:        3,
+		Armor:         0,
+		Status:        "Healthy",
+		ShowFullStats: true,
+	}
+
+	rmLG := NewResponsiveManager(80) // LG screen (80 cols)
+	comp := NewHeroCardComponent(theme, hero, rmLG)
+	view := comp.View()
+
+	lines := strings.Split(view, "\n")
+	// Full stat card with vertical padding 1 has top blank line inside border box
+	if len(lines) < 12 {
+		t.Errorf("expected LG hero card view to have vertical padding lines, got %d lines:\n%s", len(lines), view)
+	}
+
+	// Verify space between attack icon/number and armor icon/number on LG+ screens
+	if !strings.Contains(view, "3 󰒘 0") {
+		t.Errorf("expected LG full stat hero card to contain '3 󰒘 0' with spaces between icons and numbers, got:\n%s", view)
+	}
+}
+
+
 
