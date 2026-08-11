@@ -60,7 +60,12 @@ Concept layout more thoroughly in plan/mission.md
   - [x] 6.1.4 use card format, similar to hero cards with box hover effect for selected item. 
 - [x] 6.2 upon selection a Location should be generated and stored in the game states CurrentLocation
 
-## Feature 7: connect quest
+## Feature 7: connect quest screen
+- [ ] 7.1 quest screen should show data  from sqlite db likely already in memory
+- [ ] 7.2 hero cards should render based on current party heros
+- [ ] 7.3 party card should show data form sqlite db
+- [ ] 7.4 party card hearts should be based on current party hero health
+
 
 ## Feature 8: party card
 - [x] 8.1 add team hearts ui component
