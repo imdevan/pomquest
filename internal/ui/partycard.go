@@ -5,11 +5,14 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+
 	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/app"
 )
 
 // PartyCardData holds resources and supplies info for the party card.
 type PartyCardData struct {
+	Coins          int
 	Gold           int
 	Silver         int
 	Copper         int
@@ -143,7 +146,11 @@ func (c PartyCardComponent) View() string {
 	}
 
 	// Gold placed in bottom-right corner of TexturedCard container
-	goldStr := fmt.Sprintf("%dg %ds %dc", c.Data.Gold, c.Data.Silver, c.Data.Copper)
+	totalCoins := c.Data.Coins
+	if totalCoins == 0 && (c.Data.Gold > 0 || c.Data.Silver > 0 || c.Data.Copper > 0) {
+		totalCoins = c.Data.Gold*1000 + c.Data.Silver*100 + c.Data.Copper
+	}
+	goldStr := app.FormatCoins(totalCoins)
 
 	// Inner table width takes into account outer borders (2) and horizontal padding (2 * horizontalPadding)
 	innerTableWidth := c.Width - 2 - (2 * horizontalPadding)
