@@ -65,9 +65,12 @@ Concept layout more thoroughly in plan/mission.md
 
 ## Feature 8: party model update
 - [x] 8.1 add these to the party model:
-  - [x] 8.1.1 small non-negative ints (loot, rope, bombs, potions, shovels)
+  - [x] 8.1.1 small non-negative ints (loot, rope, bombs, potions, tshovels)
   - [x] 8.1.2 enum / string with fixed set of valid options (item usage: "none", "sparing", "balanced", "generous"; greed: "none", "low", "med", "high", "extreme")
 - [x] 8.2 add those properties to the partycard
+- [x] 8.3 add current party size and max party size
+  - [x] 8.3.1 current party size defaults to 0, max party size defaults to 1 - both cached in sql db
+- [ ] 8.4 add party name
 
 ## Feature 9: create icon package
 - [x] 9.1 map strings to nerdfont utf equivalents
@@ -181,6 +184,12 @@ start with 1 monster, bats... 1hp 0def 1 atk
 - [x] 22.3 active hero card should have raised/hover effect by moving the card 2 col left and 1 col up
   - [x] 22.3.1 composite `compositeActiveOffsetCard2x1` to keep old border underneath while raising active card 2 cols left and 1 row up
   - [x] 22.3.2 create dedicated party screen in `internal/screens/party/party.go` with hero selection keybindings and unit tests in `party_test.go`
+- [x] 22.4 render party based on sql data
+  - [x] 22.4.1 show only number of hero cards based on the party max size
+  - [x] 22.4.2 render empty hero slots as dotted border cards
+  - [x] 22.4.3 inside of the empty card should be a bordered button that reads "Recruit Hero"
+  - [x] 22.4.4 on selecting on enter'ing or r'ing should direct user to reroll screen
+  
 
 
 ## Feature 23: add reroll screen
@@ -198,8 +207,75 @@ start with 1 monster, bats... 1hp 0def 1 atk
 
 
 ## Feature 24: add provisions screen
+Soand Sow's General Store
+- [x] 24.1 create item catalog
+  - [x] 24.1.1 contains items with base cost
+    - [x] 24.1.1.1 food: 10c / lb
+    - [x] 24.1.1.2 spare parts: 60c / part
+    - [x] 24.1.1.3 ox: 20s per yoke (3 ox)
+    - [x] 24.1.1.4 potions: 20s / pot
+    - [x] 24.1.1.5 bombs: 50c / bomb
+    - [x] 24.1.1.6 shovels: 20c / shovel
+    - [x] 24.1.1.7 rope: 10c / 50ft
+- [x] 24.2 add store screen
+  - [x] 24.2.1 store props: name: Soand Sow's, type: general, sells: all items at base cost
+- [x] 24.3 update coin value
+  - [x] 24.3.1 conversion rate 1g = 10s; 1s = 100c
+  - [x] 24.3.2 reduce database values to coin representation
+  - [x] 24.3.3 gold and silver are visual representations of total coin value
+- [x] 24.4 instead of owned show party card under store
+  - [x] 24.4.1 party card is a shared ui component between provisions and quests
+- [x] 24.5 set current card icons as general icon for each supply icon
+  - [x] 24.5.1 defined once in icon package registry
+- [x] 24.6 store items contain 3 cols (Item, Cost, Subtotal)
+  - [x] 24.6.1 all columns aligned left
+- [x] 24.7 when selecting item
+  - [x] 24.7.1 prompt user for amount to purchase
+  - [x] 24.7.2 update subtotal column dynamically
+- [x] 24.8 last option is purchase
+  - [x] 24.8.1 purchase row: purchase, blank cost, total subtotal
+  - [x] 24.8.2 do not change party coin values until after purchase
+- [x] 24.9 remove border from store
+
+
+
+
+
+
+
+
 
 
 ## Feature 25: create ascii image library
 - [x] 25.1 use plan/ascii-art.md:575 for "treasure_hoard"
   - [x] 25.1.1 embed `TreasureHoardASCII` art in `internal/screens/hoard/hoard.go`
+
+## Feature 26: connect heros and party to sqlite db
+- [ ] 26.1 connect screens content for hero and party to sqlite db
+
+## Feature 27: add settings screen
+- [x] 27.1 contains
+  - [x] 27.1.1 reset game data
+    - [x] 27.1.1.1 resets and migrates the local sql db
+  - [x] 27.1.2 audio
+    - [x] 27.1.2.1 set in game audio - stub for now
+  - [x] 27.1.3 credits - stub for nowt
+
+## Feature 28: db flow
+- [x] 28.1 implement db flow
+  - [x] 28.1.1 first open -> init and migrate db 
+  - [x] 28.1.2 second + open -> load db
+  - [x] 28.1.3 reset db from settings as needed
+- [x] 28.2 show party current and max size on dash board under options 
+- [x] 28.3 show party coins to right of party hero count
+- [x] 28.4 do not allow players with 0 current party members to "Quest!"
+
+## Feature 29: create dungeon name generator
+- [x] 29.1 create internal/dungeon/name_generator 
+  - [x] 29.1.1 create book_of_fantasy_names.go
+  - [x] 29.1.2 generate random fantasy name like donjon https://donjon.bin.sh/fantasy/name/#type=mon
+  - [x] 29.1.3 select template (locay of blank, blank's locay, blank locay)
+  - [x] 29.1.4 select locay (dungeon | cave | cavern)
+- [x] 29.2 generate name of dest: in quest screen based on template + generated name
+
+
