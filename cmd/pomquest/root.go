@@ -154,7 +154,7 @@ func newAppModelWithDB(cfg domain.Config, dbPath string) appModel {
 		dbPath:     dbPath,
 		state:      screenDashboard,
 		dashboard:  dbModel,
-		questing:   questing.NewModel(cfg),
+		questing:   questing.NewModelWithDBPath(cfg, dbPath),
 		party:      partyModel,
 		reroll:     reroll.NewModel(cfg, 0),
 		hoard:      hoard.NewModel(cfg),
@@ -240,7 +240,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.path = pModel
 			if pModel.Completed {
 				m.state = screenQuesting
-				m.questing = questing.NewModel(m.cfg)
+				m.questing = questing.NewModelWithDBPath(m.cfg, m.dbPath)
 				m.questing.SetDimensions(m.width, m.height)
 				return m, m.questing.Init()
 			}
