@@ -108,3 +108,36 @@ func TestReplaceOrAddHeroInParty(t *testing.T) {
 		t.Fatalf("expected hero Conan in party, got %+v", updatedParty.Heroes)
 	}
 }
+
+func TestSaveSelectedLocationAndLoadGameState(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "location_test.db")
+
+	loc := Location{
+		Name:               "The Sunken Tomb of Eldoria",
+		Biome:              "Ancient Catacombs",
+		Description:        "A dark tomb sunken beneath mossy swamps.",
+		DifficultyModifier: 1.2,
+	}
+
+	savedLoc, err := SaveSelectedLocationToPath(dbPath, loc)
+	if err != nil {
+		t.Fatalf("SaveSelectedLocationToPath failed: %v", err)
+	}
+	if savedLoc.ID == 0 {
+		t.Fatalf("expected non-zero ID for saved location")
+	}
+
+	gameState, err := LoadActiveGameStateFromPath(dbPath)
+	if err != nil {
+		t.Fatalf("LoadActiveGameStateFromPath failed: %v", err)
+	}
+
+	if gameState.CurrentLocationID == nil || *gameState.CurrentLocationID != savedLoc.ID {
+		t.Fatalf("expected CurrentLocationID %d, got %v", savedLoc.ID, gameState.CurrentLocationID)
+	}
+	if gameState.CurrentLocation == nil || gameState.CurrentLocation.Name != "The Sunken Tomb of Eldoria" {
+		t.Fatalf("expected location name 'The Sunken Tomb of Eldoria', got %+v", gameState.CurrentLocation)
+	}
+}
+

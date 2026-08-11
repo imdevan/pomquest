@@ -263,3 +263,77 @@ func SavePartyToPath(dbPath string, party Party) error {
 	}
 	return SaveParty(db, party)
 }
+
+// SaveSelectedLocation creates the location in DB and updates active GameState.
+func SaveSelectedLocation(db *gorm.DB, loc Location) (Location, error) {
+	if err := db.Create(&loc).Error; err != nil {
+		return loc, err
+	}
+
+	var state GameState
+	err := db.Preload("CurrentLocation").Where("is_active = ?", true).First(&state).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			state = GameState{
+				IsActive: true,
+			}
+			if createErr := db.Create(&state).Error; createErr != nil {
+				return loc, createErr
+			}
+		} else {
+			return loc, err
+		}
+	}
+
+	state.CurrentLocationID = &loc.ID
+	state.CurrentLocation = &loc
+	if err := db.Save(&state).Error; err != nil {
+		return loc, err
+	}
+
+	return loc, nil
+}
+
+// SaveSelectedLocationToPath opens DB at dbPath and saves location to active GameState.
+func SaveSelectedLocationToPath(dbPath string, loc Location) (Location, error) {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return loc, err
+	}
+	return SaveSelectedLocation(db, loc)
+}
+
+// LoadActiveGameState loads active session GameState from DB.
+func LoadActiveGameState(db *gorm.DB) (GameState, error) {
+	var state GameState
+	err := db.Preload("CurrentLocation").Preload("Party").Preload("Hoard").Preload("CurrentQuest").Where("is_active = ?", true).First(&state).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			state = GameState{
+				IsActive: true,
+			}
+			if createErr := db.Create(&state).Error; createErr != nil {
+				return state, createErr
+			}
+			return state, nil
+		}
+		return state, err
+	}
+	return state, nil
+}
+
+// LoadActiveGameStateFromPath opens DB at dbPath and loads active GameState.
+func LoadActiveGameStateFromPath(dbPath string) (GameState, error) {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return GameState{}, err
+	}
+	return LoadActiveGameState(db)
+}
+
