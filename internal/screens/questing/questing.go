@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/pomquest/internal/domain"
+	"github.com/pomquest/internal/dungeon"
 	"github.com/pomquest/internal/ui"
 )
 
@@ -71,7 +72,7 @@ func NewModel(cfg domain.Config) Model {
 			MaxHP:          32,
 		},
 		ProgressData: QuestProgressData{
-			Destination: "Forest of Izelliador",
+			Destination: dungeon.GenerateDungeonName(),
 			CurrentSecs: 1260, // 21:00
 			TotalSecs:   1500, // 25:00
 			Weather:     "☀️",

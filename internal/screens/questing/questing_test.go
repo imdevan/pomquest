@@ -15,8 +15,8 @@ func TestQuestingScreen(t *testing.T) {
 
 	// Test View rendering
 	view := model.View()
-	if !strings.Contains(view, "Forest of Izelliador") {
-		t.Errorf("expected view to contain Forest of Izelliador, got:\n%s", view)
+	if !strings.Contains(view, model.ProgressData.Destination) {
+		t.Errorf("expected view to contain generated destination %s, got:\n%s", model.ProgressData.Destination, view)
 	}
 	if !strings.Contains(view, "jimmothy") {
 		t.Errorf("expected view to contain hero jimmothy, got:\n%s", view)
