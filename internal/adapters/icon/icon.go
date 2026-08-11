@@ -26,6 +26,7 @@ const (
 	KeyWeather      IconKey = "weather"
 	KeyTerrain      IconKey = "terrain"
 	KeyQuest        IconKey = "quest"
+	KeyDungeon      IconKey = "dungeon"
 	KeyGold         IconKey = "gold"
 	KeySilver       IconKey = "silver"
 	KeyCopper       IconKey = "copper"
@@ -116,6 +117,7 @@ var registry = map[IconKey]IconPair{
 	KeyWeather:      {NerdFont: "☀️", Emoji: "☀️"},
 	KeyTerrain:      {NerdFont: "🌲", Emoji: "🌲"},
 	KeyQuest:        {NerdFont: "🗡", Emoji: "🗡️"},
+	KeyDungeon:      {NerdFont: "🏰", Emoji: "🏰"},
 	KeyMagicItem:    {NerdFont: "✨", Emoji: "✨"},
 	KeyGem:          {NerdFont: "💎", Emoji: "💎"},
 	KeyChest:        {NerdFont: "📦", Emoji: "📦"},
