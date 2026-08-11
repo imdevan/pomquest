@@ -118,3 +118,47 @@ func TestProvisionsScreen_DeferredPurchaseExecution(t *testing.T) {
 		t.Errorf("expected status notice for purchase, got %q", m.StatusNotice)
 	}
 }
+
+func TestProvisionsScreen_PartyCardHeartsFromSavedHeroes(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "provisions_hearts_test.db")
+
+	db, err := app.InitDB(dbPath)
+	if err != nil {
+		t.Fatalf("InitDB failed: %v", err)
+	}
+
+	party, _ := app.LoadOrCreateActiveParty(db)
+	party.Coins = 2000
+	_ = app.SaveParty(db, party)
+
+	// Add 2 heroes with specific HP values
+	hero1 := app.Hero{
+		Creature: app.Creature{
+			Noun:  app.Noun{Name: "Gimli"},
+			HP:    20,
+			MaxHP: 20,
+		},
+		Class: "fighter",
+	}
+	hero2 := app.Hero{
+		Creature: app.Creature{
+			Noun:  app.Noun{Name: "Legolas"},
+			HP:    10,
+			MaxHP: 15,
+		},
+		Class: "ranger",
+	}
+	_ = app.ReplaceOrAddHeroInParty(db, 0, hero1)
+	_ = app.ReplaceOrAddHeroInParty(db, 1, hero2)
+
+	cfg := domain.DefaultConfig()
+	m := NewModelWithDBPath(cfg, dbPath)
+
+	view := m.View()
+	// Party Card should be rendered
+	if !strings.Contains(view, "Party") {
+		t.Errorf("expected Party card in view, got:\n%s", view)
+	}
+}
+

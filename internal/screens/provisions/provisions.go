@@ -324,6 +324,12 @@ func (m Model) View() string {
 		maxSize = 1
 	}
 
+	var currentHP, maxHP int
+	for _, h := range m.Party.Heroes {
+		currentHP += h.HP
+		maxHP += h.MaxHP
+	}
+
 	partyCardData := ui.PartyCardData{
 		Coins:            m.Party.Coins,
 		FoodLbs:          m.Party.FoodLbs,
@@ -336,6 +342,8 @@ func (m Model) View() string {
 		Bombs:            m.Party.Bombs,
 		Potions:          m.Party.Potions,
 		Shovels:          m.Party.Shovels,
+		CurrentHP:        currentHP,
+		MaxHP:            maxHP,
 		CurrentPartySize: curSize,
 		MaxPartySize:     maxSize,
 	}
