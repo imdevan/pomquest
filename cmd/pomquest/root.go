@@ -171,7 +171,7 @@ func (m appModel) returnToDashboard() (tea.Model, tea.Cmd) {
 	activeParty, _ := app.LoadActivePartyFromPath(m.dbPath)
 	m.dashboard = dashboard.NewModelFromParty(m.cfg, activeParty)
 	m.dashboard.SetDimensions(m.width, m.height)
-	return m, m.dashboard.Init()
+	return m, tea.Batch(tea.ClearScreen, m.dashboard.Init())
 }
 
 func (m appModel) Init() tea.Cmd {

@@ -212,8 +212,8 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 	logs, _ := app.LoadGameLogsFromPath(dbPath, gameState.ID)
 	if len(logs) == 0 {
 		logs = []string{
-			fmt.Sprintf("🏰 Party enters location: %s (%s)", destination, terrain),
-			fmt.Sprintf("🗺️ Entering Room #%d...", currentRoom),
+			fmt.Sprintf("🏰 The Party enters %s...", destination),
+			fmt.Sprintf("🗺️ The Party enters Room #%d...", currentRoom),
 		}
 	}
 
@@ -292,7 +292,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			m.saveCurrentState()
 			m.Quitted = true
-			return m, tea.Quit
+			return m, tea.Batch(tea.ClearScreen, tea.Quit)
 
 		case "p", "esc":
 			m.Paused = !m.Paused
@@ -346,7 +346,8 @@ func (m *Model) advanceDungeonCycle() {
 	switch m.DungeonState {
 	case "Entering":
 		m.DungeonState = "InRoom"
-		m.LogMessages = append(m.LogMessages, fmt.Sprintf("🗺️ Party enters Room #%d...", m.CurrentRoom))
+		m.LogMessages = append(m.LogMessages, fmt.Sprintf("🏰 The Party enters %s...", m.ProgressData.Destination))
+		m.LogMessages = append(m.LogMessages, fmt.Sprintf("🗺️ The Party enters Room #%d...", m.CurrentRoom))
 
 	case "InRoom":
 		crBudget := (m.CurrentRoom / 2) + 1
