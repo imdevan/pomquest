@@ -290,9 +290,13 @@ func SaveSelectedLocation(db *gorm.DB, loc Location) (Location, error) {
 
 	state.CurrentLocationID = &loc.ID
 	state.CurrentLocation = &loc
+	state.CurrentQuestID = nil
+	state.CurrentQuest = nil
 	if err := db.Save(&state).Error; err != nil {
 		return loc, err
 	}
+
+	_ = ClearGameLogs(db, state.ID)
 
 	return loc, nil
 }
@@ -450,6 +454,26 @@ func LoadGameLogsFromPath(dbPath string, gameStateID uint) ([]string, error) {
 		return nil, err
 	}
 	return LoadGameLogs(db, gameStateID)
+}
+
+// ClearGameLogs deletes all saved log messages for the given gameStateID.
+func ClearGameLogs(db *gorm.DB, gameStateID uint) error {
+	if gameStateID == 0 {
+		return nil
+	}
+	return db.Where("game_state_id = ?", gameStateID).Delete(&GameLog{}).Error
+}
+
+// ClearGameLogsToPath deletes all saved log messages in DB at dbPath.
+func ClearGameLogsToPath(dbPath string, gameStateID uint) error {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return err
+	}
+	return ClearGameLogs(db, gameStateID)
 }
 
 // SavePartyHeroes saves updated stats/HP for party heroes.

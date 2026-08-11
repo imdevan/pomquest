@@ -213,7 +213,6 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 	if len(logs) == 0 {
 		logs = []string{
 			fmt.Sprintf("🏰 The Party enters %s...", destination),
-			fmt.Sprintf("🗺️ The Party enters Room #%d...", currentRoom),
 		}
 	}
 
@@ -291,6 +290,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			m.saveCurrentState()
+			_ = app.ClearGameLogsToPath(m.DBPath, m.GameStateID)
+			m.LogMessages = nil
 			m.Quitted = true
 			return m, tea.Batch(tea.ClearScreen, tea.Quit)
 
@@ -346,7 +347,6 @@ func (m *Model) advanceDungeonCycle() {
 	switch m.DungeonState {
 	case "Entering":
 		m.DungeonState = "InRoom"
-		m.LogMessages = append(m.LogMessages, fmt.Sprintf("🏰 The Party enters %s...", m.ProgressData.Destination))
 		m.LogMessages = append(m.LogMessages, fmt.Sprintf("🗺️ The Party enters Room #%d...", m.CurrentRoom))
 
 	case "InRoom":
@@ -498,7 +498,7 @@ func (m *Model) advanceDungeonCycle() {
 
 		m.LogMessages = append(m.LogMessages, fmt.Sprintf("✨ Room #%d Cleared! Party gains +%d Gold and +%d XP!", m.CurrentRoom, gold, xp))
 		m.CurrentRoom++
-		m.DungeonState = "InRoom"
+		m.DungeonState = "Entering"
 		m.TurnPhase = "hero"
 
 	case "Defeat":

@@ -255,6 +255,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if qModel, ok := newQ.(questing.Model); ok {
 			m.questing = qModel
 			if qModel.Quitted {
+				_ = app.ClearGameLogsToPath(m.dbPath, qModel.GameStateID)
 				return m.returnToDashboard()
 			}
 		}
