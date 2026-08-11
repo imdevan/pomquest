@@ -1,10 +1,12 @@
 package main
 
 import (
+	"path/filepath"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 )
 
@@ -72,3 +74,50 @@ func TestAppModel_SettingsNavigation(t *testing.T) {
 		t.Fatalf("expected state to remain screenDashboard on keypress after returning, got %v", app.state)
 	}
 }
+
+func TestAppModel_PathNavigation(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "path_nav_test.db")
+
+	appModelObj := newAppModelWithDB(cfg, dbPath)
+
+	if appModelObj.state != screenDashboard {
+		t.Fatalf("expected initial state screenDashboard, got %v", appModelObj.state)
+	}
+
+	// 1. Choice 0 is ChoiceQuest. Press '1' to trigger choice quest when party size is 0
+	updated, _ := appModelObj.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
+	appModelObj = updated.(appModel)
+
+	if appModelObj.state != screenDashboard {
+		t.Fatalf("expected state to remain screenDashboard when party size is 0, got %v", appModelObj.state)
+	}
+
+	// 2. Add hero to party
+	db, err := app.InitDB(dbPath)
+	if err != nil {
+		t.Fatalf("InitDB failed: %v", err)
+	}
+	hero := app.Hero{
+		Creature: app.Creature{
+			Noun:  app.Noun{Name: "Conan"},
+			HP:    10,
+			MaxHP: 10,
+		},
+		Class: "barbarian",
+	}
+	if err := app.ReplaceOrAddHeroInParty(db, 0, hero); err != nil {
+		t.Fatalf("ReplaceOrAddHeroInParty failed: %v", err)
+	}
+
+	// Reload appModel with hero in party
+	appModelObj = newAppModelWithDB(cfg, dbPath)
+	updated, _ = appModelObj.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
+	appModelObj = updated.(appModel)
+
+	if appModelObj.state != screenPath {
+		t.Fatalf("expected state screenPath after selecting ChoiceQuest with active party, got %v", appModelObj.state)
+	}
+}
+

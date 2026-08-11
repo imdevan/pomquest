@@ -16,6 +16,7 @@ import (
 	"github.com/pomquest/internal/screens/dashboard"
 	"github.com/pomquest/internal/screens/hoard"
 	"github.com/pomquest/internal/screens/party"
+	"github.com/pomquest/internal/screens/path"
 	"github.com/pomquest/internal/screens/provisions"
 	"github.com/pomquest/internal/screens/questing"
 	"github.com/pomquest/internal/screens/reroll"
@@ -119,6 +120,7 @@ const (
 	screenHoard
 	screenSettings
 	screenProvisions
+	screenPath
 )
 
 type appModel struct {
@@ -132,6 +134,7 @@ type appModel struct {
 	hoard       hoard.Model
 	settings    settings.Model
 	provisions  provisions.Model
+	path        path.Model
 	width       int
 	height      int
 	exitMessage string
@@ -157,6 +160,7 @@ func newAppModelWithDB(cfg domain.Config, dbPath string) appModel {
 		hoard:      hoard.NewModel(cfg),
 		settings:   settings.NewModelWithDBPath(cfg, dbPath),
 		provisions: provisions.NewModelWithDBPath(cfg, dbPath),
+		path:       path.NewModelWithDBPath(cfg, dbPath),
 		width:      80,
 		height:     24,
 	}
@@ -186,6 +190,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.hoard.SetDimensions(msg.Width, msg.Height)
 		m.settings.SetDimensions(msg.Width, msg.Height)
 		m.provisions.SetDimensions(msg.Width, msg.Height)
+		m.path.SetDimensions(msg.Width, msg.Height)
 	}
 
 	switch m.state {
@@ -196,10 +201,10 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if dbModel.Selected >= 0 {
 				switch dbModel.Selected {
 				case dashboard.ChoiceQuest:
-					m.state = screenQuesting
-					m.questing = questing.NewModel(m.cfg)
-					m.questing.SetDimensions(m.width, m.height)
-					return m, m.questing.Init()
+					m.state = screenPath
+					m.path = path.NewModelWithDBPath(m.cfg, m.dbPath)
+					m.path.SetDimensions(m.width, m.height)
+					return m, m.path.Init()
 				case dashboard.ChoiceParty:
 					m.state = screenParty
 					activeParty, _ := app.LoadActivePartyFromPath(m.dbPath)
@@ -225,6 +230,22 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.exitMessage = "Goodbye, Dark Lord!"
 					return m, tea.Quit
 				}
+			}
+		}
+		return m, cmd
+
+	case screenPath:
+		newP, cmd := m.path.Update(msg)
+		if pModel, ok := newP.(path.Model); ok {
+			m.path = pModel
+			if pModel.Completed {
+				m.state = screenQuesting
+				m.questing = questing.NewModel(m.cfg)
+				m.questing.SetDimensions(m.width, m.height)
+				return m, m.questing.Init()
+			}
+			if pModel.Quitted {
+				return m.returnToDashboard()
 			}
 		}
 		return m, cmd
@@ -329,6 +350,8 @@ func (m appModel) View() string {
 	switch m.state {
 	case screenDashboard:
 		return m.dashboard.View()
+	case screenPath:
+		return m.path.View()
 	case screenQuesting:
 		return m.questing.View()
 	case screenParty:
