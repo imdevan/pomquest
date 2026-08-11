@@ -36,6 +36,7 @@ md: 90 (91)
 lg: 120 (121)
 xl: 180+ (181)
 
+╭─ Party ──────────────────────────────────────────────────────────────────────────── 󰋑 󰋑 󰛞 󰛠 ─╮
 
 content should flex to the size of the max width container
 
