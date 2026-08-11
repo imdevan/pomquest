@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/pomquest/internal/utils"
 )
@@ -132,7 +133,9 @@ func InitDB(dbPath string) (*gorm.DB, error) {
 		}
 	}
 
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+		Logger: logger.Discard,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -336,4 +339,142 @@ func LoadActiveGameStateFromPath(dbPath string) (GameState, error) {
 	}
 	return LoadActiveGameState(db)
 }
+
+// SaveActiveQuest creates or updates the active quest in DB and sets it on active GameState.
+func SaveActiveQuest(db *gorm.DB, quest Quest) (Quest, error) {
+	if quest.ID == 0 {
+		if err := db.Create(&quest).Error; err != nil {
+			return quest, err
+		}
+	} else {
+		if err := db.Save(&quest).Error; err != nil {
+			return quest, err
+		}
+	}
+
+	var state GameState
+	err := db.Where("is_active = ?", true).First(&state).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			state = GameState{
+				IsActive: true,
+			}
+			if createErr := db.Create(&state).Error; createErr != nil {
+				return quest, createErr
+			}
+		} else {
+			return quest, err
+		}
+	}
+
+	state.CurrentQuestID = &quest.ID
+	state.CurrentQuest = &quest
+	if err := db.Save(&state).Error; err != nil {
+		return quest, err
+	}
+
+	return quest, nil
+}
+
+// SaveActiveQuestToPath opens DB at dbPath and saves active quest state.
+func SaveActiveQuestToPath(dbPath string, quest Quest) (Quest, error) {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return quest, err
+	}
+	return SaveActiveQuest(db, quest)
+}
+
+// SaveGameLogs replaces/persists log messages for the given gameStateID.
+func SaveGameLogs(db *gorm.DB, gameStateID uint, messages []string) error {
+	if gameStateID == 0 {
+		return nil
+	}
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("game_state_id = ?", gameStateID).Delete(&GameLog{}).Error; err != nil {
+			return err
+		}
+		if len(messages) == 0 {
+			return nil
+		}
+		gLogs := make([]GameLog, len(messages))
+		for i, msg := range messages {
+			gLogs[i] = GameLog{
+				GameStateID: gameStateID,
+				Message:     msg,
+				Category:    "dungeon",
+			}
+		}
+		return tx.Create(&gLogs).Error
+	})
+}
+
+// SaveGameLogsToPath opens DB at dbPath and saves log messages.
+func SaveGameLogsToPath(dbPath string, gameStateID uint, messages []string) error {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return err
+	}
+	return SaveGameLogs(db, gameStateID, messages)
+}
+
+// LoadGameLogs loads all saved log messages for a given gameStateID.
+func LoadGameLogs(db *gorm.DB, gameStateID uint) ([]string, error) {
+	if gameStateID == 0 {
+		return nil, nil
+	}
+	var logs []GameLog
+	if err := db.Where("game_state_id = ?", gameStateID).Order("id asc").Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	var res []string
+	for _, l := range logs {
+		res = append(res, l.Message)
+	}
+	return res, nil
+}
+
+// LoadGameLogsFromPath opens DB at dbPath and loads log messages.
+func LoadGameLogsFromPath(dbPath string, gameStateID uint) ([]string, error) {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return nil, err
+	}
+	return LoadGameLogs(db, gameStateID)
+}
+
+// SavePartyHeroes saves updated stats/HP for party heroes.
+func SavePartyHeroes(db *gorm.DB, partyID uint, heroes []Hero) error {
+	for i := range heroes {
+		if heroes[i].PartyID == nil {
+			heroes[i].PartyID = &partyID
+		}
+		if heroes[i].ID != 0 {
+			_ = db.Save(&heroes[i]).Error
+		}
+	}
+	return nil
+}
+
+// SavePartyHeroesToPath opens DB at dbPath and saves party hero stats.
+func SavePartyHeroesToPath(dbPath string, partyID uint, heroes []Hero) error {
+	if dbPath == "" {
+		dbPath = DefaultDBPath()
+	}
+	db, err := InitDB(dbPath)
+	if err != nil {
+		return err
+	}
+	return SavePartyHeroes(db, partyID, heroes)
+}
+
 

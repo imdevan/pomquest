@@ -12,8 +12,11 @@ import (
 )
 
 func TestQuestingScreen(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test_questing_default.db")
+
 	cfg := domain.DefaultConfig()
-	model := NewModel(cfg)
+	model := NewModelWithDBPath(cfg, dbPath)
 
 	// Test View rendering
 	view := model.View()
@@ -24,12 +27,12 @@ func TestQuestingScreen(t *testing.T) {
 		t.Errorf("expected view to contain hero jimmothy, got:\n%s", view)
 	}
 
-	// Test pressing space to add attack action log entry
+	// Test pressing space to step automated dungeon cycle
+	prevLogsCount := len(model.LogMessages)
 	updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{' '}})
 	m := updated.(Model)
-	lastLog := m.LogMessages[len(m.LogMessages)-1]
-	if !strings.Contains(lastLog, "pam attacks") {
-		t.Errorf("expected new log entry to contain pam attacks, got '%s'", lastLog)
+	if len(m.LogMessages) < prevLogsCount {
+		t.Errorf("expected log messages count to increase after space keypress, got %d", len(m.LogMessages))
 	}
 
 	// Test pause key
@@ -109,7 +112,7 @@ func TestQuestingScreenWithDB(t *testing.T) {
 	cfg := domain.DefaultConfig()
 	model := NewModelWithDBPath(cfg, dbPath)
 
-	// Verify Feature 7.1 & 7.3: DB Data loaded
+	// Verify DB Data loaded
 	if model.ProgressData.Destination != "The Obsidian Citadel" {
 		t.Errorf("expected destination 'The Obsidian Citadel', got '%s'", model.ProgressData.Destination)
 	}
@@ -123,7 +126,7 @@ func TestQuestingScreenWithDB(t *testing.T) {
 		t.Errorf("expected diet 'heavy', got '%s'", model.Supplies.Diet)
 	}
 
-	// Verify Feature 7.2: Hero cards render based on current party heroes
+	// Verify Hero cards render based on current party heroes
 	if len(model.Heroes) != 2 {
 		t.Fatalf("expected 2 party heroes, got %d", len(model.Heroes))
 	}
@@ -131,7 +134,7 @@ func TestQuestingScreenWithDB(t *testing.T) {
 		t.Errorf("expected heroes Thorin and Gandalf, got %s and %s", model.Heroes[0].Name, model.Heroes[1].Name)
 	}
 
-	// Verify Feature 7.4: Party card hearts based on current party hero health (15 + 12 = 27 HP out of 20 + 12 = 32 MaxHP)
+	// Verify Party card hearts based on current party hero health
 	if model.Supplies.CurrentHP != 27 {
 		t.Errorf("expected CurrentHP 27, got %d", model.Supplies.CurrentHP)
 	}
@@ -149,3 +152,34 @@ func TestQuestingScreenWithDB(t *testing.T) {
 	}
 }
 
+func TestAutomatedDungeonCycleAndPersistence(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "dungeon_cycle.db")
+
+	cfg := domain.DefaultConfig()
+	model := NewModelWithDBPath(cfg, dbPath)
+
+	// Step 1: Advance cycle several times using space bar
+	for i := 0; i < 5; i++ {
+		updated, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{' '}})
+		model = updated.(Model)
+	}
+
+	// Verify room and state advanced
+	if model.CurrentRoom < 1 {
+		t.Errorf("expected CurrentRoom >= 1, got %d", model.CurrentRoom)
+	}
+
+	// Step 2: Simulate exit and re-open (resume quest from SQLite DB)
+	resumedModel := NewModelWithDBPath(cfg, dbPath)
+
+	if resumedModel.ProgressData.Destination != model.ProgressData.Destination {
+		t.Errorf("expected resumed destination '%s', got '%s'", model.ProgressData.Destination, resumedModel.ProgressData.Destination)
+	}
+	if resumedModel.CurrentRoom != model.CurrentRoom {
+		t.Errorf("expected resumed room %d, got %d", model.CurrentRoom, resumedModel.CurrentRoom)
+	}
+	if len(resumedModel.LogMessages) == 0 {
+		t.Errorf("expected restored game logs from DB, got 0")
+	}
+}

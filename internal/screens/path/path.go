@@ -169,6 +169,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.SelectedLocation = selected
 			}
+
+			newQuest := app.Quest{
+				Title:        m.SelectedLocation.Name,
+				Biome:        m.SelectedLocation.Biome,
+				PathLength:   1500,
+				TotalSecs:    1500,
+				ElapsedSecs:  0,
+				CurrentRoom:  1,
+				DungeonState: "Entering",
+				Status:       "Active",
+			}
+			_, _ = app.SaveActiveQuestToPath(m.DBPath, newQuest)
+
 			m.Completed = true
 		}
 	}

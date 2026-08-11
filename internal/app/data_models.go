@@ -116,6 +116,10 @@ type Quest struct {
 	Biome           string `gorm:"size:64"`
 	PathLength      int    `gorm:"default:100"`
 	CurrentDistance int    `gorm:"default:0"`
+	ElapsedSecs     int    `gorm:"default:0"`
+	TotalSecs       int    `gorm:"default:1500"`
+	CurrentRoom     int    `gorm:"default:1"`
+	DungeonState    string `gorm:"size:32;default:'Entering'"`
 	Weather         string `gorm:"size:32;default:'Sunny'"`
 	Status          string `gorm:"size:32;default:'Available'"` // Available, Active, Completed, Failed
 	Difficulty      int    `gorm:"default:1"`
