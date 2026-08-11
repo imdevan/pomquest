@@ -1,11 +1,13 @@
 package questing
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 )
 
@@ -37,3 +39,113 @@ func TestQuestingScreen(t *testing.T) {
 		t.Errorf("expected model to be paused after pressing 'p'")
 	}
 }
+
+func TestQuestingScreenWithDB(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test_questing.db")
+
+	db, err := app.InitDB(dbPath)
+	if err != nil {
+		t.Fatalf("failed to init db: %v", err)
+	}
+
+	// 1. Save party with custom supplies & coins
+	party, err := app.LoadOrCreateActiveParty(db)
+	if err != nil {
+		t.Fatalf("failed to load active party: %v", err)
+	}
+	party.Coins = 4500
+	party.FoodLbs = 1200
+	party.SpareParts = 7
+	party.Oxen = 3
+	party.Diet = "heavy"
+	party.Pace = "balanced"
+	if err := app.SaveParty(db, party); err != nil {
+		t.Fatalf("failed to save party: %v", err)
+	}
+
+	// 2. Save party heroes
+	hero1 := app.Hero{
+		Creature: app.Creature{
+			Noun:   app.Noun{Name: "Thorin", Icon: "🛡️"},
+			HP:     15,
+			MaxHP:  20,
+			Attack: 4,
+			Armor:  3,
+		},
+		Class:  "fighter",
+		Level:  3,
+		Status: "Healthy",
+	}
+	hero2 := app.Hero{
+		Creature: app.Creature{
+			Noun:   app.Noun{Name: "Gandalf", Icon: "🧙"},
+			HP:     12,
+			MaxHP:  12,
+			Attack: 5,
+			Armor:  1,
+		},
+		Class:  "wizard",
+		Level:  4,
+		Status: "Healthy",
+	}
+	if err := app.ReplaceOrAddHeroInParty(db, 0, hero1); err != nil {
+		t.Fatalf("failed to add hero1: %v", err)
+	}
+	if err := app.ReplaceOrAddHeroInParty(db, 1, hero2); err != nil {
+		t.Fatalf("failed to add hero2: %v", err)
+	}
+
+	// 3. Save selected location
+	loc := app.Location{
+		Name:  "The Obsidian Citadel",
+		Biome: "Volcanic Crag",
+	}
+	if _, err := app.SaveSelectedLocation(db, loc); err != nil {
+		t.Fatalf("failed to save selected location: %v", err)
+	}
+
+	// 4. Initialize Questing model from DB
+	cfg := domain.DefaultConfig()
+	model := NewModelWithDBPath(cfg, dbPath)
+
+	// Verify Feature 7.1 & 7.3: DB Data loaded
+	if model.ProgressData.Destination != "The Obsidian Citadel" {
+		t.Errorf("expected destination 'The Obsidian Citadel', got '%s'", model.ProgressData.Destination)
+	}
+	if model.Supplies.Coins != 4500 {
+		t.Errorf("expected 4500 coins, got %d", model.Supplies.Coins)
+	}
+	if model.Supplies.FoodLbs != 1200 {
+		t.Errorf("expected 1200 food lbs, got %d", model.Supplies.FoodLbs)
+	}
+	if model.Supplies.Diet != "heavy" {
+		t.Errorf("expected diet 'heavy', got '%s'", model.Supplies.Diet)
+	}
+
+	// Verify Feature 7.2: Hero cards render based on current party heroes
+	if len(model.Heroes) != 2 {
+		t.Fatalf("expected 2 party heroes, got %d", len(model.Heroes))
+	}
+	if model.Heroes[0].Name != "Thorin" || model.Heroes[1].Name != "Gandalf" {
+		t.Errorf("expected heroes Thorin and Gandalf, got %s and %s", model.Heroes[0].Name, model.Heroes[1].Name)
+	}
+
+	// Verify Feature 7.4: Party card hearts based on current party hero health (15 + 12 = 27 HP out of 20 + 12 = 32 MaxHP)
+	if model.Supplies.CurrentHP != 27 {
+		t.Errorf("expected CurrentHP 27, got %d", model.Supplies.CurrentHP)
+	}
+	if model.Supplies.MaxHP != 32 {
+		t.Errorf("expected MaxHP 32, got %d", model.Supplies.MaxHP)
+	}
+
+	// Verify view rendering contains hero names and location
+	view := model.View()
+	if !strings.Contains(view, "The Obsidian Citadel") {
+		t.Errorf("expected view to contain 'The Obsidian Citadel', got:\n%s", view)
+	}
+	if !strings.Contains(view, "Thorin") || !strings.Contains(view, "Gandalf") {
+		t.Errorf("expected view to contain hero names Thorin and Gandalf, got:\n%s", view)
+	}
+}
+

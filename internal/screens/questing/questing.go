@@ -7,6 +7,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/dungeon"
 	"github.com/pomquest/internal/ui"
@@ -27,14 +29,132 @@ type Model struct {
 	Quitted      bool
 	Width        int
 	Height       int
+	DBPath       string
 }
 
-// NewModel initializes the questing screen with exact mockup data.
+// NewModel initializes the questing screen using default DB path.
 func NewModel(cfg domain.Config) Model {
+	return NewModelWithDBPath(cfg, app.DefaultDBPath())
+}
+
+// NewModelWithDBPath initializes the questing screen using data loaded from SQLite DB.
+func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 	theme := ui.ThemeFromConfig(cfg)
+	if dbPath == "" {
+		dbPath = app.DefaultDBPath()
+	}
+
+	party, _ := app.LoadActivePartyFromPath(dbPath)
+	gameState, _ := app.LoadActiveGameStateFromPath(dbPath)
+
+	var heroes []ui.HeroCardData
+	var totalCurrentHP, totalMaxHP int
+
+	for _, h := range party.Heroes {
+		iconStr := h.Icon
+		if iconStr == "" {
+			iconStr = app.GetClassArchetype(h.Class).Icon(icon.ModeNerdFont)
+		}
+		status := h.Status
+		if status == "" {
+			status = "Healthy"
+		}
+		if h.IsDead || h.HP <= 0 {
+			status = "Dead"
+		}
+		totalCurrentHP += h.HP
+		totalMaxHP += h.MaxHP
+
+		heroes = append(heroes, ui.HeroCardData{
+			Name:     h.Name,
+			Class:    h.Class,
+			Level:    h.Level,
+			HP:       h.HP,
+			MaxHP:    h.MaxHP,
+			Attack:   h.Attack,
+			Armor:    h.Armor,
+			Status:   status,
+			IsDead:   h.IsDead || h.HP <= 0,
+			Icon:     iconStr,
+			IsActive: false,
+		})
+	}
+
+	if len(heroes) == 0 {
+		heroes = []ui.HeroCardData{
+			{Name: "jimmothy", Class: "fighter", Level: 2, HP: 10, MaxHP: 10, Attack: 2, Armor: 2, Status: "Healthy", IsActive: false},
+			{Name: "applebee", Class: "wizard", Level: 1, HP: 6, MaxHP: 6, Attack: 3, Armor: 0, Status: "Healthy"},
+			{Name: "pam", Class: "ranger", Level: 1, HP: 8, MaxHP: 8, Attack: 3, Armor: 0, Status: "Healthy"},
+			{Name: "sam", Class: "rouge", Level: 2, HP: 0, MaxHP: 8, Attack: 3, Armor: 0, Status: "Dead", IsDead: true},
+		}
+		totalCurrentHP = 24
+		totalMaxHP = 32
+	}
+
+	var magicItems, treasureChests int
+	if gameState.Hoard != nil {
+		magicItems = gameState.Hoard.MagicItems
+		treasureChests = gameState.Hoard.TreasureChests
+	}
+
+	supplies := ui.PartyCardData{
+		Coins:            party.Coins,
+		FoodLbs:          party.FoodLbs,
+		Diet:             party.Diet,
+		Pace:             party.Pace,
+		SpareParts:       party.SpareParts,
+		Oxen:             party.Oxen,
+		Regents:          party.Regents,
+		Potions:          party.Potions,
+		Loot:             party.Loot,
+		Rope:             party.Rope,
+		Bombs:            party.Bombs,
+		Shovels:          party.Shovels,
+		ItemUsage:        party.ItemUsage,
+		Greed:            party.Greed,
+		MagicItems:       magicItems,
+		TreasureChests:   treasureChests,
+		CurrentHP:        totalCurrentHP,
+		MaxHP:            totalMaxHP,
+		CurrentPartySize: party.CurrentPartySize,
+		MaxPartySize:     party.MaxPartySize,
+	}
+
+	destination := ""
+	terrain := "🌲"
+	weather := "☀️"
+	hazards := "mud, rain"
+
+	if gameState.CurrentLocation != nil && gameState.CurrentLocation.Name != "" {
+		destination = gameState.CurrentLocation.Name
+		if gameState.CurrentLocation.Biome != "" {
+			terrain = gameState.CurrentLocation.Biome
+		}
+	} else if gameState.CurrentQuest != nil && gameState.CurrentQuest.Title != "" {
+		destination = gameState.CurrentQuest.Title
+		if gameState.CurrentQuest.Weather != "" {
+			weather = gameState.CurrentQuest.Weather
+		}
+	}
+	if destination == "" {
+		destination = dungeon.GenerateDungeonName()
+	}
+
+	progressData := QuestProgressData{
+		Destination: destination,
+		CurrentSecs: 1260, // 21:00
+		TotalSecs:   1500, // 25:00
+		Weather:     weather,
+		Terrain:     terrain,
+		Hazards:     hazards,
+		DaysPassed:  12,
+		Width:       72,
+	}
+
 	return Model{
 		Theme:      theme,
 		Responsive: ui.NewResponsiveManager(80),
+		DBPath:     dbPath,
 		LogTitle:   "12, Jan, 1000 A.P.",
 		LogMessages: []string{
 			"...",
@@ -50,39 +170,11 @@ func NewModel(cfg domain.Config) Model {
 			"...",
 			"+ 3 xp! +3 copper!",
 		},
-		Heroes: []ui.HeroCardData{
-			{Name: "jimmothy", Class: "fighter", Level: 2, HP: 10, MaxHP: 10, Attack: 2, Armor: 2, Status: "Healthy", IsActive: false},
-			{Name: "applebee", Class: "wizard", Level: 1, HP: 6, MaxHP: 6, Attack: 3, Armor: 0, Status: "Healthy"},
-			{Name: "pam", Class: "ranger", Level: 1, HP: 8, MaxHP: 8, Attack: 3, Armor: 0, Status: "Healthy"},
-			{Name: "sam", Class: "rouge", Level: 2, HP: 0, MaxHP: 8, Attack: 3, Armor: 0, Status: "Dead", IsDead: true},
-		},
-		Supplies: ui.PartyCardData{
-			Gold:           0,
-			Silver:         10,
-			Copper:         80,
-			FoodLbs:        2000,
-			Diet:           "balanced",
-			Pace:           "fast",
-			SpareParts:     3,
-			Oxen:           4,
-			MagicItems:     0,
-			Gems:           0,
-			TreasureChests: 1,
-			CurrentHP:      24,
-			MaxHP:          32,
-		},
-		ProgressData: QuestProgressData{
-			Destination: dungeon.GenerateDungeonName(),
-			CurrentSecs: 1260, // 21:00
-			TotalSecs:   1500, // 25:00
-			Weather:     "☀️",
-			Terrain:     "🌲",
-			Hazards:     "mud, rain",
-			DaysPassed:  12,
-			Width:       72,
-		},
-		Width:  80,
-		Height: 24,
+		Heroes:       heroes,
+		Supplies:     supplies,
+		ProgressData: progressData,
+		Width:        80,
+		Height:       24,
 	}
 }
 
