@@ -46,7 +46,7 @@ func EnsureInitialData(db *gorm.DB) error {
 			Name:             "Adventuring Party",
 			CurrentPartySize: 0,
 			MaxPartySize:     1,
-			Gold:             1,
+			Coins:            1000,
 			FoodLbs:          100,
 			Diet:             "balanced",
 			Pace:             "fast",
@@ -101,7 +101,7 @@ func LoadOrCreateActiveParty(db *gorm.DB) (Party, error) {
 				Name:             "Adventuring Party",
 				CurrentPartySize: 0,
 				MaxPartySize:     1,
-				Gold:             1,
+				Coins:            1000,
 			}
 			if createErr := db.Create(&party).Error; createErr != nil {
 				return party, createErr
@@ -223,7 +223,7 @@ func LoadActivePartyFromPath(dbPath string) (Party, error) {
 			Name:             "Adventuring Party",
 			CurrentPartySize: 0,
 			MaxPartySize:     1,
-			Gold:             1,
+			Coins:            1000,
 		}, err
 	}
 	return LoadOrCreateActiveParty(db)

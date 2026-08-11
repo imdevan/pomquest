@@ -324,12 +324,8 @@ func (m Model) View() string {
 		maxSize = 1
 	}
 
-	g, s, cop := app.BreakdownCoins(app.TotalCoins(m.Party))
-
 	partyCardData := ui.PartyCardData{
-		Gold:             g,
-		Silver:           s,
-		Copper:           cop,
+		Coins:            m.Party.Coins,
 		FoodLbs:          m.Party.FoodLbs,
 		Diet:             m.Party.Diet,
 		SpareParts:       m.Party.SpareParts,

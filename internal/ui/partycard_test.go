@@ -43,8 +43,8 @@ func TestPartyCardComponentView_LG(t *testing.T) {
 	if !strings.Contains(view, "󰋑 󰋑 󰋑 󰛠") {
 		t.Errorf("expected view to contain team hearts in top-right, got:\n%s", view)
 	}
-	if !strings.Contains(view, "0g 10s 80c") {
-		t.Errorf("expected view to contain gold info 0g 10s 80c, got:\n%s", view)
+	if !strings.Contains(view, "1g 0s 80c") {
+		t.Errorf("expected view to contain gold info 1g 0s 80c, got:\n%s", view)
 	}
 	if !strings.Contains(view, "󱐟 food: 2,000lbs") {
 		t.Errorf("expected view to contain food info with icon, got:\n%s", view)

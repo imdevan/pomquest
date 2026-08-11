@@ -4,7 +4,7 @@ import "testing"
 
 func TestCoinConversions(t *testing.T) {
 	// 1g = 10s = 1000c
-	p := Party{Gold: 1, Silver: 2, Copper: 50}
+	p := Party{Coins: 1250}
 	total := TotalCoins(p)
 	if total != 1250 {
 		t.Fatalf("expected 1250 total coins, got %d", total)

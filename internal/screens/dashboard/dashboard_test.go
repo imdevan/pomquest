@@ -36,7 +36,7 @@ func TestDashboardScreen_PartyDisplayAndCoins(t *testing.T) {
 	party := app.Party{
 		Name:             "Heroes Guild",
 		MaxPartySize:     4,
-		Gold:             150,
+		Coins:            150,
 		CurrentPartySize: 2,
 		Heroes: []app.Hero{
 			{Creature: app.Creature{Noun: app.Noun{Name: "Gimli"}}, Class: "barbarian"},
@@ -53,8 +53,8 @@ func TestDashboardScreen_PartyDisplayAndCoins(t *testing.T) {
 	}
 
 	// 28.3: show party coins to right of party hero count
-	if !strings.Contains(view, "💰 Coins: 150 Gold") {
-		t.Errorf("expected view to display party coins '💰 Coins: 150 Gold', got:\n%s", view)
+	if !strings.Contains(view, "💰 Coins: 1s 50c") {
+		t.Errorf("expected view to display party coins '💰 Coins: 1s 50c', got:\n%s", view)
 	}
 }
 

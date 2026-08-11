@@ -82,9 +82,7 @@ type Party struct {
 	Name             string `gorm:"size:64;default:'Adventuring Party'"`
 	CurrentPartySize int    `gorm:"default:0"`
 	MaxPartySize     int    `gorm:"default:1"`
-	Gold             int    `gorm:"default:0"`
-	Silver           int    `gorm:"default:0"`
-	Copper           int    `gorm:"default:0"`
+	Coins            int    `gorm:"default:1000"`
 	FoodLbs          int    `gorm:"default:100"`
 	Diet             string `gorm:"size:32;default:'balanced'"` // sparse, balanced, heavy
 	Pace             string `gorm:"size:32;default:'fast'"`     // slow, balanced, fast

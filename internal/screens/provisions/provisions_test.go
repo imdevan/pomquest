@@ -76,9 +76,7 @@ func TestProvisionsScreen_DeferredPurchaseExecution(t *testing.T) {
 
 	// Give party 1 Gold (1000c)
 	party, _ := app.LoadOrCreateActiveParty(db)
-	party.Gold = 1 // 1000c
-	party.Silver = 0
-	party.Copper = 0
+	party.Coins = 1000
 	_ = app.SaveParty(db, party)
 
 	cfg := domain.DefaultConfig()
@@ -91,8 +89,8 @@ func TestProvisionsScreen_DeferredPurchaseExecution(t *testing.T) {
 	m = updated.(Model)
 
 	// 24.8: Party coins should NOT change before purchase
-	if m.Party.Gold != 1 || m.Party.Silver != 0 || m.Party.Copper != 0 {
-		t.Fatalf("expected coins unchanged before purchase, got %dg %ds %dc", m.Party.Gold, m.Party.Silver, m.Party.Copper)
+	if m.Party.Coins != 1000 {
+		t.Fatalf("expected coins unchanged before purchase, got %d coins", m.Party.Coins)
 	}
 
 	// Subtotal should reflect 20c (2 * 10c)
@@ -109,9 +107,9 @@ func TestProvisionsScreen_DeferredPurchaseExecution(t *testing.T) {
 	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	m = updated.(Model)
 
-	// 1000c - 20c = 980c -> 0g 9s 80c
-	if m.Party.Gold != 0 || m.Party.Silver != 9 || m.Party.Copper != 80 {
-		t.Errorf("expected remaining purse 0g 9s 80c, got %dg %ds %dc", m.Party.Gold, m.Party.Silver, m.Party.Copper)
+	// 1000c - 20c = 980c -> 9s 80c
+	if m.Party.Coins != 980 {
+		t.Errorf("expected remaining purse 980 coins, got %d", m.Party.Coins)
 	}
 	if m.Party.FoodLbs != 102 { // 100 + 2
 		t.Errorf("expected FoodLbs to be 102, got %d", m.Party.FoodLbs)

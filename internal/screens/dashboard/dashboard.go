@@ -34,7 +34,7 @@ type Model struct {
 	Selected         Choice
 	CurrentPartySize int
 	MaxPartySize     int
-	PartyGold        int
+	PartyCoins       int
 	Quitted          bool
 	StatusNotice     string
 	Width            int
@@ -59,7 +59,7 @@ func NewModel(cfg domain.Config) Model {
 		Selected:         -1,
 		CurrentPartySize: 0,
 		MaxPartySize:     1,
-		PartyGold:        1,
+		PartyCoins:       1000,
 		Width:            80,
 		Height:           24,
 	}
@@ -86,7 +86,7 @@ func (m *Model) UpdatePartyData(party app.Party) {
 		maxSize = 1
 	}
 	m.MaxPartySize = maxSize
-	m.PartyGold = party.Gold
+	m.PartyCoins = app.TotalCoins(party)
 }
 
 func (m *Model) SetDimensions(width, height int) {
@@ -196,7 +196,7 @@ func (m Model) View() string {
 	partyInfoStyle := lipgloss.NewStyle().
 		MarginTop(1).
 		Foreground(m.Theme.Secondary)
-	partyInfoText := fmt.Sprintf("👥 Party: %d/%d Members   💰 Coins: %d Gold", m.CurrentPartySize, m.MaxPartySize, m.PartyGold)
+	partyInfoText := fmt.Sprintf("👥 Party: %d/%d Members   💰 Coins: %s", m.CurrentPartySize, m.MaxPartySize, app.FormatCoins(m.PartyCoins))
 	sb.WriteString("\n" + partyInfoStyle.Render(partyInfoText) + "\n")
 
 	if m.StatusNotice != "" {
