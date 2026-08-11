@@ -235,7 +235,7 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 27.4.1 prompts for hero name input after card selection, replaces dead hero in party, and returns to party screen
 
 ## Feature 28: create fantasy name generator
-- [ ] 28.1 similar to fantasy location name generator
+- [ ] 28.1 internal/name_generator similar to fantasy location name generator
 - but account for races: human, elf, dwarf, hobbit, goblin, orc, and gender: male / female. 
 - gender not display shown
 - [ ] 28.2 use fantasy name generator on reroll screen for place holdernames
