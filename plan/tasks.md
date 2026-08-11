@@ -53,12 +53,12 @@ Concept layout more thoroughly in plan/mission.md
   |spare parts: 3| | tresure chests: 1|
 
 ## Feature 6: path screen
-- [ ] 6.1 create path screen
-  - [ ] 6.1.1 when a user begins a quest they should be directed to the path screen before the quest sceen
-  - [ ] 6.1.2  should still check for party size before starting
-  - [ ] 6.1.3 shows 3 generated dungeon names
-  - [ ] 6.1.4 use card format, similar to hero cards with box hover effect for selected item. 
-- [ ] 6.2 upon selection a Location should be generated and stored in the game states CurrentLocation
+- [x] 6.1 create path screen
+  - [x] 6.1.1 when a user begins a quest they should be directed to the path screen before the quest sceen
+  - [x] 6.1.2 should still check for party size before starting
+  - [x] 6.1.3 shows 3 generated dungeon names
+  - [x] 6.1.4 use card format, similar to hero cards with box hover effect for selected item. 
+- [x] 6.2 upon selection a Location should be generated and stored in the game states CurrentLocation
 
 ## Feature 7: connect quest
 
