@@ -72,15 +72,7 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 }
 
 func (m *Model) generateOptions() {
-	biomes := []struct {
-		Biome string
-		Desc  string
-		Diff  float64
-	}{
-		{Biome: "Ancient Catacombs", Desc: "A labyrinth of stone and lingering curses.", Diff: 1.0},
-		{Biome: "Shadow Caverns", Desc: "Jagged subterranean chasms where beasts lurk.", Diff: 1.2},
-		{Biome: "Brimstone Keep", Desc: "Scorching infernal halls filled with fiery perils.", Diff: 1.5},
-	}
+	biomeKeys := dungeon.AllBiomes
 
 	generatedNames := make(map[string]bool)
 	for i := 0; i < 3; i++ {
@@ -90,18 +82,21 @@ func (m *Model) generateOptions() {
 		}
 		generatedNames[name] = true
 
-		b := biomes[i%len(biomes)]
+		biomeKey := biomeKeys[(i+m.rng.Intn(len(biomeKeys)))%len(biomeKeys)]
+		biomeObj := dungeon.GetBiome(biomeKey)
+
+		diff := 1.0 + float64(i)*0.25
 		loc := app.Location{
 			Name:               name,
-			Biome:              b.Biome,
-			Description:        b.Desc,
-			DifficultyModifier: b.Diff,
+			Biome:              biomeObj.ID,
+			Description:        biomeObj.Name + " environment with " + dungeon.GetBiomeHazardDescription(biomeObj),
+			DifficultyModifier: diff,
 		}
 		m.Options[i] = loc
 
 		m.Cards[i] = ui.PathCardData{
 			Name:               loc.Name,
-			Biome:              loc.Biome,
+			Biome:              biomeObj.Name,
 			Description:        loc.Description,
 			DifficultyModifier: loc.DifficultyModifier,
 			Icon:               icon.GetNerdFont(icon.KeyDungeon),

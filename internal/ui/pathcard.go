@@ -128,12 +128,21 @@ func (c PathCardComponent) View() string {
 	}
 
 	nameStyle := lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Primary).Align(lipgloss.Center)
+	biomeStyle := lipgloss.NewStyle().Foreground(c.Theme.Tags).Align(lipgloss.Center)
 
 	nameStr := c.DataModel.Name
 	nameLines := WrapText(nameStr, innerWidth)
 	nameContent := nameStyle.Render(strings.Join(nameLines, "\n"))
 
-	frontCard := cardStyle.Render(nameContent)
+	var bodyContent string
+	if c.DataModel.Biome != "" {
+		biomeContent := biomeStyle.Render("🌲 " + strings.ToUpper(c.DataModel.Biome))
+		bodyContent = nameContent + "\n" + biomeContent
+	} else {
+		bodyContent = nameContent
+	}
+
+	frontCard := cardStyle.Render(bodyContent)
 
 	var cardResult string
 	if c.DataModel.IsActive {
