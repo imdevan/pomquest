@@ -7,7 +7,7 @@ import (
 
 func TestGenerateMonstersForRoom(t *testing.T) {
 	r := rand.New(rand.NewSource(42))
-	monsters := GenerateMonstersForRoom("Ancient Catacombs", 3, r)
+	monsters := GenerateMonstersForRoom("Ancient Catacombs", 3, r, 0)
 
 	if len(monsters) == 0 {
 		t.Fatalf("expected at least 1 monster generated, got 0")
@@ -19,6 +19,20 @@ func TestGenerateMonstersForRoom(t *testing.T) {
 		}
 		if m.MaxHP <= 0 {
 			t.Errorf("expected monster HP > 0, got %d", m.MaxHP)
+		}
+	}
+}
+
+func TestGenerateMonstersForRoomMaxCR(t *testing.T) {
+	r := rand.New(rand.NewSource(42))
+	for i := 0; i < 50; i++ {
+		monsters := GenerateMonstersForRoom("Ancient Catacombs", 10, r, 1)
+		for _, m := range monsters {
+			for _, tmpl := range BookOfMonsters {
+				if tmpl.Name == m.Name && tmpl.CR > 1 {
+					t.Errorf("expected only CR 1 monsters when maxCR=1, got %s (CR %d)", m.Name, tmpl.CR)
+				}
+			}
 		}
 	}
 }
