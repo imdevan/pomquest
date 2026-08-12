@@ -68,48 +68,77 @@ Concept layout more thoroughly in plan/mission.md
 - [x] 7.5 clear quest screen on exit
   - [x] 7.5.1 entering a new dungeon should say "entering ..."
 
+## Feature 8: refine turn order
+hero attacks
 
-## Feature 8: add book of achievements
-- [ ] 8.1 certain things are only unlocked once a user completes certain achievements
+## Feature 9: attack "animations"
 
-## Feature 9: add book of biomes
-- [ ] 9.1 add book_of_biomes
-- biomes are the type of environment a location takes place in. 
-- for example a forest dungeon is a dungeon in a forest not a dungeon that is a forest 
-biomes: forest, swamp, plains, mountains, island, desert
-- each biome contains: 
-  - id, name, monsters (flip current model of listing biome on monsters), hazards (hazard weights), traps rates, resource drop rates
-,
+"animations" 0.5 second changes to card position and border color to show state, as well as icon number pairs in the row two rows above the active card (to make space for attack card move up animation)
 
-## Feature 10: party card
-- [x] 10.1 add team hearts ui component
-  - [x] 10.1.1 takes max and current hp, renders hearts evaluated in 10 HP and 5 HP increments using icon.KeyHeart...
-  - [x] 10.1.2 add team hearts to party texture card top-right
+attack
+  card moves 1 row up
+  no border color change
+  hero attack damage type icon + attack damage value ("!"  after value for critical)
 
-## Feature 11: create custom internal/ui/texturedCard
-- [x] 11.1 create custom internal/ui/texturedCard component supporting embedded text on any of the 4 border corners with padding, margin, and styling properties
-- [x] 11.2 use TexturedCard for party card container wrapping party table
+block
+  card moves 1 down
+  no border color change
+  show shield icon against damage blocked
+
+dodge
+  card moves 1 left or right
+  border flashes blue color change
+  show dodge icon 󰆷 against damage dodged
+
+take damage
+  card moves 1 down
+  border color flashes red
+  damage taken in red with icon on enemy that dealt the damage
 
 
 
-## Feature 12: party model update
-- [x] 12.1 add these to the party model:
-  - [x] 12.1.1 small non-negative ints (loot, rope, bombs, potions, tshovels)
-  - [x] 12.1.2 enum / string with fixed set of valid options (item usage: "none", "sparing", "balanced", "generous"; greed: "none", "low", "med", "high", "extreme")
-- [x] 12.2 add those properties to the partycard
-- [x] 12.3 add current party size and max party size
-  - [x] 12.3.1 current party size defaults to 0, max party size defaults to 1 - both cached in sql db
-- [ ] 12.4 add party name
 
-## Feature 13: create icon package
-- [x] 13.1 map strings to nerdfont utf equivalents
-- [x] 13.2 some icons can have a nerd font and emoji variant
-- [x] 13.3 create library of names mapped to icons
-- [x] 13.4 replace all icons on quest screen components with icon package icons
 
-## Feature 14: create icon library
+## Feature 10: add book of achievements
+- [ ] 10.1 certain things are only unlocked once a user completes certain achievements
 
-## Feature 15: define class base stats
+## Feature 11: add book of biomes
+- [x] 11.1 add book_of_biomes
+  - [x] 11.1.1 biomes: forest, swamp, plains, mountains, island, desert
+  - [x] 11.1.2 each biome contains id, name, monsters, hazards (hazard weights), trap rates, resource drop rates
+- [x] 11.2 refactor room generation to use book_of_biomes based on dungeons' biome
+- [x] 11.3 show biome on dungeon card in path screen
+
+
+## Feature 12: party card
+- [x] 12.1 add team hearts ui component
+  - [x] 12.1.1 takes max and current hp, renders hearts evaluated in 10 HP and 5 HP increments using icon.KeyHeart...
+  - [x] 12.1.2 add team hearts to party texture card top-right
+
+## Feature 13: create custom internal/ui/texturedCard
+- [x] 13.1 create custom internal/ui/texturedCard component supporting embedded text on any of the 4 border corners with padding, margin, and styling properties
+- [x] 13.2 use TexturedCard for party card container wrapping party table
+
+
+
+## Feature 14: party model update
+- [x] 14.1 add these to the party model:
+  - [x] 14.1.1 small non-negative ints (loot, rope, bombs, potions, tshovels)
+  - [x] 14.1.2 enum / string with fixed set of valid options (item usage: "none", "sparing", "balanced", "generous"; greed: "none", "low", "med", "high", "extreme")
+- [x] 14.2 add those properties to the partycard
+- [x] 14.3 add current party size and max party size
+  - [x] 14.3.1 current party size defaults to 0, max party size defaults to 1 - both cached in sql db
+- [ ] 14.4 add party name
+
+## Feature 15: create icon package
+- [x] 15.1 map strings to nerdfont utf equivalents
+- [x] 15.2 some icons can have a nerd font and emoji variant
+- [x] 15.3 create library of names mapped to icons
+- [x] 15.4 replace all icons on quest screen components with icon package icons
+
+## Feature 16: create icon library
+
+## Feature 17: define class base stats
 only warrior
 str 2, con 2⌋
 dmg: 1d6/2+1 => 0.5, 2, 2.5, 3, 3.5, 4
@@ -119,15 +148,15 @@ dmg: ⌊(1d6+2)/2⌋ = 1, 2, 2, 3, 3, 4
 
 maybe this
 dmg: hits for 1d2 󰇋 (2) dmg!
-## Feature 16: create randomization library
+## Feature 18: create randomization library
 2d6 based system 2.6% crit chance - epic fail
 
 
-## Feature 17: define quest, biome, path, weather tables
+## Feature 19: define quest, biome, path, weather tables
 start with 1 quest, 1 biome, 1 path, 1 sunny weather
 
 
-## Feature 18: define monster stat table
+## Feature 20: define monster stat table
 
 ... maybe sql isn't needed for stats ext? unless, they are downloaded with first install... sqlite still good for saving player state. But does it make sense to ship all as embeded sqlite db?
 
@@ -137,63 +166,63 @@ start with 1 quest, 1 biome, 1 path, 1 sunny weather
 
 start with 1 monster, bats... 1hp 0def 1 atk
 
-## Feature 19: add icons
-- [x] 19.1 add heart icons in internal/adapters/icon/icon.go:74    
-  - [x] 19.1.1 10hp heart 󰋑 
-  - [x] 19.1.2 10hp - 5 heart 󰛞 
-  - [x] 19.1.3 10hp - 10 heart 󰋕
-  - [x] 19.1.4 5hp heart 󰛟
-  - [x] 19.1.5 5hp empty heart 󰛠
+## Feature 21: add icons
+- [x] 21.1 add heart icons in internal/adapters/icon/icon.go:74    
+  - [x] 21.1.1 10hp heart 󰋑 
+  - [x] 21.1.2 10hp - 5 heart 󰛞 
+  - [x] 21.1.3 10hp - 10 heart 󰋕
+  - [x] 21.1.4 5hp heart 󰛟
+  - [x] 21.1.5 5hp empty heart 󰛠
 
 
-## Feature 20: quest footer
-- [x] 20.1 use progress bar for timer progress.
-  - [x] 20.1.1 integrate github.com/charmbracelet/bubbles/progress model into ProgressBarComponent in internal/ui/progress.go
-  - [x] 20.1.2 add unit test coverage in internal/ui/progress_test.go
-- [x] 20.2 quest footer should be the full width of the questing container
-- [x] 20.3 progress bar should be the full width of the container
-- [x] 20.4 time should be aligned fully to right of container and not wrap line
+## Feature 22: quest footer
+- [x] 22.1 use progress bar for timer progress.
+  - [x] 22.1.1 integrate github.com/charmbracelet/bubbles/progress model into ProgressBarComponent in internal/ui/progress.go
+  - [x] 22.1.2 add unit test coverage in internal/ui/progress_test.go
+- [x] 22.2 quest footer should be the full width of the questing container
+- [x] 22.3 progress bar should be the full width of the container
+- [x] 22.4 time should be aligned fully to right of container and not wrap line
 
-## Feature 21: quest log
-- [x] 21.1 replace quest log border with textureCard
-- [x] 21.2 show quest log date top-left text on quest log texture card
+## Feature 23: quest log
+- [x] 23.1 replace quest log border with textureCard
+- [x] 23.2 show quest log date top-left text on quest log texture card
 
-## Feature 22: container
-- [x] 22.1 create container that wraps quest screen components
-  - [x] 22.1.1 all quest component sections flex to fit container width
-  - [x] 22.1.2 set the width of the container to 96
+## Feature 24: container
+- [x] 24.1 create container that wraps quest screen components
+  - [x] 24.1.1 all quest component sections flex to fit container width
+  - [x] 24.1.2 set the width of the container to 96
 
-## Feature 23: responsiveness
-- [x] 23.1 adjust container and nested children to use internal/ui/responsive.go
-  - [x] 23.1.1 on md: remove name from party status labels such that party card has `icon: value`
-  - [x] 23.1.2 on md: remove space between icon atk and icon def on hero cards
-  - [x] 23.1.3 on lg +: keep full label names and standard icon spacing
-  - [x] 23.1.4 on sm -: show a message saying this terminal width is not currently supported with full pane border
+## Feature 25: responsiveness
+- [x] 25.1 adjust container and nested children to use internal/ui/responsive.go
+  - [x] 25.1.1 on md: remove name from party status labels such that party card has `icon: value`
+  - [x] 25.1.2 on md: remove space between icon atk and icon def on hero cards
+  - [x] 25.1.3 on lg +: keep full label names and standard icon spacing
+  - [x] 25.1.4 on sm -: show a message saying this terminal width is not currently supported with full pane border
     - [x] 19.1.5.1 update `QuestContainerComponent.Render` in `internal/screens/questing/container.go` to check for `sm -` breakpoints (`IsAtMost(ui.BreakpointSM)`)
     - [x] 19.1.5.2 render unsupported terminal width message with full pane border
     - [x] 19.1.5.3 add unit test `TestQuestContainerComponent_SmallScreenUnsupported` in `internal/screens/questing/container_test.go`
 
-## Feature 24: fix screen transitions
-- [x] 24.1 currently there is a blink where all text seems to be shifted to left side col when going from home to questing.
-  - [x] 24.1.1 pass terminal dimensions across screen transitions to prevent uncentered rendering on frame 1
-  - [x] 24.1.2 clear terminal screen on model Init to prevent transition flash
+## Feature 26: fix screen transitions
+- [x] 26.1 currently there is a blink where all text seems to be shifted to left side col when going from home to questing.
+  - [x] 26.1.1 pass terminal dimensions across screen transitions to prevent uncentered rendering on frame 1
+  - [x] 26.1.2 clear terminal screen on model Init to prevent transition flash
 
 
-## Feature 25: add hoard screen
-- [x] 25.1 hoard screen implementation
-  - [x] 25.1.1 top section shows `treasure_hoard` ASCII art from `plan/ascii-art.md:575`
-  - [x] 25.1.2 bottom section rendered in `TexturedCard` with `"Hoard"` header on top-left
-  - [x] 25.1.3 3-column table showing total gold, total loot, total treasure, heroes hired, heroes lost, places traveled, quests started, quests completed, and time focused
-  - [x] 25.1.4 define icon keys for hoard stats reusing gold, loot, and treasure icons from party card
-  - [x] 25.1.5 unit test coverage in `internal/screens/hoard/hoard_test.go` and app integration in `cmd/pomquest/root.go`
+## Feature 27: add hoard screen
+- [x] 27.1 hoard screen implementation
+  - [x] 27.1.1 top section shows `treasure_hoard` ASCII art from `plan/ascii-art.md:575`
+  - [x] 27.1.2 bottom section rendered in `TexturedCard` with `"Hoard"` header on top-left
+  - [x] 27.1.3 3-column table showing total gold, total loot, total treasure, heroes hired, heroes lost, places traveled, quests started, quests completed, and time focused
+  - [x] 27.1.4 define icon keys for hoard stats reusing gold, loot, and treasure icons from party card
+  - [x] 27.1.5 unit test coverage in `internal/screens/hoard/hoard_test.go` and app integration in `cmd/pomquest/root.go`
 
-## Feature 26: add party screen
-- [x] 26.1 order dashboard quest, party, provisions, hoard, settings, quit
-  - [x] 26.1.1 split provisions and party to party and provisions in `internal/screens/dashboard/dashboard.go`
-  - [x] 26.1.2 wire `screenParty` navigation state in `cmd/pomquest/root.go`
-- [x] 26.2 show full hero card stat blocks
-  - [x] 26.2.1 support 10 RPG stat block view (`str`, `dex`, `cha`, `sur`, `con`, `wil`, `int`, `per`, `hel`, `luc`) when `ShowFullStats` is true in `internal/ui/herocard.go`
-  - [x] 26.2.2 show active indicator icon in row below hero card
+## Feature 28: add party screen
+- [x] 28.1 order dashboard quest, party, provisions, hoard, settings, quit
+  - [x] 28.1.1 split provisions and party to party and provisions in `internal/screens/dashboard/dashboard.go`
+  - [x] 28.1.2 wire `screenParty` navigation state in `cmd/pomquest/root.go`
+- [x] 28.2 show full hero card stat blocks
+  - [x] 28.2.1 support 10 RPG stat block view (`str`, `dex`, `cha`, `sur`, `con`, `wil`, `int`, `per`, `hel`, `luc`) when `ShowFullStats` is true in `internal/ui/herocard.go`
+  - [x] 28.2.2 show active indicator icon in row below hero card
   - see example below:
 ```
 ╭─────────────╮ 
@@ -210,43 +239,55 @@ start with 1 monster, bats... 1hp 0def 1 atk
 ╰─────────────╯ 
  󱐠              
 ```
-- [x] 26.3 active hero card should have raised/hover effect by moving the card 2 col left and 1 col up
-  - [x] 26.3.1 composite `compositeActiveOffsetCard2x1` to keep old border underneath while raising active card 2 cols left and 1 row up
-  - [x] 26.3.2 create dedicated party screen in `internal/screens/party/party.go` with hero selection keybindings and unit tests in `party_test.go`
-- [x] 26.4 render party based on sql data
-  - [x] 26.4.1 show only number of hero cards based on the party max size
-  - [x] 26.4.2 render empty hero slots as dotted border cards
-  - [x] 26.4.3 inside of the empty card should be a bordered button that reads "Recruit Hero"
-  - [x] 26.4.4 on selecting on enter'ing or r'ing should direct user to reroll screen
+- [x] 28.3 active hero card should have raised/hover effect by moving the card 2 col left and 1 col up
+  - [x] 28.3.1 composite `compositeActiveOffsetCard2x1` to keep old border underneath while raising active card 2 cols left and 1 row up
+  - [x] 28.3.2 create dedicated party screen in `internal/screens/party/party.go` with hero selection keybindings and unit tests in `party_test.go`
+- [x] 28.4 render party based on sql data
+  - [x] 28.4.1 show only number of hero cards based on the party max size
+  - [x] 28.4.2 render empty hero slots as dotted border cards
+  - [x] 28.4.3 inside of the empty card should be a bordered button that reads "Recruit Hero"
+  - [x] 28.4.4 on selecting on enter'ing or r'ing should direct user to reroll screen
   
 
 
-## Feature 27: add reroll screen
-- [x] 27.1 a dead hero can be "rerolled" from the party screen
-  - [x] 27.1.1 navigates to reroll screen when `r` or `enter` is pressed on a dead hero in `internal/screens/party/party.go`
-- [x] 27.2 reroll screen looks very similar to party screen, showing a list of four hero cards
-  - [x] 27.2.1 hero cards with no name
-  - [x] 27.2.2 the first card is always "random" and has `?` for stats (`IsUnknownStats = true` in `internal/ui/herocard.go`)
-  - [x] 27.2.3 the other three cards are 3 randomly selected classes from the class catalog programmatically
-- [x] 27.3 reroll button
-  - [x] 27.3.1 `[r]` rerolls available class options (cards 1, 2, 3), keeping card 0 ("random") untouched
-  - [x] 27.3.2 only 2 rerolls allowed (`RerollsLeft` counter tracked and rendered in header)
-- [x] 27.4 after hero picks a hero class card they pick a name
-  - [x] 27.4.1 prompts for hero name input after card selection, replaces dead hero in party, and returns to party screen
+## Feature 29: add reroll screen
+- [x] 29.1 a dead hero can be "rerolled" from the party screen
+  - [x] 29.1.1 navigates to reroll screen when `r` or `enter` is pressed on a dead hero in `internal/screens/party/party.go`
+- [x] 29.2 reroll screen looks very similar to party screen, showing a list of four hero cards
+  - [x] 29.2.1 hero cards with no name
+  - [x] 29.2.2 the first card is always "random" and has `?` for stats (`IsUnknownStats = true` in `internal/ui/herocard.go`)
+  - [x] 29.2.3 the other three cards are 3 randomly selected classes from the class catalog programmatically
+- [x] 29.3 reroll button
+  - [x] 29.3.1 `[r]` rerolls available class options (cards 1, 2, 3), keeping card 0 ("random") untouched
+  - [x] 29.3.2 only 2 rerolls allowed (`RerollsLeft` counter tracked and rendered in header)
+- [x] 29.4 after hero picks a hero class card they pick a name
+  - [x] 29.4.1 prompts for hero name input after card selection, replaces dead hero in party, and returns to party screen
 
-## Feature 28: create fantasy name generator
-- [ ] 28.1 internal/name_generator similar to fantasy location name generator
-- but account for races: human, elf, dwarf, hobbit, goblin, orc, and gender: male / female. 
-- gender not display shown
-- [ ] 28.2 use fantasy name generator on reroll screen for place holdernames
-  - [ ] 28.2.1 still allow user to change name
+## Feature 30: create fantasy name generator
+- [x] 30.1 internal/namegen package similar to internal/dungeon/book_of_location_names.go
+  - [x] 30.1.1 Race type with constants: human, elf, dwarf, hobbit, goblin, orc
+  - [x] 30.1.2 Gender type with constants: male, female (not displayed to user)
+  - [x] 30.1.3 Race-and-gender-specific syllable prefix/suffix data for name generation
+  - [x] 30.1.4 Core generator: GenerateCharacterNameFullWithRand(r, race, gender)
+  - [x] 30.1.5 Convenience functions: GenerateCharacterName, ForRace, WithRand variants
+  - [x] 30.1.6 RandomRace and RandomGender helpers
+  - [x] 30.1.7 Shared location name data (BookOfLocationNames, LocationPrefixes, LocationSuffixes)
+  - [x] 30.1.8 Comprehensive tests for all races, genders, determinism, and edge cases
+- [x] 30.2 use fantasy name generator on reroll screen for placeholder names
+  - [x] 30.2.1 pre-fill NameInput with generated name when selecting a class
+  - [x] 30.2.2 user can still clear and change name (backspace + type)
+  - [x] 30.2.3 updated reroll tests to verify placeholder name and custom name flow
+- [x] 30.3 refactor internal/dungeon/book_of_location_names.go to use namegen data
+  - [x] 30.3.1 location name data sourced from shared namegen package
+  - [x] 30.3.2 all existing exported API signatures preserved
+  - [x] 30.3.3 backward compatibility aliases maintained
 
 
 
-## Feature 29: add provisions screen
+## Feature 31: add provisions screen
 Soand Sow's General Store
-- [x] 29.1 create item catalog
-  - [x] 29.1.1 contains items with base cost
+- [x] 31.1 create item catalog
+  - [x] 31.1.1 contains items with base cost
     - [x] 24.1.1.1 food: 10c / lb
     - [x] 24.1.1.2 spare parts: 60c / part
     - [x] 24.1.1.3 ox: 20s per yoke (3 ox)
@@ -254,25 +295,25 @@ Soand Sow's General Store
     - [x] 24.1.1.5 bombs: 50c / bomb
     - [x] 24.1.1.6 shovels: 20c / shovel
     - [x] 24.1.1.7 rope: 10c / 50ft
-- [x] 29.2 add store screen
-  - [x] 29.2.1 store props: name: Soand Sow's, type: general, sells: all items at base cost
-- [x] 29.3 update coin value
-  - [x] 29.3.1 conversion rate 1g = 10s; 1s = 100c
-  - [x] 29.3.2 reduce database values to coin representation
-  - [x] 29.3.3 gold and silver are visual representations of total coin value
-- [x] 29.4 instead of owned show party card under store
-  - [x] 29.4.1 party card is a shared ui component between provisions and quests
-- [x] 29.5 set current card icons as general icon for each supply icon
-  - [x] 29.5.1 defined once in icon package registry
-- [x] 29.6 store items contain 3 cols (Item, Cost, Subtotal)
-  - [x] 29.6.1 all columns aligned left
-- [x] 29.7 when selecting item
-  - [x] 29.7.1 prompt user for amount to purchase
-  - [x] 29.7.2 update subtotal column dynamically
-- [x] 29.8 last option is purchase
-  - [x] 29.8.1 purchase row: purchase, blank cost, total subtotal
-  - [x] 29.8.2 do not change party coin values until after purchase
-- [x] 29.9 remove border from store
+- [x] 31.2 add store screen
+  - [x] 31.2.1 store props: name: Soand Sow's, type: general, sells: all items at base cost
+- [x] 31.3 update coin value
+  - [x] 31.3.1 conversion rate 1g = 10s; 1s = 100c
+  - [x] 31.3.2 reduce database values to coin representation
+  - [x] 31.3.3 gold and silver are visual representations of total coin value
+- [x] 31.4 instead of owned show party card under store
+  - [x] 31.4.1 party card is a shared ui component between provisions and quests
+- [x] 31.5 set current card icons as general icon for each supply icon
+  - [x] 31.5.1 defined once in icon package registry
+- [x] 31.6 store items contain 3 cols (Item, Cost, Subtotal)
+  - [x] 31.6.1 all columns aligned left
+- [x] 31.7 when selecting item
+  - [x] 31.7.1 prompt user for amount to purchase
+  - [x] 31.7.2 update subtotal column dynamically
+- [x] 31.8 last option is purchase
+  - [x] 31.8.1 purchase row: purchase, blank cost, total subtotal
+  - [x] 31.8.2 do not change party coin values until after purchase
+- [x] 31.9 remove border from store
 
 
 
@@ -283,37 +324,37 @@ Soand Sow's General Store
 
 
 
-## Feature 30: create ascii image library
-- [x] 30.1 use plan/ascii-art.md:575 for "treasure_hoard"
-  - [x] 30.1.1 embed `TreasureHoardASCII` art in `internal/screens/hoard/hoard.go`
+## Feature 32: create ascii image library
+- [x] 32.1 use plan/ascii-art.md:575 for "treasure_hoard"
+  - [x] 32.1.1 embed `TreasureHoardASCII` art in `internal/screens/hoard/hoard.go`
 
-## Feature 31: connect heros and party to sqlite db
-- [ ] 31.1 connect screens content for hero and party to sqlite db
+## Feature 33: connect heros and party to sqlite db
+- [ ] 33.1 connect screens content for hero and party to sqlite db
 
-## Feature 32: add settings screen
-- [x] 32.1 contains
-  - [x] 32.1.1 reset game data
+## Feature 34: add settings screen
+- [x] 34.1 contains
+  - [x] 34.1.1 reset game data
     - [x] 27.1.1.1 resets and migrates the local sql db
-  - [x] 32.1.2 audio
+  - [x] 34.1.2 audio
     - [x] 27.1.2.1 set in game audio - stub for now
-  - [x] 32.1.3 credits - stub for nowt
+  - [x] 34.1.3 credits - stub for nowt
 
-## Feature 33: db flow
-- [x] 33.1 implement db flow
-  - [x] 33.1.1 first open -> init and migrate db 
-  - [x] 33.1.2 second + open -> load db
-  - [x] 33.1.3 reset db from settings as needed
-- [x] 33.2 show party current and max size on dash board under options 
-- [x] 33.3 show party coins to right of party hero count
-- [x] 33.4 do not allow players with 0 current party members to "Quest!"
+## Feature 35: db flow
+- [x] 35.1 implement db flow
+  - [x] 35.1.1 first open -> init and migrate db 
+  - [x] 35.1.2 second + open -> load db
+  - [x] 35.1.3 reset db from settings as needed
+- [x] 35.2 show party current and max size on dash board under options 
+- [x] 35.3 show party coins to right of party hero count
+- [x] 35.4 do not allow players with 0 current party members to "Quest!"
 
-## Feature 34: create dungeon name generator
-- [x] 34.1 create internal/dungeon/dungeon_name_generator
-  - [x] 34.1.1 create book_of_location_names.go
-  - [x] 34.1.2 generate random location name like donjon https://donjon.bin.sh/fantasy/name/#type=mon
-  - [x] 34.1.3 general name generator util in internal/utils/name_generator.go
-  - [x] 34.1.4 select template (locay of blank, blank's locay, blank locay)
-  - [x] 34.1.5 select locay (dungeon | cave | cavern)
-- [x] 34.2 generate name of dest: in quest screen based on template + generated name
+## Feature 36: create dungeon name generator
+- [x] 36.1 create internal/dungeon/dungeon_name_generator
+  - [x] 36.1.1 create book_of_location_names.go
+  - [x] 36.1.2 generate random location name like donjon https://donjon.bin.sh/fantasy/name/#type=mon
+  - [x] 36.1.3 general name generator util in internal/utils/name_generator.go
+  - [x] 36.1.4 select template (locay of blank, blank's locay, blank locay)
+  - [x] 36.1.5 select locay (dungeon | cave | cavern)
+- [x] 36.2 generate name of dest: in quest screen based on template + generated name
 
 
