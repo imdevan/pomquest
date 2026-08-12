@@ -150,8 +150,11 @@ func GetBiome(id string) Biome {
 func MonstersForBiome(biomeID string) []MonsterTemplate {
 	var matches []MonsterTemplate
 	for _, m := range BookOfMonsters {
-		if m.Biome == biomeID || m.Biome == "Any" {
-			matches = append(matches, m)
+		for _, b := range m.Biome {
+			if b == biomeID || b == "Any" {
+				matches = append(matches, m)
+				break
+			}
 		}
 	}
 	if len(matches) == 0 {

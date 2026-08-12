@@ -55,3 +55,42 @@ func TestGenerateMonstersForBiomeRoom(t *testing.T) {
 		}
 	}
 }
+
+func TestMonstersForBiomeMultiBiome(t *testing.T) {
+	// Temporarily add a test monster with multiple biomes
+	testMonster := MonsterTemplate{
+		Name:  "Test Multi Monster",
+		Biome: []string{"forest", "desert"},
+		CR:    1,
+		HP:    5, MaxHP: 5, Attack: 1, Armor: 0, XPValue: 5, LootGold: 1, Icon: "👾",
+	}
+	BookOfMonsters = append(BookOfMonsters, testMonster)
+	defer func() {
+		BookOfMonsters = BookOfMonsters[:len(BookOfMonsters)-1]
+	}()
+
+	forestMonsters := MonstersForBiome("forest")
+	desertMonsters := MonstersForBiome("desert")
+
+	foundInForest := false
+	for _, m := range forestMonsters {
+		if m.Name == "Test Multi Monster" {
+			foundInForest = true
+			break
+		}
+	}
+	if !foundInForest {
+		t.Errorf("expected multi-biome monster to be found in forest biome")
+	}
+
+	foundInDesert := false
+	for _, m := range desertMonsters {
+		if m.Name == "Test Multi Monster" {
+			foundInDesert = true
+			break
+		}
+	}
+	if !foundInDesert {
+		t.Errorf("expected multi-biome monster to be found in desert biome")
+	}
+}
