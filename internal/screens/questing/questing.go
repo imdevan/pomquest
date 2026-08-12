@@ -351,7 +351,15 @@ func (m *Model) advanceDungeonCycle() {
 
 	case "InRoom":
 		crBudget := (m.CurrentRoom / 2) + 1
-		m.ActiveMonsters = dungeon.GenerateMonstersForRoom(m.ProgressData.Terrain, crBudget, m.rng)
+		maxHeroLevel := 1
+		for _, h := range m.partyHeroes {
+			if !h.IsDead && h.Level > maxHeroLevel {
+				maxHeroLevel = h.Level
+			}
+		}
+		maxCR := maxHeroLevel
+		m.ActiveMonsters = dungeon.GenerateMonstersForRoom(m.ProgressData.Terrain, crBudget, m.rng, maxCR)
+
 		if len(m.ActiveMonsters) == 0 {
 			m.DungeonState = "Victory"
 			m.TurnPhase = "hero"
