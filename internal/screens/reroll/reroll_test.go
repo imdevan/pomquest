@@ -30,6 +30,13 @@ func TestRerollScreen(t *testing.T) {
 		t.Errorf("expected Card 0 Level to be 1, got %d", model.Cards[0].Level)
 	}
 
+	// Verify all cards have placeholder names
+	for i := 0; i < 4; i++ {
+		if model.Cards[i].Name == "" {
+			t.Errorf("expected Card %d to have a placeholder name", i)
+		}
+	}
+
 	// Initial rerolls left is 2
 	if model.RerollsLeft != 2 {
 		t.Errorf("expected RerollsLeft = 2, got %d", model.RerollsLeft)
@@ -44,11 +51,23 @@ func TestRerollScreen(t *testing.T) {
 
 	// Test selecting Card 1 (specific class)
 	m.ActiveIndex = 1
+	expectedName := m.Cards[1].Name
 	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{' '}})
 	m = updated.(Model)
 
 	if !m.EnteringName {
 		t.Errorf("expected EnteringName to be true after selecting class")
+	}
+
+	// Verify the placeholder name matches the selected hero card's name
+	if m.NameInput != expectedName {
+		t.Errorf("expected NameInput to equal card name %q, got %q", expectedName, m.NameInput)
+	}
+
+	// Clear the pre-filled name with backspace
+	for len(m.NameInput) > 0 {
+		updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyBackspace})
+		m = updated.(Model)
 	}
 
 	// Type name 'arthur' and submit with Enter

@@ -13,6 +13,7 @@ import (
 	"github.com/pomquest/internal/adapters/icon"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
+	"github.com/pomquest/internal/namegen"
 	"github.com/pomquest/internal/ui"
 )
 
@@ -61,7 +62,7 @@ func (m *Model) generateCards() {
 
 	// Card 0: Random Card with unknown stats
 	m.Cards[0] = ui.HeroCardData{
-		Name:           "",
+		Name:           "?????",
 		Class:          "random",
 		Level:          1,
 		Icon:           icon.GetNerdFont(icon.KeyDice),
@@ -74,7 +75,7 @@ func (m *Model) generateCards() {
 	for i := 0; i < 3; i++ {
 		arch := catalog[perm[i]]
 		m.Cards[i+1] = ui.HeroCardData{
-			Name:          "",
+			Name:          namegen.GenerateCharacterNameWithRand(m.rng),
 			Class:         arch.Name,
 			Level:         1,
 			HP:            arch.HP,
@@ -163,7 +164,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				for i := 0; i < 3; i++ {
 					arch := catalog[perm[i]]
 					m.Cards[i+1] = ui.HeroCardData{
-						Name:          "",
+						Name:          namegen.GenerateCharacterNameWithRand(m.rng),
 						Class:         arch.Name,
 						Level:         1,
 						HP:            arch.HP,
@@ -206,13 +207,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Random card chosen
 				rndIdx := m.rng.Intn(len(catalog))
 				m.SelectedArch = catalog[rndIdx]
+				m.NameInput = namegen.GenerateCharacterNameWithRand(m.rng)
 			} else {
 				// Find matching archetype from selected card
 				cardClass := m.Cards[m.ActiveIndex].Class
 				m.SelectedArch = app.GetClassArchetype(cardClass)
+				m.NameInput = m.Cards[m.ActiveIndex].Name
 			}
 			m.EnteringName = true
-			m.NameInput = ""
 		}
 	}
 
