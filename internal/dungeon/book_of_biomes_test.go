@@ -94,3 +94,41 @@ func TestMonstersForBiomeMultiBiome(t *testing.T) {
 		t.Errorf("expected multi-biome monster to be found in desert biome")
 	}
 }
+
+func TestAdaptableMonsterName(t *testing.T) {
+	testMonster := MonsterTemplate{
+		Name:      "TestAdaptable",
+		Biome:     []string{"Any"},
+		Adaptable: true,
+		CR:        1,
+		HP:        1, MaxHP: 1, Attack: 1, Armor: 0, XPValue: 1, LootGold: 0, Icon: "👾",
+	}
+	BookOfMonsters = append(BookOfMonsters, testMonster)
+	defer func() {
+		BookOfMonsters = BookOfMonsters[:len(BookOfMonsters)-1]
+	}()
+
+	r := rand.New(rand.NewSource(1))
+	// Force candidate selection to only testMonster by temporarily filtering BookOfMonsters
+	oldBook := BookOfMonsters
+	BookOfMonsters = []MonsterTemplate{testMonster}
+	defer func() {
+		BookOfMonsters = oldBook
+	}()
+
+	monsters := GenerateMonstersForBiomeRoom("forest", 1, r, 0)
+	if len(monsters) == 0 {
+		t.Fatalf("expected 1 monster spawned")
+	}
+	if monsters[0].Name != "Forest TestAdaptable" {
+		t.Errorf("expected monster name 'Forest TestAdaptable', got %q", monsters[0].Name)
+	}
+
+	monstersDesert := GenerateMonstersForBiomeRoom("desert", 1, r, 0)
+	if len(monstersDesert) == 0 {
+		t.Fatalf("expected 1 monster spawned")
+	}
+	if monstersDesert[0].Name != "Desert TestAdaptable" {
+		t.Errorf("expected monster name 'Desert TestAdaptable', got %q", monstersDesert[0].Name)
+	}
+}

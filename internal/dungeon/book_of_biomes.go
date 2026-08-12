@@ -195,10 +195,17 @@ func GenerateMonstersForBiomeRoom(biomeID string, crBudget int, r *rand.Rand, ma
 
 	for currentCR < crBudget && len(spawned) < 3 {
 		tmpl := filtered[r.Intn(len(filtered))]
+		name := tmpl.Name
+		if tmpl.Adaptable && biomeID != "" {
+			b := GetBiome(biomeID)
+			if b.Name != "" {
+				name = b.Name + " " + tmpl.Name
+			}
+		}
 		monster := app.Monster{
 			Creature: app.Creature{
 				Noun: app.Noun{
-					Name: tmpl.Name,
+					Name: name,
 					Icon: tmpl.Icon,
 				},
 				HP:     tmpl.HP,
