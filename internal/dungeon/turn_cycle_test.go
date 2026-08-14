@@ -2,6 +2,7 @@ package dungeon
 
 import (
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/pomquest/internal/app"
@@ -43,23 +44,28 @@ func TestExecuteCombatTurnCycle_HeroAttack(t *testing.T) {
 	rng := rand.New(rand.NewSource(1))
 
 	heroes := []app.Hero{
-		{Creature: app.Creature{Noun: app.Noun{Name: "Fighter"}, HP: 10, MaxHP: 10, Attack: 3}, Stats: app.Stats{Dex: 4}},
+		{Creature: app.Creature{Noun: app.Noun{Name: "Fighter"}, HP: 10, MaxHP: 10, Attack: 3}, Class: "Fighter", Stats: app.Stats{Dex: 4}},
 	}
 
 	monsters := []app.Monster{
-		{Creature: app.Creature{Noun: app.Noun{Name: "Goblin"}, HP: 5, MaxHP: 5, Armor: 1}, Stats: app.Stats{Dex: 2}},
+		{Creature: app.Creature{Noun: app.Noun{Name: "Goblin", Icon: "👺"}, HP: 5, MaxHP: 5, Armor: 1}, Stats: app.Stats{Dex: 2}},
 	}
 
 	queue := BuildTurn(heroes, monsters, rng)
 	currentIdx := 0
+	stepPhase := 0
+	state := TurnCycleState{}
 
-	res := ExecuteCombatTurnCycle(&queue, &currentIdx, heroes, &monsters, rng)
-
-	if res.ActiveHeroIdx != 0 {
-		t.Errorf("expected ActiveHeroIdx to be 0, got %d", res.ActiveHeroIdx)
+	// Phase 0: Declaration
+	res0 := ExecuteCombatTurnCycle(&queue, &currentIdx, &stepPhase, &state, heroes, &monsters, rng)
+	if len(res0.ActionLogs) == 0 || !strings.Contains(res0.ActionLogs[0], "attacks") {
+		t.Errorf("expected declaration log containing 'attacks', got: %v", res0.ActionLogs)
 	}
-	if len(res.ActionLogs) == 0 {
-		t.Errorf("expected at least 1 action log message")
+
+	// Phase 1: Roll
+	res1 := ExecuteCombatTurnCycle(&queue, &currentIdx, &stepPhase, &state, heroes, &monsters, rng)
+	if len(res1.ActionLogs) == 0 || !strings.Contains(res1.ActionLogs[0], "rolls") {
+		t.Errorf("expected roll log containing 'rolls', got: %v", res1.ActionLogs)
 	}
 }
 
@@ -67,25 +73,92 @@ func TestExecuteCombatTurnCycle_SlayMonster(t *testing.T) {
 	rng := rand.New(rand.NewSource(2))
 
 	heroes := []app.Hero{
-		{Creature: app.Creature{Noun: app.Noun{Name: "Hero"}, HP: 10, MaxHP: 10, Attack: 100}, Stats: app.Stats{Dex: 10}},
+		{Creature: app.Creature{Noun: app.Noun{Name: "Hero"}, HP: 10, MaxHP: 10, Attack: 100}, Class: "Fighter", Stats: app.Stats{Dex: 10}},
 	}
 
 	monsters := []app.Monster{
-		{Creature: app.Creature{Noun: app.Noun{Name: "Weak Goblin"}, HP: 1, MaxHP: 1}, Stats: app.Stats{Dex: 1}},
+		{Creature: app.Creature{Noun: app.Noun{Name: "Weak Goblin", Icon: "👺"}, HP: 1, MaxHP: 1}, Stats: app.Stats{Dex: 1}},
 	}
 
 	queue := BuildTurn(heroes, monsters, rng)
 	currentIdx := 0
+	stepPhase := 0
+	state := TurnCycleState{}
 
-	res := ExecuteCombatTurnCycle(&queue, &currentIdx, heroes, &monsters, rng)
+	// Step through sub-phases until monster is slain
+	var lastRes TurnResult
+	for i := 0; i < 10; i++ {
+		lastRes = ExecuteCombatTurnCycle(&queue, &currentIdx, &stepPhase, &state, heroes, &monsters, rng)
+		if lastRes.QueueReset {
+			break
+		}
+	}
 
 	if len(monsters) != 0 {
 		t.Errorf("expected monster to be slain and removed, remaining: %d", len(monsters))
 	}
-	if res.DungeonState != "Victory" {
-		t.Errorf("expected DungeonState 'Victory', got %q", res.DungeonState)
-	}
-	if !res.QueueReset {
-		t.Errorf("expected QueueReset to be true after monster slain")
+	if lastRes.DungeonState != "Victory" {
+		t.Errorf("expected DungeonState 'Victory', got %q", lastRes.DungeonState)
 	}
 }
+
+func TestTurnCyclePhasesAndIconography(t *testing.T) {
+	rng := rand.New(rand.NewSource(10))
+
+	heroes := []app.Hero{
+		{
+			Creature: app.Creature{
+				Noun:   app.Noun{Name: "Arsel", Icon: "⚔️"},
+				HP:     10,
+				MaxHP:  10,
+				Attack: 2,
+			},
+			Class: "Fighter",
+			Stats: app.Stats{Dex: 5, Con: 2},
+		},
+	}
+
+	monsters := []app.Monster{
+		{
+			Creature: app.Creature{
+				Noun:   app.Noun{Name: "bat", Icon: "🦇"},
+				HP:     2,
+				MaxHP:  2,
+				Attack: 1,
+			},
+			Stats: app.Stats{Dex: 1, Sur: 1, Con: 0},
+		},
+	}
+
+	queue := BuildTurn(heroes, monsters, rng)
+	currentIdx := 0
+	stepPhase := 0
+	state := TurnCycleState{}
+
+	// Phase 0: declaration
+	res0 := ExecuteCombatTurnCycle(&queue, &currentIdx, &stepPhase, &state, heroes, &monsters, rng)
+	if len(res0.ActionLogs) == 0 || res0.ActionLogs[0] != "⚔️ Arsel attacks 🦇 bat" {
+		t.Errorf("Phase 0 declaration log mismatch: got %v", res0.ActionLogs)
+	}
+
+	// Phase 1: roll
+	res1 := ExecuteCombatTurnCycle(&queue, &currentIdx, &stepPhase, &state, heroes, &monsters, rng)
+	if len(res1.ActionLogs) == 0 || !strings.HasPrefix(res1.ActionLogs[0], "⚔️ Arsel rolls ") {
+		t.Errorf("Phase 1 roll log mismatch: got %v", res1.ActionLogs)
+	}
+
+	// Phase 2: target reaction (or phase 4 if miss/crit)
+	if stepPhase == 2 {
+		res2 := ExecuteCombatTurnCycle(&queue, &currentIdx, &stepPhase, &state, heroes, &monsters, rng)
+		if len(res2.ActionLogs) == 0 || !strings.HasPrefix(res2.ActionLogs[0], "🦇 bat attempts to ") {
+			t.Errorf("Phase 2 reaction log mismatch: got %v", res2.ActionLogs)
+		}
+
+		// Phase 3: target roll
+		res3 := ExecuteCombatTurnCycle(&queue, &currentIdx, &stepPhase, &state, heroes, &monsters, rng)
+		if len(res3.ActionLogs) == 0 || !strings.HasPrefix(res3.ActionLogs[0], "🦇 bat rolls ") {
+			t.Errorf("Phase 3 target roll log mismatch: got %v", res3.ActionLogs)
+		}
+	}
+}
+

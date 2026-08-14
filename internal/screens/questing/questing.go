@@ -53,6 +53,8 @@ type Model struct {
 	rng             *rand.Rand
 	TurnQueue       []dungeon.Combatant
 	CurrentTurnIdx  int
+	StepPhase       int
+	TurnCycleState  dungeon.TurnCycleState
 }
 
 // NewModel initializes the questing screen using default DB path.
@@ -502,7 +504,7 @@ func (m *Model) advanceDungeonCycle() tea.Cmd {
 			}
 		}
 
-		res := dungeon.ExecuteCombatTurnCycle(&m.TurnQueue, &m.CurrentTurnIdx, m.partyHeroes, &m.ActiveMonsters, m.rng)
+		res := dungeon.ExecuteCombatTurnCycle(&m.TurnQueue, &m.CurrentTurnIdx, &m.StepPhase, &m.TurnCycleState, m.partyHeroes, &m.ActiveMonsters, m.rng)
 		if res.ActiveHeroIdx >= 0 {
 			for i := range m.Heroes {
 				m.Heroes[i].IsActive = (i == res.ActiveHeroIdx)

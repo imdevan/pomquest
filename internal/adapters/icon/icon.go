@@ -44,6 +44,8 @@ const (
 	KeyBomb         IconKey = "bomb"
 	KeyPotion       IconKey = "potion"
 	KeyShovel       IconKey = "shovel"
+	KeyDodge        IconKey = "dodge"
+	KeyBlock        IconKey = "block"
 
 	// Hoard statistics keys
 	KeyHeroesHired     IconKey = "heroes_hired"
@@ -145,6 +147,8 @@ var registry = map[IconKey]IconPair{
 	KeyBomb:   {NerdFont: "󰚑", Emoji: "💣"},
 	KeyPotion: {NerdFont: "", Emoji: "🧪"},
 	KeyShovel: {NerdFont: "󰜐", Emoji: "⛏️"},
+	KeyDodge:  {NerdFont: "", Emoji: "💨"},
+	KeyBlock:  {NerdFont: "", Emoji: "🛡️"},
 
 	KeyHeroesHired:     {NerdFont: "󰡉", Emoji: "👥"},
 	KeyHeroesLost:      {NerdFont: "󰯈", Emoji: "💀"},
