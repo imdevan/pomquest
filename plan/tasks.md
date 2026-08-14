@@ -130,8 +130,10 @@ Concept layout more thoroughly in plan/mission.md
   - [x] 11.1.2 each biome contains id, name, monsters, hazards (hazard weights), trap rates, resource drop rates
 - [x] 11.2 refactor room generation to use book_of_biomes based on dungeons' biome
 - [x] 11.3 show biome on dungeon card in path screen
-
-
+- [x] 11.4 each biome should have it's own icon
+  - [x] 11.4.1 defined in icon library
+  - [x] 11.4.2 biome icons assigned in book of biomes
+  - [x] 11.4.3 display correct biome icon on path screen cards
 ## Feature 12: party card
 - [x] 12.1 add team hearts ui component
   - [x] 12.1.1 takes max and current hp, renders hearts evaluated in 10 HP and 5 HP increments using icon.KeyHeart...
@@ -403,6 +405,3 @@ classes have an attack type
   atk_mod: int/dex/str/cha 
   armor: flatly reduces incoming damage
 - [ ] 38.2 overhaul damage system based on book_of_attacks
-
-## Feature 39: performance improvement
-- [ ] 39.1 games starts lagging computer after so many minutes of run time
