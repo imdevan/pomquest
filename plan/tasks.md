@@ -29,7 +29,7 @@ Concept layout more thoroughly in plan/mission.md
 - [x] 4.1 implement hearth dashboard screen TUI component in internal/ui/dashboard.go
 - [x] 4.2 wire root CLI command in cmd/pomquest/root.go to trigger dashboard screen on execution
 - [x] 4.3 add unit tests in internal/ui/dashboard_test.go verifying navigation and option selection
-## Feature 5: simple questing screen
+## Feature 5: questing screen
 - [x] 5.1 create generic UI components for progress bar, log view, hero card, and party supplies bar in internal/ui/
 - [x] 5.2 implement questing screen model and prototype components with static dummy data in internal/screens/questing/
 - [x] 5.3 wire ChoiceQuest transition from dashboard screen to questing screen in cmd/pomquest/root.go
@@ -67,6 +67,9 @@ Concept layout more thoroughly in plan/mission.md
 - [x] 7.4 party card hearts should be based on current party hero health
 - [x] 7.5 clear quest screen on exit
   - [x] 7.5.1 entering a new dungeon should say "entering ..."
+- [x] 7.6 add charDelay to be used between each character added to the questing screen. 
+  - [x] 7.6.1 does not affect the 3 dot separators between lines
+  - [x] 7.6.2 next action does not execute until previously action as fully been printed
 
 ## Feature 8: refine turn order
 - [x] 8.1 add monster stat blocks internal/app/data_models.go:10
