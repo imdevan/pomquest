@@ -164,3 +164,28 @@ func TestClassIcons(t *testing.T) {
 		}
 	}
 }
+
+func TestBiomeIcons(t *testing.T) {
+	tests := []struct {
+		biome    string
+		mode     Mode
+		expected string
+	}{
+		{"forest", ModeNerdFont, "🌲"},
+		{"swamp", ModeNerdFont, "🐊"},
+		{"plains", ModeNerdFont, "🌾"},
+		{"mountains", ModeNerdFont, "🏔️"},
+		{"island", ModeNerdFont, "🏝️"},
+		{"desert", ModeNerdFont, "🏜️"},
+		{"forest", ModeEmoji, "🌲"},
+		{"swamp", ModeEmoji, "🐊"},
+		{"unknown", ModeNerdFont, "🌲"},
+	}
+
+	for _, tt := range tests {
+		got := GetBiomeIcon(tt.biome, tt.mode)
+		if got != tt.expected {
+			t.Errorf("GetBiomeIcon(%q, %v) = %q, want %q", tt.biome, tt.mode, got, tt.expected)
+		}
+	}
+}

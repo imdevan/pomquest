@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/pomquest/internal/adapters/icon"
 	"github.com/pomquest/internal/app"
 )
 
@@ -11,6 +12,7 @@ import (
 type Biome struct {
 	ID                string
 	Name              string
+	IconKey           icon.IconKey
 	HazardWeights     map[string]int
 	TrapRate          float64 // 0.0 to 1.0 likelihood of traps in rooms
 	ResourceDropRates map[string]float64
@@ -19,8 +21,9 @@ type Biome struct {
 // BookOfBiomes contains predefined biomes for dungeon locations.
 var BookOfBiomes = map[string]Biome{
 	"forest": {
-		ID:   "forest",
-		Name: "Forest",
+		ID:      "forest",
+		Name:    "Forest",
+		IconKey: icon.KeyBiomeForest,
 		HazardWeights: map[string]int{
 			"Entangling Vines": 40,
 			"Poison Ivy":       30,
@@ -35,8 +38,9 @@ var BookOfBiomes = map[string]Biome{
 		},
 	},
 	"swamp": {
-		ID:   "swamp",
-		Name: "Swamp",
+		ID:      "swamp",
+		Name:    "Swamp",
+		IconKey: icon.KeyBiomeSwamp,
 		HazardWeights: map[string]int{
 			"Mire Pit":     50,
 			"Toxic Gas":    30,
@@ -51,8 +55,9 @@ var BookOfBiomes = map[string]Biome{
 		},
 	},
 	"plains": {
-		ID:   "plains",
-		Name: "Plains",
+		ID:      "plains",
+		Name:    "Plains",
+		IconKey: icon.KeyBiomePlains,
 		HazardWeights: map[string]int{
 			"Wildfire":       40,
 			"Stampede":       35,
@@ -67,8 +72,9 @@ var BookOfBiomes = map[string]Biome{
 		},
 	},
 	"mountains": {
-		ID:   "mountains",
-		Name: "Mountains",
+		ID:      "mountains",
+		Name:    "Mountains",
+		IconKey: icon.KeyBiomeMountains,
 		HazardWeights: map[string]int{
 			"Rockslide":      50,
 			"Freezing Winds": 30,
@@ -83,8 +89,9 @@ var BookOfBiomes = map[string]Biome{
 		},
 	},
 	"island": {
-		ID:   "island",
-		Name: "Island",
+		ID:      "island",
+		Name:    "Island",
+		IconKey: icon.KeyBiomeIsland,
 		HazardWeights: map[string]int{
 			"Riptide":      40,
 			"Quick Sand":   30,
@@ -99,8 +106,9 @@ var BookOfBiomes = map[string]Biome{
 		},
 	},
 	"desert": {
-		ID:   "desert",
-		Name: "Desert",
+		ID:      "desert",
+		Name:    "Desert",
+		IconKey: icon.KeyBiomeDesert,
 		HazardWeights: map[string]int{
 			"Sandstorm":   45,
 			"Heat Stroke": 35,

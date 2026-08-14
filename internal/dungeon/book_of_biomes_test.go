@@ -15,6 +15,9 @@ func TestBookOfBiomes(t *testing.T) {
 		if b.Name == "" {
 			t.Errorf("expected non-empty name for biome %q", key)
 		}
+		if b.IconKey == "" {
+			t.Errorf("expected non-empty IconKey for biome %q", key)
+		}
 		if b.TrapRate <= 0.0 || b.TrapRate > 1.0 {
 			t.Errorf("expected TrapRate between 0 and 1 for biome %q, got %f", key, b.TrapRate)
 		}

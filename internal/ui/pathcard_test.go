@@ -52,3 +52,33 @@ func TestPathCardComponent_Sized3To4AspectRatio(t *testing.T) {
 		}
 	}
 }
+
+func TestPathCardComponent_BiomeIcons(t *testing.T) {
+	theme := ThemeFromConfig(domain.DefaultConfig())
+
+	tests := []struct {
+		biome        string
+		icon         string
+		expectedIcon string
+	}{
+		{biome: "swamp", icon: "", expectedIcon: "🐊"},
+		{biome: "desert", icon: "", expectedIcon: "🏜️"},
+		{biome: "mountains", icon: "", expectedIcon: "🏔️"},
+		{biome: "island", icon: "", expectedIcon: "🏝️"},
+		{biome: "plains", icon: "", expectedIcon: "🌾"},
+		{biome: "forest", icon: "", expectedIcon: "🌲"},
+	}
+
+	for _, tt := range tests {
+		data := PathCardData{
+			Name:  "Test Location",
+			Biome: tt.biome,
+			Icon:  tt.icon,
+		}
+		comp := NewPathCardComponent(theme, data)
+		output := comp.View()
+		if !strings.Contains(output, tt.expectedIcon) {
+			t.Errorf("expected output for biome %q to contain icon %q, got:\n%s", tt.biome, tt.expectedIcon, output)
+		}
+	}
+}

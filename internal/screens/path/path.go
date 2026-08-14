@@ -99,7 +99,7 @@ func (m *Model) generateOptions() {
 			Biome:              biomeObj.Name,
 			Description:        loc.Description,
 			DifficultyModifier: loc.DifficultyModifier,
-			Icon:               icon.GetNerdFont(icon.KeyDungeon),
+			Icon:               icon.GetBiomeIcon(biomeObj.ID, icon.ModeNerdFont),
 		}
 	}
 }

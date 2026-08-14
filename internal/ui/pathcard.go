@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/pomquest/internal/adapters/icon"
 )
 
 // PathCardData holds values for rendering a dungeon path option card.
@@ -136,7 +138,11 @@ func (c PathCardComponent) View() string {
 
 	var bodyContent string
 	if c.DataModel.Biome != "" {
-		biomeContent := biomeStyle.Render("🌲 " + strings.ToUpper(c.DataModel.Biome))
+		iconStr := c.DataModel.Icon
+		if iconStr == "" {
+			iconStr = icon.GetBiomeIcon(c.DataModel.Biome, icon.ModeNerdFont)
+		}
+		biomeContent := biomeStyle.Render(iconStr + " " + strings.ToUpper(c.DataModel.Biome))
 		bodyContent = nameContent + "\n" + biomeContent
 	} else {
 		bodyContent = nameContent

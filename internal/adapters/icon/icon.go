@@ -96,6 +96,14 @@ const (
 	KeyPaceSlow     IconKey = "pace_slow"
 	KeyPaceBalanced IconKey = "pace_balanced"
 	KeyPaceFast     IconKey = "pace_fast"
+
+	// Biome keys
+	KeyBiomeForest    IconKey = "biome_forest"
+	KeyBiomeSwamp     IconKey = "biome_swamp"
+	KeyBiomePlains    IconKey = "biome_plains"
+	KeyBiomeMountains IconKey = "biome_mountains"
+	KeyBiomeIsland    IconKey = "biome_island"
+	KeyBiomeDesert    IconKey = "biome_desert"
 )
 
 // IconPair stores both the Nerd Font UTF icon equivalent and the Emoji variant.
@@ -177,6 +185,13 @@ var registry = map[IconKey]IconPair{
 	KeyPaceSlow:     {NerdFont: "", Emoji: "🐢"},
 	KeyPaceBalanced: {NerdFont: "󰜎", Emoji: "🚶"},
 	KeyPaceFast:     {NerdFont: "󰑮", Emoji: "🏃"},
+
+	KeyBiomeForest:    {NerdFont: "🌲", Emoji: "🌲"},
+	KeyBiomeSwamp:     {NerdFont: "🐊", Emoji: "🐊"},
+	KeyBiomePlains:    {NerdFont: "🌾", Emoji: "🌾"},
+	KeyBiomeMountains: {NerdFont: "🏔️", Emoji: "🏔️"},
+	KeyBiomeIsland:    {NerdFont: "🏝️", Emoji: "🏝️"},
+	KeyBiomeDesert:    {NerdFont: "🏜️", Emoji: "🏜️"},
 
 	KeyItemUsage: {NerdFont: "", Emoji: "🎒"},
 	KeyDiet:      {NerdFont: "", Emoji: "🍽️"},
@@ -317,6 +332,30 @@ func GetClassIconKey(val string) IconKey {
 		return KeyClassGuard
 	default:
 		return IconKey(val)
+	}
+}
+
+// GetBiomeIcon returns the icon string for a biome name or key.
+func GetBiomeIcon(val string, mode Mode) string {
+	return Get(GetBiomeIconKey(val), mode)
+}
+
+func GetBiomeIconKey(val string) IconKey {
+	switch strings.ToLower(strings.TrimSpace(val)) {
+	case "forest", "biome_forest":
+		return KeyBiomeForest
+	case "swamp", "biome_swamp":
+		return KeyBiomeSwamp
+	case "plains", "biome_plains":
+		return KeyBiomePlains
+	case "mountains", "mountain", "biome_mountains":
+		return KeyBiomeMountains
+	case "island", "biome_island":
+		return KeyBiomeIsland
+	case "desert", "biome_desert":
+		return KeyBiomeDesert
+	default:
+		return KeyTerrain
 	}
 }
 
