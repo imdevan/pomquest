@@ -216,6 +216,7 @@ func GenerateMonstersForBiomeRoom(biomeID string, crBudget int, r *rand.Rand, ma
 			XPValue:  tmpl.XPValue,
 			LootGold: tmpl.LootGold,
 			Biome:    biomeID,
+			Stats:    tmpl.Stats,
 		}
 		spawned = append(spawned, monster)
 		currentCR += tmpl.CR

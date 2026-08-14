@@ -67,6 +67,7 @@ type Monster struct {
 	XPValue    int    `gorm:"default:10"`
 	LootGold   int    `gorm:"default:1"`
 	Biome      string `gorm:"size:64"`
+	Stats      `gorm:"embedded;embeddedPrefix:stat_"`
 }
 
 // NPC represents non-player characters in towns or along quest paths.
