@@ -96,21 +96,36 @@ update:
   - [x] 9.3.1 create dungeon.Combatant, BuildTurn, and ExecuteCombatTurnCycle in internal/dungeon/turn_cycle.go
   - [x] 9.3.2 refactor questing screen Fighting phase to delegate turn cycle and combat resolution to dungeon package
   - [x] 9.3.3 add comprehensive unit tests in internal/dungeon/turn_cycle_test.go
-- [ ] 9.4 turn order 1 phase = 1 line in quest log with separator delay
+- [ ] 9.4 update turn cycle.  
+- 1 phase = 1 line in quest log with separator delay
   combat turn order:
-  - subject attacks target
-  - subject rolls 1d6 + 1d6 + atk_mod = total_atk 󰓥
-    - critical_miss of attack automatically fails and subject takes 1 dmg
-  - target attempts to block_or_doge for 1d6 + def_mod = total_def /
-  - target rolls a dc
-  - subject hit target for x dmg
-  - target is slain
+  - declaration: subject attacks target
+  - roll: subject rolls 1d6 + 1d6 + atk_mod = total_atk 󰓥
+    - optional critical_announcement: critical_miss of attack automatically fails and subject takes 1 dmg
+  - target_reaction: target attempts to block_or_doge for 1d6 + def_mod = total_def /
+  - target_roll: target rolls a dc
+  - resolution: subject hit target for x dmg!
+  - optional death_declaration: target is slain
+  - [ ] 9.4.1 update turn iconography
+  - phases that begin with subject or target use the icon for the given hero class or monster.
+  - always show the hero and monster icons anytime they appear in the quest log. 
+
+  e.g. 
+
+   Arsel attacks 🦇 bat
+  . . . 
+   Arsel rolls 2 + 3 + 2 = 7 󰓥
+  . . . 
+  🦇 attempts to dodge
+  . . . 
+  🦇 rolls 2 + 1 - 1 = 2 
+  . . . 
+   Arsel hits 🦇 bat for 3 dmg!
+  . . . 
+  💀 🦇 bat dies 😵
+  . . . 
 
 
-  turn order:
-  - subject action_declaration target
-  - subject rolls a dc
-  - target attempts to reaction
 
 
 
