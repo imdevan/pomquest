@@ -12,6 +12,7 @@ The following options can be set in your configuration file:
 |--------|------|---------|-------------|
 | `editor` | string | `nvim` | Editor to use for editing bookmarks and config files |
 | `interactive_default` | bool | `false` | Start in interactive mode by default when no arguments are provided |
+| `char_delay` | int | `20` | Milliseconds delay between character prints on questing screen |
 
 ### Display Settings
 

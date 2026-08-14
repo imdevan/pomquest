@@ -72,6 +72,7 @@ func renderConfigTemplate(cfg domain.Config) string {
 	builder.WriteString(fmt.Sprintf("# editor = %q\n", cfg.Editor))
 	builder.WriteString("\n# CLI behavior\n")
 	builder.WriteString(fmt.Sprintf("# interactive_default = %t\n", cfg.InteractiveDefault))
+	builder.WriteString(fmt.Sprintf("# char_delay = %d\n", cfg.CharDelay))
 	builder.WriteString("\n# UI\n")
 	builder.WriteString("# list_spacing options: compact (title only), tight (title + description, no margin), space (default, with spacing)\n")
 	builder.WriteString(fmt.Sprintf("# list_spacing = %q\n", cfg.ListSpacing))

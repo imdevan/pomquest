@@ -21,6 +21,7 @@ type Config struct {
 	Border               string `toml:"border"`
 	InteractiveDefault   bool   `toml:"interactive_default"`
 	ListSpacing          string `toml:"list_spacing"`
+	CharDelay            int    `toml:"char_delay"`
 }
 
 // DefaultConfig returns the default configuration values.
@@ -40,6 +41,7 @@ func DefaultConfig() Config {
 		Border:               "08",
 		InteractiveDefault:   true,
 		ListSpacing:          "space",
+		CharDelay:            20,
 	}
 }
 
