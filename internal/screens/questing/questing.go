@@ -18,6 +18,7 @@ import (
 )
 
 type tickMsg time.Time
+type charTickMsg struct{}
 
 type Combatant struct {
 	IsHero     bool
@@ -41,6 +42,11 @@ type Model struct {
 	Width           int
 	Height          int
 	DBPath          string
+	CharDelay       int
+	activeAction     string
+	activeCharIdx    int
+	isTyping         bool
+	pendingActions   []string
 	DungeonState    string
 	TurnPhase       string
 	CurrentRoom     int
@@ -230,6 +236,7 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 		Theme:         theme,
 		Responsive:    ui.NewResponsiveManager(80),
 		DBPath:        dbPath,
+		CharDelay:     cfg.CharDelay,
 		LogTitle:      "12, Jan, 1000 A.P.",
 		LogMessages:   logs,
 		Heroes:        heroes,
@@ -249,6 +256,12 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 		rng:           rng,
 	}
 
+	if cfg.CharDelay > 0 && len(logs) > 0 {
+		m.activeAction = logs[len(logs)-1]
+		m.activeCharIdx = 1
+		m.isTyping = true
+	}
+
 	return m
 }
 
@@ -261,12 +274,18 @@ func (m *Model) SetDimensions(width, height int) {
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(
+	cmds := []tea.Cmd{
 		tea.ClearScreen,
 		tea.Tick(time.Second, func(t time.Time) tea.Msg {
 			return tickMsg(t)
 		}),
-	)
+	}
+	if m.isTyping && m.CharDelay > 0 {
+		cmds = append(cmds, tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
+			return charTickMsg{}
+		}))
+	}
+	return tea.Batch(cmds...)
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -277,20 +296,55 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Responsive.SetWidth(msg.Width)
 		return m, nil
 
+	case charTickMsg:
+		if m.isTyping && m.CharDelay > 0 {
+			runes := []rune(m.activeAction)
+			if m.activeCharIdx < len(runes) {
+				m.activeCharIdx++
+				return m, tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
+					return charTickMsg{}
+				})
+			}
+
+			if len(m.pendingActions) > 0 {
+				nextMsg := m.pendingActions[0]
+				m.pendingActions = m.pendingActions[1:]
+				m.LogMessages = append(m.LogMessages, nextMsg)
+				m.activeAction = nextMsg
+				m.activeCharIdx = 1
+				return m, tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
+					return charTickMsg{}
+				})
+			}
+
+			m.isTyping = false
+		}
+		return m, nil
+
 	case tickMsg:
 		if !m.Paused && m.ProgressData.CurrentSecs < m.ProgressData.TotalSecs {
+			if m.isTyping {
+				return m, tea.Tick(time.Second, func(t time.Time) tea.Msg {
+					return tickMsg(t)
+				})
+			}
+
 			m.ProgressData.CurrentSecs++
 			m.AutoTickCounter++
 			m.TurnTickSecs++
 
+			var cmd tea.Cmd
 			if m.TurnTickSecs < 3 {
 				m.updatePacingDots()
 			} else {
 				m.updatePacingDots()
-				m.advanceDungeonCycle()
+				cmd = m.advanceDungeonCycle()
 				m.TurnTickSecs = 0
 			}
 			m.saveCurrentState()
+			return m, tea.Batch(cmd, tea.Tick(time.Second, func(t time.Time) tea.Msg {
+				return tickMsg(t)
+			}))
 		}
 		return m, tea.Tick(time.Second, func(t time.Time) tea.Msg {
 			return tickMsg(t)
@@ -310,11 +364,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case " ", "space":
 			if !m.Paused {
-				m.TurnTickSecs = 3
-				m.updatePacingDots()
-				m.advanceDungeonCycle()
-				m.TurnTickSecs = 0
-				m.saveCurrentState()
+				if m.isTyping {
+					for len(m.pendingActions) > 0 {
+						nextMsg := m.pendingActions[0]
+						m.pendingActions = m.pendingActions[1:]
+						m.LogMessages = append(m.LogMessages, nextMsg)
+					}
+					m.activeCharIdx = len([]rune(m.activeAction))
+					m.isTyping = false
+				} else {
+					m.TurnTickSecs = 3
+					m.updatePacingDots()
+					cmd := m.advanceDungeonCycle()
+					m.TurnTickSecs = 0
+					m.saveCurrentState()
+					return m, cmd
+				}
 			}
 		}
 	}
@@ -345,19 +410,58 @@ func (m *Model) updatePacingDots() {
 	}
 }
 
-func (m *Model) advanceDungeonCycle() {
+func (m *Model) appendActionLog(msg string) tea.Cmd {
+	if m.CharDelay <= 0 {
+		m.LogMessages = append(m.LogMessages, msg)
+		m.activeAction = msg
+		m.activeCharIdx = len([]rune(msg))
+		m.isTyping = false
+		return nil
+	}
+
+	if !m.isTyping {
+		m.LogMessages = append(m.LogMessages, msg)
+		m.activeAction = msg
+		m.activeCharIdx = 1
+		m.isTyping = true
+		return tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
+			return charTickMsg{}
+		})
+	}
+
+	m.pendingActions = append(m.pendingActions, msg)
+	return nil
+}
+
+func (m Model) displayLogMessages() []string {
+	if !m.isTyping || len(m.LogMessages) == 0 {
+		return m.LogMessages
+	}
+
+	display := make([]string, len(m.LogMessages))
+	copy(display, m.LogMessages)
+
+	runes := []rune(m.activeAction)
+	if m.activeCharIdx < len(runes) {
+		display[len(display)-1] = string(runes[:m.activeCharIdx])
+	}
+	return display
+}
+
+func (m *Model) advanceDungeonCycle() tea.Cmd {
+	var cmds []tea.Cmd
 	if m.ProgressData.CurrentSecs >= m.ProgressData.TotalSecs {
 		if m.DungeonState != "Completed" {
 			m.DungeonState = "Completed"
-			m.LogMessages = append(m.LogMessages, "🏆 25:00 FOCUS TIMER EXPIRED! Quest completed successfully!")
+			cmds = append(cmds, m.appendActionLog("🏆 25:00 FOCUS TIMER EXPIRED! Quest completed successfully!"))
 		}
-		return
+		return tea.Batch(cmds...)
 	}
 
 	switch m.DungeonState {
 	case "Entering":
 		m.DungeonState = "InRoom"
-		m.LogMessages = append(m.LogMessages, fmt.Sprintf("🗺️ The Party enters Room #%d...", m.CurrentRoom))
+		cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🗺️ The Party enters Room #%d...", m.CurrentRoom)))
 
 	case "InRoom":
 		crBudget := (m.CurrentRoom / 2) + 1
@@ -373,13 +477,13 @@ func (m *Model) advanceDungeonCycle() {
 		if len(m.ActiveMonsters) == 0 {
 			m.DungeonState = "Victory"
 			m.TurnPhase = "hero"
-			return
+			return tea.Batch(cmds...)
 		}
 		var names []string
 		for _, mon := range m.ActiveMonsters {
 			names = append(names, fmt.Sprintf("%s %s", mon.Icon, mon.Name))
 		}
-		m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚔️ Room #%d: Encountered %s!", m.CurrentRoom, strings.Join(names, ", ")))
+		cmds = append(cmds, m.appendActionLog(fmt.Sprintf("⚔️ Room #%d: Encountered %s!", m.CurrentRoom, strings.Join(names, ", "))))
 		m.DungeonState = "Fighting"
 		m.TurnPhase = "hero"
 		m.ActiveHeroIdx = 0
@@ -388,7 +492,7 @@ func (m *Model) advanceDungeonCycle() {
 		if len(m.ActiveMonsters) == 0 {
 			m.DungeonState = "Victory"
 			m.TurnPhase = "hero"
-			return
+			return tea.Batch(cmds...)
 		}
 
 		// Re-calculate turn order if queue is empty or index exceeds queue length
@@ -431,11 +535,11 @@ func (m *Model) advanceDungeonCycle() {
 				}
 				if !livingHeroes {
 					m.DungeonState = "Defeat"
-					m.LogMessages = append(m.LogMessages, "💀 THE PARTY HAS BEEN DEFEATED! All heroes have fallen.")
+					cmds = append(cmds, m.appendActionLog("💀 THE PARTY HAS BEEN DEFEATED! All heroes have fallen."))
 				} else {
 					m.DungeonState = "Victory"
 				}
-				return
+				return tea.Batch(cmds...)
 			}
 
 			// Sort by Dex descending using stable sort / rng tie-breaking
@@ -454,7 +558,7 @@ func (m *Model) advanceDungeonCycle() {
 		if combatant.IsHero {
 			hero := &m.partyHeroes[combatant.HeroIdx]
 			if hero.IsDead || hero.HP <= 0 {
-				return
+				return tea.Batch(cmds...)
 			}
 
 			// Update UI active card state
@@ -465,7 +569,7 @@ func (m *Model) advanceDungeonCycle() {
 
 			if len(m.ActiveMonsters) == 0 {
 				m.DungeonState = "Victory"
-				return
+				return tea.Batch(cmds...)
 			}
 
 			targetMon := &m.ActiveMonsters[0]
@@ -483,15 +587,15 @@ func (m *Model) advanceDungeonCycle() {
 					hero.IsDead = true
 					hero.Status = "Dead"
 				}
-				m.LogMessages = append(m.LogMessages, fmt.Sprintf("💥 CRITICAL MISS! 🎲(1,1) %s stumbles and takes 1 recoil dmg!", hero.Name))
+				cmds = append(cmds, m.appendActionLog(fmt.Sprintf("💥 CRITICAL MISS! 🎲(1,1) %s stumbles and takes 1 recoil dmg!", hero.Name)))
 			} else if d1 == 6 && d2 == 6 {
 				// Critical Hit: deal max damage
 				maxDmg := hero.Attack*2 + 2
 				targetMon.HP -= maxDmg
-				m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d max dmg!", hero.Name, targetMon.Name, maxDmg))
+				cmds = append(cmds, m.appendActionLog(fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d max dmg!", hero.Name, targetMon.Name, maxDmg)))
 			} else if atkRollSum <= 4 {
 				// Miss on 4 or less
-				m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ 🎲(%d+%d=%d) %s attacks %s, but misses!", d1, d2, atkRollSum, hero.Name, targetMon.Name))
+				cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🛡️ 🎲(%d+%d=%d) %s attacks %s, but misses!", d1, d2, atkRollSum, hero.Name, targetMon.Name)))
 			} else {
 				// Normal Hit attempt -> Defender (Monster) defense roll
 				// Defender uses block (con/wil) or dodge (dex/sur) based on highest stat
@@ -527,11 +631,11 @@ func (m *Model) advanceDungeonCycle() {
 					if isDodge {
 						actionType = "dodges"
 					}
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ 🎲(%d+%d=%d vs %d) %s attacks, but %s %s!", d1, d2, atkTotal, defTotal, hero.Name, targetMon.Name, actionType))
+					cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🛡️ 🎲(%d+%d=%d vs %d) %s attacks, but %s %s!", d1, d2, atkTotal, defTotal, hero.Name, targetMon.Name, actionType)))
 				} else if defTotal <= atkTotal/2 {
 					// Half block/dodge -> full damage taken
 					targetMon.HP -= rawDmg
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🗡️ 🎲(%d+%d=%d vs %d) %s hits %s for %d dmg!", d1, d2, atkTotal, defTotal, hero.Name, targetMon.Name, rawDmg))
+					cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🗡️ 🎲(%d+%d=%d vs %d) %s hits %s for %d dmg!", d1, d2, atkTotal, defTotal, hero.Name, targetMon.Name, rawDmg)))
 				} else {
 					// Partial defense -> half damage rounded down (min 1)
 					dmg := rawDmg / 2
@@ -539,13 +643,13 @@ func (m *Model) advanceDungeonCycle() {
 						dmg = 1
 					}
 					targetMon.HP -= dmg
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚔️ 🎲(%d+%d=%d vs %d) %s partially hits %s for %d dmg!", d1, d2, atkTotal, defTotal, hero.Name, targetMon.Name, dmg))
+					cmds = append(cmds, m.appendActionLog(fmt.Sprintf("⚔️ 🎲(%d+%d=%d vs %d) %s partially hits %s for %d dmg!", d1, d2, atkTotal, defTotal, hero.Name, targetMon.Name, dmg)))
 				}
 			}
 
 			// Monster Slay Resolution
 			if targetMon.HP <= 0 {
-				m.LogMessages = append(m.LogMessages, fmt.Sprintf("☠️ %s is slain!", targetMon.Name))
+				cmds = append(cmds, m.appendActionLog(fmt.Sprintf("☠️ %s is slain!", targetMon.Name)))
 				m.ActiveMonsters = m.ActiveMonsters[1:]
 				// Reset turn queue to adjust monster indices
 				m.TurnQueue = nil
@@ -559,11 +663,11 @@ func (m *Model) advanceDungeonCycle() {
 		} else {
 			// Monster Action Step
 			if combatant.MonsterIdx >= len(m.ActiveMonsters) {
-				return
+				return tea.Batch(cmds...)
 			}
 			activeMonster := &m.ActiveMonsters[combatant.MonsterIdx]
 			if activeMonster.HP <= 0 {
-				return
+				return tea.Batch(cmds...)
 			}
 
 			// Find target hero (first living hero or tank)
@@ -577,8 +681,8 @@ func (m *Model) advanceDungeonCycle() {
 
 			if livingHeroIdx == -1 {
 				m.DungeonState = "Defeat"
-				m.LogMessages = append(m.LogMessages, "💀 THE PARTY HAS BEEN DEFEATED! All heroes have fallen.")
-				return
+				cmds = append(cmds, m.appendActionLog("💀 THE PARTY HAS BEEN DEFEATED! All heroes have fallen."))
+				return tea.Batch(cmds...)
 			}
 
 			targetHero := &m.partyHeroes[livingHeroIdx]
@@ -590,9 +694,9 @@ func (m *Model) advanceDungeonCycle() {
 			if mD1 == 1 && mD2 == 1 {
 				// Monster Critical Miss: takes 1 recoil dmg
 				activeMonster.HP--
-				m.LogMessages = append(m.LogMessages, fmt.Sprintf("💥 CRITICAL MISS! 🎲(1,1) %s stumbles and takes 1 recoil dmg!", activeMonster.Name))
+				cmds = append(cmds, m.appendActionLog(fmt.Sprintf("💥 CRITICAL MISS! 🎲(1,1) %s stumbles and takes 1 recoil dmg!", activeMonster.Name)))
 				if activeMonster.HP <= 0 {
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("☠️ %s is slain!", activeMonster.Name))
+					cmds = append(cmds, m.appendActionLog(fmt.Sprintf("☠️ %s is slain!", activeMonster.Name)))
 					m.ActiveMonsters = m.ActiveMonsters[1:]
 					m.TurnQueue = nil
 					m.CurrentTurnIdx = 0
@@ -605,13 +709,13 @@ func (m *Model) advanceDungeonCycle() {
 					targetHero.HP = 0
 					targetHero.IsDead = true
 					targetHero.Status = "Dead"
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d critical dmg! %s HAS FALLEN!", activeMonster.Name, targetHero.Name, mDmg, targetHero.Name))
+					cmds = append(cmds, m.appendActionLog(fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d critical dmg! %s HAS FALLEN!", activeMonster.Name, targetHero.Name, mDmg, targetHero.Name)))
 				} else {
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d critical dmg!", activeMonster.Name, targetHero.Name, mDmg))
+					cmds = append(cmds, m.appendActionLog(fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d critical dmg!", activeMonster.Name, targetHero.Name, mDmg)))
 				}
 			} else if mAtkSum <= 4 {
 				// Miss on 4 or less
-				m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ 🎲(%d+%d=%d) %s attacks %s, but misses!", mD1, mD2, mAtkSum, activeMonster.Name, targetHero.Name))
+				cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🛡️ 🎲(%d+%d=%d) %s attacks %s, but misses!", mD1, mD2, mAtkSum, activeMonster.Name, targetHero.Name)))
 			} else {
 				// Normal monster attack -> Hero defense roll (1d6 + best stat)
 				defStat := targetHero.Con
@@ -646,7 +750,7 @@ func (m *Model) advanceDungeonCycle() {
 					if isDodge {
 						actionType = "dodges"
 					}
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ 🎲(%d+%d=%d vs %d) %s attacks, but %s %s!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, actionType))
+					cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🛡️ 🎲(%d+%d=%d vs %d) %s attacks, but %s %s!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, actionType)))
 				} else if hDefTotal <= mAtkTotal/2 {
 					// Full hit taken
 					targetHero.HP -= rawDmg
@@ -654,9 +758,9 @@ func (m *Model) advanceDungeonCycle() {
 						targetHero.HP = 0
 						targetHero.IsDead = true
 						targetHero.Status = "Dead"
-						m.LogMessages = append(m.LogMessages, fmt.Sprintf("🩸 🎲(%d+%d=%d vs %d) %s strikes %s for %d dmg! %s HAS FALLEN!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, rawDmg, targetHero.Name))
+						cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🩸 🎲(%d+%d=%d vs %d) %s strikes %s for %d dmg! %s HAS FALLEN!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, rawDmg, targetHero.Name)))
 					} else {
-						m.LogMessages = append(m.LogMessages, fmt.Sprintf("🐾 🎲(%d+%d=%d vs %d) %s attacks %s for %d dmg!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, rawDmg))
+						cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🐾 🎲(%d+%d=%d vs %d) %s attacks %s for %d dmg!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, rawDmg)))
 					}
 				} else {
 					// Partial defense -> half damage
@@ -669,9 +773,9 @@ func (m *Model) advanceDungeonCycle() {
 						targetHero.HP = 0
 						targetHero.IsDead = true
 						targetHero.Status = "Dead"
-						m.LogMessages = append(m.LogMessages, fmt.Sprintf("🩸 🎲(%d+%d=%d vs %d) %s strikes %s for %d dmg! %s HAS FALLEN!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, dmg, targetHero.Name))
+						cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🩸 🎲(%d+%d=%d vs %d) %s strikes %s for %d dmg! %s HAS FALLEN!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, dmg, targetHero.Name)))
 					} else {
-						m.LogMessages = append(m.LogMessages, fmt.Sprintf("🐾 🎲(%d+%d=%d vs %d) %s attacks %s for %d dmg!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, dmg))
+						cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🐾 🎲(%d+%d=%d vs %d) %s attacks %s for %d dmg!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, dmg)))
 					}
 				}
 			}
@@ -691,12 +795,12 @@ func (m *Model) advanceDungeonCycle() {
 					m.partyHeroes[i].Level++
 					m.partyHeroes[i].MaxHP += 2
 					m.partyHeroes[i].HP = m.partyHeroes[i].MaxHP
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🌟 %s LEVELED UP to Level %d!", m.partyHeroes[i].Name, m.partyHeroes[i].Level))
+					cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🌟 %s LEVELED UP to Level %d!", m.partyHeroes[i].Name, m.partyHeroes[i].Level)))
 				}
 			}
 		}
 
-		m.LogMessages = append(m.LogMessages, fmt.Sprintf("✨ Room #%d Cleared! Party gains +%d Gold and +%d XP!", m.CurrentRoom, gold, xp))
+		cmds = append(cmds, m.appendActionLog(fmt.Sprintf("✨ Room #%d Cleared! Party gains +%d Gold and +%d XP!", m.CurrentRoom, gold, xp)))
 		m.CurrentRoom++
 		m.DungeonState = "Entering"
 		m.TurnPhase = "hero"
@@ -725,6 +829,7 @@ func (m *Model) advanceDungeonCycle() {
 	}
 	m.Supplies.CurrentHP = totalCurrentHP
 	m.Supplies.MaxHP = totalMaxHP
+	return tea.Batch(cmds...)
 }
 
 func (m *Model) saveCurrentState() {
@@ -781,7 +886,7 @@ func (m Model) View() string {
 		containerWidth = min(DefaultContainerWidth, m.Responsive.Width())
 	}
 
-	logComp := NewLogComponent(m.Theme, m.LogTitle, m.LogMessages, containerWidth)
+	logComp := NewLogComponent(m.Theme, m.LogTitle, m.displayLogMessages(), containerWidth)
 	heroCardsComp := NewHeroCardsComponent(m.Theme, m.Heroes, containerWidth, m.Responsive)
 	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth, m.Responsive)
 	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth, m.Responsive)

@@ -183,3 +183,46 @@ func TestAutomatedDungeonCycleAndPersistence(t *testing.T) {
 		t.Errorf("expected restored game logs from DB, got 0")
 	}
 }
+
+func TestCharacterDelay_TypingAnimation(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test_char_delay.db")
+
+	cfg := domain.DefaultConfig()
+	cfg.CharDelay = 10
+	model := NewModelWithDBPath(cfg, dbPath)
+
+	if !model.isTyping {
+		t.Errorf("expected isTyping to be true on initial load with CharDelay > 0")
+	}
+
+	// Step character ticks
+	initialActiveLen := model.activeCharIdx
+	updated, cmd := model.Update(charTickMsg{})
+	model = updated.(Model)
+	if cmd == nil {
+		t.Errorf("expected non-nil cmd for next char tick")
+	}
+	if model.activeCharIdx != initialActiveLen+1 {
+		t.Errorf("expected activeCharIdx to increment to %d, got %d", initialActiveLen+1, model.activeCharIdx)
+	}
+
+	// Press space to fast forward typing
+	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{' '}})
+	model = updated.(Model)
+	if model.isTyping {
+		t.Errorf("expected isTyping to be false after space bar press fast forwards text")
+	}
+
+	// Test pacing dots do not block typing state
+	model.TurnTickSecs = 1
+	model.updatePacingDots()
+	if model.isTyping {
+		t.Errorf("expected updatePacingDots not to set isTyping")
+	}
+
+	lastLog := model.LogMessages[len(model.LogMessages)-1]
+	if lastLog != ". " {
+		t.Errorf("expected last log to be pacing dot '. ', got %q", lastLog)
+	}
+}
