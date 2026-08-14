@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pomquest/internal/adapters/icon"
 	"github.com/pomquest/internal/app"
 )
 
@@ -146,6 +147,11 @@ func TestTurnCyclePhasesAndIconography(t *testing.T) {
 	if len(res1.ActionLogs) == 0 || !strings.HasPrefix(res1.ActionLogs[0], "⚔️ Arsel rolls ") {
 		t.Errorf("Phase 1 roll log mismatch: got %v", res1.ActionLogs)
 	}
+	d1Icon := icon.GetD6Icon(state.AtkD1, icon.ModeNerdFont)
+	d2Icon := icon.GetD6Icon(state.AtkD2, icon.ModeNerdFont)
+	if !strings.Contains(res1.ActionLogs[0], d1Icon) || !strings.Contains(res1.ActionLogs[0], d2Icon) {
+		t.Errorf("Phase 1 roll log missing D6 icons (%s, %s): got %s", d1Icon, d2Icon, res1.ActionLogs[0])
+	}
 
 	// Phase 2: target reaction (or phase 4 if miss/crit)
 	if stepPhase == 2 {
@@ -158,6 +164,10 @@ func TestTurnCyclePhasesAndIconography(t *testing.T) {
 		res3 := ExecuteCombatTurnCycle(&queue, &currentIdx, &stepPhase, &state, heroes, &monsters, rng)
 		if len(res3.ActionLogs) == 0 || !strings.HasPrefix(res3.ActionLogs[0], "🦇 bat rolls ") {
 			t.Errorf("Phase 3 target roll log mismatch: got %v", res3.ActionLogs)
+		}
+		defDIcon := icon.GetD6Icon(state.DefD, icon.ModeNerdFont)
+		if !strings.Contains(res3.ActionLogs[0], defDIcon) {
+			t.Errorf("Phase 3 target roll log missing D6 icon (%s): got %s", defDIcon, res3.ActionLogs[0])
 		}
 	}
 }

@@ -247,11 +247,13 @@ func ExecuteCombatTurnCycle(
 		state.AtkTotal = atkTotal
 
 		atkIcon := icon.GetNerdFont(icon.KeyAttack)
+		d1Icon := icon.GetD6Icon(d1, icon.ModeNerdFont)
+		d2Icon := icon.GetD6Icon(d2, icon.ModeNerdFont)
 		var atkExpr string
 		if atkMod >= 0 {
-			atkExpr = fmt.Sprintf("%d + %d + %d", d1, d2, atkMod)
+			atkExpr = fmt.Sprintf("%s + %s + %d", d1Icon, d2Icon, atkMod)
 		} else {
-			atkExpr = fmt.Sprintf("%d + %d - %d", d1, d2, -atkMod)
+			atkExpr = fmt.Sprintf("%s + %s - %d", d1Icon, d2Icon, -atkMod)
 		}
 		res.ActionLogs = append(res.ActionLogs, fmt.Sprintf("%s rolls %s = %d %s", subjectDisp, atkExpr, atkTotal, atkIcon))
 
@@ -370,11 +372,12 @@ func ExecuteCombatTurnCycle(
 			defIcon = icon.GetNerdFont(icon.KeyDodge)
 		}
 
+		defDIcon := icon.GetD6Icon(defD, icon.ModeNerdFont)
 		var defExpr string
 		if bestDefStat >= 0 {
-			defExpr = fmt.Sprintf("%d + %d", defD, bestDefStat)
+			defExpr = fmt.Sprintf("%s + %d", defDIcon, bestDefStat)
 		} else {
-			defExpr = fmt.Sprintf("%d - %d", defD, -bestDefStat)
+			defExpr = fmt.Sprintf("%s - %d", defDIcon, -bestDefStat)
 		}
 
 		res.ActionLogs = append(res.ActionLogs, fmt.Sprintf("%s rolls %s = %d %s", targetDisp, defExpr, defTotal, defIcon))
