@@ -19,6 +19,14 @@ import (
 
 type tickMsg time.Time
 
+type Combatant struct {
+	IsHero     bool
+	HeroIdx    int
+	MonsterIdx int
+	Dexterity  int
+	Name       string
+}
+
 // Model represents the active questing UI screen.
 type Model struct {
 	Theme           ui.Theme
@@ -45,6 +53,8 @@ type Model struct {
 	QuestID         uint
 	partyHeroes     []app.Hero
 	rng             *rand.Rand
+	TurnQueue       []Combatant
+	CurrentTurnIdx  int
 }
 
 // NewModel initializes the questing screen using default DB path.
@@ -381,107 +391,289 @@ func (m *Model) advanceDungeonCycle() {
 			return
 		}
 
-		// Find next living hero
-		livingHeroIdx := -1
-		for i := 0; i < len(m.partyHeroes); i++ {
-			idx := (m.ActiveHeroIdx + i) % len(m.partyHeroes)
-			if !m.partyHeroes[idx].IsDead && m.partyHeroes[idx].HP > 0 {
-				livingHeroIdx = idx
-				break
-			}
-		}
+		// Re-calculate turn order if queue is empty or index exceeds queue length
+		if len(m.TurnQueue) == 0 || m.CurrentTurnIdx >= len(m.TurnQueue) {
+			m.TurnQueue = nil
+			m.CurrentTurnIdx = 0
 
-		if livingHeroIdx == -1 {
-			m.DungeonState = "Defeat"
-			m.LogMessages = append(m.LogMessages, "💀 THE PARTY HAS BEEN DEFEATED! All heroes have fallen.")
-			return
-		}
-
-		if m.TurnPhase == "monster" {
-			// --- MONSTER ACTION STEP ---
-			activeMonster := m.ActiveMonsters[0]
-			targetHero := &m.partyHeroes[livingHeroIdx]
-
-			mD1 := m.rng.Intn(6) + 1
-			mD2 := m.rng.Intn(6) + 1
-			mRoll := mD1 + mD2 + activeMonster.Attack
-			heroDC := targetHero.Armor + 4
-
-			if mRoll >= heroDC {
-				mDmg := activeMonster.Attack
-				if mDmg < 1 {
-					mDmg = 1
+			// Add active living heroes
+			for i, h := range m.partyHeroes {
+				if !h.IsDead && h.HP > 0 {
+					m.TurnQueue = append(m.TurnQueue, Combatant{
+						IsHero:    true,
+						HeroIdx:   i,
+						Dexterity: h.Dex,
+						Name:      h.Name,
+					})
 				}
-				targetHero.HP -= mDmg
-				if targetHero.HP <= 0 {
-					targetHero.HP = 0
-					targetHero.IsDead = true
-					targetHero.Status = "Dead"
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🩸 %s strikes %s for %d dmg! %s HAS FALLEN!", activeMonster.Name, targetHero.Name, mDmg, targetHero.Name))
+			}
+
+			// Add active monsters
+			for i, mon := range m.ActiveMonsters {
+				if mon.HP > 0 {
+					m.TurnQueue = append(m.TurnQueue, Combatant{
+						IsHero:     false,
+						MonsterIdx: i,
+						Dexterity:  mon.Dex,
+						Name:       mon.Name,
+					})
+				}
+			}
+
+			if len(m.TurnQueue) == 0 {
+				// No combatants left
+				livingHeroes := false
+				for _, h := range m.partyHeroes {
+					if !h.IsDead && h.HP > 0 {
+						livingHeroes = true
+						break
+					}
+				}
+				if !livingHeroes {
+					m.DungeonState = "Defeat"
+					m.LogMessages = append(m.LogMessages, "💀 THE PARTY HAS BEEN DEFEATED! All heroes have fallen.")
 				} else {
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🐾 %s attacks %s for %d dmg!", activeMonster.Name, targetHero.Name, mDmg))
+					m.DungeonState = "Victory"
 				}
-			} else {
-				m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ %s attacks %s, but misses!", activeMonster.Name, targetHero.Name))
+				return
 			}
 
-			m.TurnPhase = "hero"
-			m.ActiveHeroIdx = (livingHeroIdx + 1) % len(m.partyHeroes)
+			// Sort by Dex descending using stable sort / rng tie-breaking
+			for i := 0; i < len(m.TurnQueue); i++ {
+				for j := i + 1; j < len(m.TurnQueue); j++ {
+					if m.TurnQueue[j].Dexterity > m.TurnQueue[i].Dexterity || (m.TurnQueue[j].Dexterity == m.TurnQueue[i].Dexterity && m.rng.Intn(2) == 0) {
+						m.TurnQueue[i], m.TurnQueue[j] = m.TurnQueue[j], m.TurnQueue[i]
+					}
+				}
+			}
+		}
 
-		} else {
-			// --- HERO ACTION STEP ---
-			m.ActiveHeroIdx = livingHeroIdx
-			hero := &m.partyHeroes[m.ActiveHeroIdx]
+		combatant := m.TurnQueue[m.CurrentTurnIdx]
+		m.CurrentTurnIdx++
 
-			// Update UI active state
+		if combatant.IsHero {
+			hero := &m.partyHeroes[combatant.HeroIdx]
+			if hero.IsDead || hero.HP <= 0 {
+				return
+			}
+
+			// Update UI active card state
 			for i := range m.Heroes {
-				m.Heroes[i].IsActive = (i == m.ActiveHeroIdx)
+				m.Heroes[i].IsActive = (i == combatant.HeroIdx)
+			}
+			m.ActiveHeroIdx = combatant.HeroIdx
+
+			if len(m.ActiveMonsters) == 0 {
+				m.DungeonState = "Victory"
+				return
 			}
 
 			targetMon := &m.ActiveMonsters[0]
+
+			// Attacker (Hero) rolls 2d6
 			d1 := m.rng.Intn(6) + 1
 			d2 := m.rng.Intn(6) + 1
-			atkMod := hero.Attack
+			atkRollSum := d1 + d2
 
 			if d1 == 1 && d2 == 1 {
-				// Crit Miss
+				// Critical Miss: miss and take 1 recoil damage
 				hero.HP--
 				if hero.HP <= 0 {
 					hero.HP = 0
 					hero.IsDead = true
 					hero.Status = "Dead"
 				}
-				m.LogMessages = append(m.LogMessages, fmt.Sprintf("💥 CRITICAL MISS! 🎲(1,1) %s stumbles and suffers 1 recoil dmg!", hero.Name))
+				m.LogMessages = append(m.LogMessages, fmt.Sprintf("💥 CRITICAL MISS! 🎲(1,1) %s stumbles and takes 1 recoil dmg!", hero.Name))
 			} else if d1 == 6 && d2 == 6 {
-				// Crit Hit
-				dmg := hero.Attack*2 + 2
-				targetMon.HP -= dmg
-				m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d critical dmg!", hero.Name, targetMon.Name, dmg))
+				// Critical Hit: deal max damage
+				maxDmg := hero.Attack*2 + 2
+				targetMon.HP -= maxDmg
+				m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d max dmg!", hero.Name, targetMon.Name, maxDmg))
+			} else if atkRollSum <= 4 {
+				// Miss on 4 or less
+				m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ 🎲(%d+%d=%d) %s attacks %s, but misses!", d1, d2, atkRollSum, hero.Name, targetMon.Name))
 			} else {
-				totalRoll := d1 + d2 + atkMod
-				dc := targetMon.Armor + 4
-				if totalRoll >= dc {
-					dmg := hero.Attack
+				// Normal Hit attempt -> Defender (Monster) defense roll
+				// Defender uses block (con/wil) or dodge (dex/sur) based on highest stat
+				defStat := targetMon.Con
+				if targetMon.Wil > defStat {
+					defStat = targetMon.Wil
+				}
+				dodgeStat := targetMon.Dex
+				if targetMon.Sur > dodgeStat {
+					dodgeStat = targetMon.Sur
+				}
+				isDodge := dodgeStat > defStat
+				if !isDodge && dodgeStat == defStat {
+					isDodge = m.rng.Intn(2) == 0
+				}
+				bestDefStat := defStat
+				if isDodge {
+					bestDefStat = dodgeStat
+				}
+
+				defD := m.rng.Intn(6) + 1
+				defTotal := defD + bestDefStat
+				atkTotal := atkRollSum + hero.Attack
+
+				rawDmg := hero.Attack
+				if rawDmg < 1 {
+					rawDmg = 1
+				}
+
+				if defTotal >= atkTotal {
+					// Full block / dodge
+					actionType := "blocks"
+					if isDodge {
+						actionType = "dodges"
+					}
+					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ 🎲(%d+%d=%d vs %d) %s attacks, but %s %s!", d1, d2, atkTotal, defTotal, hero.Name, targetMon.Name, actionType))
+				} else if defTotal <= atkTotal/2 {
+					// Half block/dodge -> full damage taken
+					targetMon.HP -= rawDmg
+					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🗡️ 🎲(%d+%d=%d vs %d) %s hits %s for %d dmg!", d1, d2, atkTotal, defTotal, hero.Name, targetMon.Name, rawDmg))
+				} else {
+					// Partial defense -> half damage rounded down (min 1)
+					dmg := rawDmg / 2
 					if dmg < 1 {
 						dmg = 1
 					}
 					targetMon.HP -= dmg
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🗡️ 🎲(%d+%d+%d=%d vs DC %d) %s hits %s for %d dmg!", d1, d2, atkMod, totalRoll, dc, hero.Name, targetMon.Name, dmg))
-				} else {
-					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ 🎲(%d+%d+%d=%d vs DC %d) %s attacks %s, but armor deflects!", d1, d2, atkMod, totalRoll, dc, hero.Name, targetMon.Name))
+					m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚔️ 🎲(%d+%d=%d vs %d) %s partially hits %s for %d dmg!", d1, d2, atkTotal, defTotal, hero.Name, targetMon.Name, dmg))
 				}
 			}
 
+			// Monster Slay Resolution
 			if targetMon.HP <= 0 {
 				m.LogMessages = append(m.LogMessages, fmt.Sprintf("☠️ %s is slain!", targetMon.Name))
 				m.ActiveMonsters = m.ActiveMonsters[1:]
+				// Reset turn queue to adjust monster indices
+				m.TurnQueue = nil
+				m.CurrentTurnIdx = 0
 			}
 
 			if len(m.ActiveMonsters) == 0 {
 				m.DungeonState = "Victory"
-				m.TurnPhase = "hero"
+			}
+
+		} else {
+			// Monster Action Step
+			if combatant.MonsterIdx >= len(m.ActiveMonsters) {
+				return
+			}
+			activeMonster := &m.ActiveMonsters[combatant.MonsterIdx]
+			if activeMonster.HP <= 0 {
+				return
+			}
+
+			// Find target hero (first living hero or tank)
+			livingHeroIdx := -1
+			for i, h := range m.partyHeroes {
+				if !h.IsDead && h.HP > 0 {
+					livingHeroIdx = i
+					break
+				}
+			}
+
+			if livingHeroIdx == -1 {
+				m.DungeonState = "Defeat"
+				m.LogMessages = append(m.LogMessages, "💀 THE PARTY HAS BEEN DEFEATED! All heroes have fallen.")
+				return
+			}
+
+			targetHero := &m.partyHeroes[livingHeroIdx]
+
+			mD1 := m.rng.Intn(6) + 1
+			mD2 := m.rng.Intn(6) + 1
+			mAtkSum := mD1 + mD2
+
+			if mD1 == 1 && mD2 == 1 {
+				// Monster Critical Miss: takes 1 recoil dmg
+				activeMonster.HP--
+				m.LogMessages = append(m.LogMessages, fmt.Sprintf("💥 CRITICAL MISS! 🎲(1,1) %s stumbles and takes 1 recoil dmg!", activeMonster.Name))
+				if activeMonster.HP <= 0 {
+					m.LogMessages = append(m.LogMessages, fmt.Sprintf("☠️ %s is slain!", activeMonster.Name))
+					m.ActiveMonsters = m.ActiveMonsters[1:]
+					m.TurnQueue = nil
+					m.CurrentTurnIdx = 0
+				}
+			} else if mD1 == 6 && mD2 == 6 {
+				// Monster Critical Hit: deal max damage
+				mDmg := activeMonster.Attack*2 + 2
+				targetHero.HP -= mDmg
+				if targetHero.HP <= 0 {
+					targetHero.HP = 0
+					targetHero.IsDead = true
+					targetHero.Status = "Dead"
+					m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d critical dmg! %s HAS FALLEN!", activeMonster.Name, targetHero.Name, mDmg, targetHero.Name))
+				} else {
+					m.LogMessages = append(m.LogMessages, fmt.Sprintf("⚡ CRITICAL HIT! 🎲(6,6) %s strikes %s for %d critical dmg!", activeMonster.Name, targetHero.Name, mDmg))
+				}
+			} else if mAtkSum <= 4 {
+				// Miss on 4 or less
+				m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ 🎲(%d+%d=%d) %s attacks %s, but misses!", mD1, mD2, mAtkSum, activeMonster.Name, targetHero.Name))
 			} else {
-				m.TurnPhase = "monster"
+				// Normal monster attack -> Hero defense roll (1d6 + best stat)
+				defStat := targetHero.Con
+				if targetHero.Wil > defStat {
+					defStat = targetHero.Wil
+				}
+				dodgeStat := targetHero.Dex
+				if targetHero.Sur > dodgeStat {
+					dodgeStat = targetHero.Sur
+				}
+				isDodge := dodgeStat > defStat
+				if !isDodge && dodgeStat == defStat {
+					isDodge = m.rng.Intn(2) == 0
+				}
+				bestDefStat := defStat
+				if isDodge {
+					bestDefStat = dodgeStat
+				}
+
+				hDefD := m.rng.Intn(6) + 1
+				hDefTotal := hDefD + bestDefStat
+				mAtkTotal := mAtkSum + activeMonster.Attack
+
+				rawDmg := activeMonster.Attack
+				if rawDmg < 1 {
+					rawDmg = 1
+				}
+
+				if hDefTotal >= mAtkTotal {
+					// Full block / dodge
+					actionType := "blocks"
+					if isDodge {
+						actionType = "dodges"
+					}
+					m.LogMessages = append(m.LogMessages, fmt.Sprintf("🛡️ 🎲(%d+%d=%d vs %d) %s attacks, but %s %s!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, actionType))
+				} else if hDefTotal <= mAtkTotal/2 {
+					// Full hit taken
+					targetHero.HP -= rawDmg
+					if targetHero.HP <= 0 {
+						targetHero.HP = 0
+						targetHero.IsDead = true
+						targetHero.Status = "Dead"
+						m.LogMessages = append(m.LogMessages, fmt.Sprintf("🩸 🎲(%d+%d=%d vs %d) %s strikes %s for %d dmg! %s HAS FALLEN!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, rawDmg, targetHero.Name))
+					} else {
+						m.LogMessages = append(m.LogMessages, fmt.Sprintf("🐾 🎲(%d+%d=%d vs %d) %s attacks %s for %d dmg!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, rawDmg))
+					}
+				} else {
+					// Partial defense -> half damage
+					dmg := rawDmg / 2
+					if dmg < 1 {
+						dmg = 1
+					}
+					targetHero.HP -= dmg
+					if targetHero.HP <= 0 {
+						targetHero.HP = 0
+						targetHero.IsDead = true
+						targetHero.Status = "Dead"
+						m.LogMessages = append(m.LogMessages, fmt.Sprintf("🩸 🎲(%d+%d=%d vs %d) %s strikes %s for %d dmg! %s HAS FALLEN!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, dmg, targetHero.Name))
+					} else {
+						m.LogMessages = append(m.LogMessages, fmt.Sprintf("🐾 🎲(%d+%d=%d vs %d) %s attacks %s for %d dmg!", mD1, mD2, mAtkTotal, hDefTotal, activeMonster.Name, targetHero.Name, dmg))
+					}
+				}
 			}
 		}
 
