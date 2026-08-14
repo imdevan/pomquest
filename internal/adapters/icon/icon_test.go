@@ -189,3 +189,38 @@ func TestBiomeIcons(t *testing.T) {
 		}
 	}
 }
+
+func TestD6Icons(t *testing.T) {
+	nerdFontExpected := map[int]string{
+		1: "",
+		2: "󰇋",
+		3: "󰇌",
+		4: "󰇍",
+		5: "󰇎",
+		6: "󰇏",
+	}
+
+	emojiExpected := map[int]string{
+		1: "⚀",
+		2: "⚁",
+		3: "⚂",
+		4: "⚃",
+		5: "⚄",
+		6: "⚅",
+	}
+
+	for val, expected := range nerdFontExpected {
+		got := GetD6Icon(val, ModeNerdFont)
+		if got != expected {
+			t.Errorf("GetD6Icon(%d, ModeNerdFont) = %q, want %q", val, got, expected)
+		}
+	}
+
+	for val, expected := range emojiExpected {
+		got := GetD6Icon(val, ModeEmoji)
+		if got != expected {
+			t.Errorf("GetD6Icon(%d, ModeEmoji) = %q, want %q", val, got, expected)
+		}
+	}
+}
+

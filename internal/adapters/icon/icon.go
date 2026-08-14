@@ -47,6 +47,14 @@ const (
 	KeyDodge        IconKey = "dodge"
 	KeyBlock        IconKey = "block"
 
+	// D6 die face keys
+	KeyD6_1 IconKey = "d6_1"
+	KeyD6_2 IconKey = "d6_2"
+	KeyD6_3 IconKey = "d6_3"
+	KeyD6_4 IconKey = "d6_4"
+	KeyD6_5 IconKey = "d6_5"
+	KeyD6_6 IconKey = "d6_6"
+
 	// Hoard statistics keys
 	KeyHeroesHired     IconKey = "heroes_hired"
 	KeyHeroesLost      IconKey = "heroes_lost"
@@ -149,6 +157,13 @@ var registry = map[IconKey]IconPair{
 	KeyShovel: {NerdFont: "󰜐", Emoji: "⛏️"},
 	KeyDodge:  {NerdFont: "", Emoji: "💨"},
 	KeyBlock:  {NerdFont: "", Emoji: "🛡️"},
+
+	KeyD6_1: {NerdFont: "", Emoji: "⚀"},
+	KeyD6_2: {NerdFont: "󰇋", Emoji: "⚁"},
+	KeyD6_3: {NerdFont: "󰇌", Emoji: "⚂"},
+	KeyD6_4: {NerdFont: "󰇍", Emoji: "⚃"},
+	KeyD6_5: {NerdFont: "󰇎", Emoji: "⚄"},
+	KeyD6_6: {NerdFont: "󰇏", Emoji: "⚅"},
 
 	KeyHeroesHired:     {NerdFont: "󰡉", Emoji: "👥"},
 	KeyHeroesLost:      {NerdFont: "󰯈", Emoji: "💀"},
@@ -360,6 +375,30 @@ func GetBiomeIconKey(val string) IconKey {
 		return KeyBiomeDesert
 	default:
 		return KeyTerrain
+	}
+}
+
+// GetD6Icon returns the icon string for a d6 die face value (1-6).
+func GetD6Icon(val int, mode Mode) string {
+	return Get(GetD6IconKey(val), mode)
+}
+
+func GetD6IconKey(val int) IconKey {
+	switch val {
+	case 1:
+		return KeyD6_1
+	case 2:
+		return KeyD6_2
+	case 3:
+		return KeyD6_3
+	case 4:
+		return KeyD6_4
+	case 5:
+		return KeyD6_5
+	case 6:
+		return KeyD6_6
+	default:
+		return KeyDice
 	}
 }
 
