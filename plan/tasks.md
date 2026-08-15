@@ -55,7 +55,6 @@ Concept layout more thoroughly in plan/mission.md
   - [x] 5.7.1 pad LogViewComponent visible rows to fixed maxRows height regardless of log message count
   - [x] 5.7.2 support pageHeight parameter in LogComponent to scale fixed row height relative to terminal page height (minimum 8 rows, default 14 rows)
   - [x] 5.7.3 preserve explicit card height in TexturedCard container
-
 - [ ] 5.8 align content to bottom of window
 - quest progress section should be on bottom of window
   - [x] 5.8.1 should be at least one line between top of screen and top of quest log
