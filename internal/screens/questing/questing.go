@@ -65,6 +65,7 @@ type Model struct {
 	StepPhase          int
 	TurnCycleState     dungeon.TurnCycleState
 	activeDiceAnimator *dice_animation.LineAnimator
+	LogScrollOffset    int
 }
 
 // NewModel initializes the questing screen using default DB path.
@@ -330,6 +331,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case charTickMsg:
 		if m.isTyping && m.CharDelay > 0 {
+			if m.LogScrollOffset > 0 {
+				return m, tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
+					return charTickMsg{}
+				})
+			}
 			runes := []rune(m.activeAction)
 			step := 1
 			if len(m.pendingActions) > 3 {
@@ -421,10 +427,28 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Batch(tea.ClearScreen, tea.Quit)
 
 		case "p", "esc":
-			m.Paused = !m.Paused
-			m.saveCurrentState()
+			if m.LogScrollOffset > 0 {
+				cmd := m.exitScrollMode()
+				return m, cmd
+			} else {
+				m.Paused = !m.Paused
+				m.saveCurrentState()
+			}
+
+		case "k", "up":
+			m.LogScrollOffset++
+
+		case "j", "down":
+			if m.LogScrollOffset > 0 {
+				m.LogScrollOffset--
+				if m.LogScrollOffset == 0 {
+					cmd := m.exitScrollMode()
+					return m, cmd
+				}
+			}
 
 		case " ", "space":
+			scrollCmd := m.exitScrollMode()
 			if !m.Paused {
 				if m.activeDiceAnimator != nil && !m.activeDiceAnimator.IsFinished() {
 					targetIdx := m.activeDiceAnimator.TargetLineIdx
@@ -449,9 +473,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					cmd := m.advanceDungeonCycle()
 					m.TurnTickSecs = 0
 					m.saveCurrentState()
-					return m, cmd
+					return m, tea.Batch(scrollCmd, cmd)
 				}
 			}
+			return m, scrollCmd
 		}
 	}
 
@@ -593,10 +618,43 @@ func extractEnemyIconFromLog(log string) string {
 	return "👾"
 }
 
+func (m *Model) exitScrollMode() tea.Cmd {
+	m.LogScrollOffset = 0
+	if len(m.pendingActions) > 0 {
+		if m.CharDelay <= 0 {
+			m.LogMessages = append(m.LogMessages, m.pendingActions...)
+			m.pendingActions = nil
+			m.isTyping = false
+			return nil
+		}
+		if !m.isTyping {
+			nextMsg := m.pendingActions[0]
+			m.pendingActions = m.pendingActions[1:]
+			m.LogMessages = append(m.LogMessages, nextMsg)
+			m.activeAction = nextMsg
+			m.activeCharIdx = 1
+			m.isTyping = true
+			if !isPacingDot(nextMsg) {
+				m.clearAllHeroAnimations()
+				m.triggerAnimationFromLog(nextMsg)
+			}
+			return tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
+				return charTickMsg{}
+			})
+		}
+	}
+	return nil
+}
+
 func (m *Model) appendActionLog(msg string) tea.Cmd {
 	if !isPacingDot(msg) {
 		m.clearAllHeroAnimations()
 		m.triggerAnimationFromLog(msg)
+	}
+
+	if m.LogScrollOffset > 0 {
+		m.pendingActions = append(m.pendingActions, msg)
+		return nil
 	}
 
 	if m.CharDelay <= 0 {
@@ -767,7 +825,7 @@ func (m *Model) advanceDungeonCycle() tea.Cmd {
 
 		cmds = append(cmds, m.appendActionLog(fmt.Sprintf("✨ Room #%d Cleared!", m.CurrentRoom)))
 
-		cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🎁 Party gains +%d Gold, +%d XP, and +%d Loot!", m.CurrentRoom, gold, xp, loot)))
+		cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🎁 Party gains +%d Gold, +%d XP, and +1 Loot!", gold, xp)))
 		m.CurrentRoom++
 		m.DungeonState = "Entering"
 		m.TurnPhase = "hero"
@@ -860,13 +918,14 @@ func (m Model) View() string {
 	}
 
 	roomName := fmt.Sprintf("Room #%d", m.CurrentRoom)
-	logComp := NewLogComponent(m.Theme, m.LogTitle, m.ProgressData.Destination, roomName, m.displayLogMessages(), containerWidth, m.Height)
+	logComp := NewLogComponent(m.Theme, m.LogTitle, m.ProgressData.Destination, roomName, m.displayLogMessages(), containerWidth, m.Height, m.LogScrollOffset)
 	heroCardsComp := NewHeroCardsComponent(m.Theme, m.Heroes, containerWidth, m.Responsive)
 	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth, m.Responsive)
 	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth, m.Responsive)
 
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "attack/step")),
+		key.NewBinding(key.WithKeys("j/k"), key.WithHelp("j/k", "scroll log")),
 		key.NewBinding(key.WithKeys("p/esc"), key.WithHelp("p", "pause")),
 		key.NewBinding(key.WithKeys("q"), key.WithHelp("q", "quit")),
 	}

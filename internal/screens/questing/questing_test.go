@@ -1,6 +1,7 @@
 package questing
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -384,6 +385,68 @@ func TestQuestingScreen_QuestLogHeaders(t *testing.T) {
 	}
 	if !strings.Contains(view, "Room #3") {
 		t.Errorf("expected quest log to render room name (top-right), got:\n%s", view)
+	}
+}
+
+func TestQuestingScreen_LogScrollingJK(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test_questing_scrolling.db")
+
+	cfg := domain.DefaultConfig()
+	m := NewModelWithDBPath(cfg, dbPath)
+	m.CharDelay = 0
+
+	var logMsgs []string
+	for i := 1; i <= 20; i++ {
+		logMsgs = append(logMsgs, fmt.Sprintf("Event message number %d", i))
+	}
+	m.LogMessages = logMsgs
+
+	// Pressing 'k' scrolls back up in log history
+	updatedM, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	modelK := updatedM.(Model)
+	if modelK.LogScrollOffset != 1 {
+		t.Errorf("expected LogScrollOffset to be 1 after pressing 'k', got %d", modelK.LogScrollOffset)
+	}
+
+	// Pressing 'j' scrolls back down towards live logs
+	updatedM2, _ := modelK.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	modelJ := updatedM2.(Model)
+	if modelJ.LogScrollOffset != 0 {
+		t.Errorf("expected LogScrollOffset to be 0 after pressing 'j', got %d", modelJ.LogScrollOffset)
+	}
+
+	// While in scrolling mode, new log events buffer to pendingActions without printing
+	(&modelK).appendActionLog("Queued Event While Scrolling")
+	if len(modelK.pendingActions) != 1 || modelK.pendingActions[0] != "Queued Event While Scrolling" {
+		t.Errorf("expected new log event to be queued in pendingActions while scrolling, got pending: %v", modelK.pendingActions)
+	}
+
+	// Pressing 'esc' while in scrolling mode resets LogScrollOffset to 0 and flushes queue
+	if modelK.Paused {
+		t.Errorf("modelK should not be paused")
+	}
+	escM, _ := modelK.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	modelEsc := escM.(Model)
+	if modelEsc.LogScrollOffset != 0 {
+		t.Errorf("expected LogScrollOffset to reset to 0 after pressing esc in scroll mode, got %d", modelEsc.LogScrollOffset)
+	}
+	if modelEsc.Paused {
+		t.Errorf("expected pressing esc in scroll mode NOT to toggle Paused, but Paused was true")
+	}
+	if len(modelEsc.pendingActions) != 0 {
+		t.Errorf("expected pendingActions to be empty after exiting scroll mode, got: %v", modelEsc.pendingActions)
+	}
+	lastMsg := modelEsc.LogMessages[len(modelEsc.LogMessages)-1]
+	if lastMsg != "Queued Event While Scrolling" {
+		t.Errorf("expected last log message to be 'Queued Event While Scrolling', got %q", lastMsg)
+	}
+
+	// Pressing 'esc' when NOT in scrolling mode toggles Paused
+	escM2, _ := modelEsc.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	modelEsc2 := escM2.(Model)
+	if !modelEsc2.Paused {
+		t.Errorf("expected pressing esc when not in scroll mode to toggle Paused to true")
 	}
 }
 

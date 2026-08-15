@@ -4,13 +4,14 @@ import "github.com/pomquest/internal/ui"
 
 // LogComponent wraps ui.LogViewComponent for the top dungeon event log.
 type LogComponent struct {
-	theme       ui.Theme
-	date        string
-	dungeonName string
-	roomName    string
-	messages    []string
-	width       int
-	pageHeight  int
+	theme        ui.Theme
+	date         string
+	dungeonName  string
+	roomName     string
+	messages     []string
+	width        int
+	pageHeight   int
+	scrollOffset int
 }
 
 func NewLogComponent(
@@ -20,7 +21,8 @@ func NewLogComponent(
 	roomName string,
 	messages []string,
 	width int,
-	pageHeight ...int,
+	pageHeight int,
+	scrollOffset ...int,
 ) LogComponent {
 	if width <= 0 {
 		width = DefaultContainerWidth
@@ -28,18 +30,19 @@ func NewLogComponent(
 	if date == "" {
 		date = "12, Jan, 1000 A.P."
 	}
-	ph := 0
-	if len(pageHeight) > 0 {
-		ph = pageHeight[0]
+	so := 0
+	if len(scrollOffset) > 0 {
+		so = scrollOffset[0]
 	}
 	return LogComponent{
-		theme:       theme,
-		date:        date,
-		dungeonName: dungeonName,
-		roomName:    roomName,
-		messages:    messages,
-		width:       width,
-		pageHeight:  ph,
+		theme:        theme,
+		date:         date,
+		dungeonName:  dungeonName,
+		roomName:     roomName,
+		messages:     messages,
+		width:        width,
+		pageHeight:   pageHeight,
+		scrollOffset: so,
 	}
 }
 
@@ -54,13 +57,14 @@ func (c LogComponent) View() string {
 		}
 	}
 	logView := ui.LogViewComponent{
-		Theme:      c.theme,
-		TopTopLeft: c.date,
-		TopLeft:    c.dungeonName,
-		TopRight:   c.roomName,
-		Messages:   c.messages,
-		MaxRows:    maxRows,
-		Width:      c.width,
+		Theme:        c.theme,
+		TopTopLeft:   c.date,
+		TopLeft:      c.dungeonName,
+		TopRight:     c.roomName,
+		Messages:     c.messages,
+		MaxRows:      maxRows,
+		Width:        c.width,
+		ScrollOffset: c.scrollOffset,
 	}
 	return logView.View()
 }
