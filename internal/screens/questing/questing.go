@@ -18,9 +18,14 @@ import (
 	"github.com/pomquest/internal/ui/dice_animation"
 )
 
+var AnimDuration = 500 * time.Millisecond
+
 type tickMsg time.Time
 type charTickMsg struct{}
 type diceTickMsg struct{}
+type animTickMsg struct {
+	HeroIdx int
+}
 
 // Model represents the active questing UI screen.
 type Model struct {
@@ -293,6 +298,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Responsive.SetWidth(msg.Width)
 		return m, nil
 
+	case animTickMsg:
+		if msg.HeroIdx >= 0 && msg.HeroIdx < len(m.Heroes) {
+			m.Heroes[msg.HeroIdx].AnimState = ui.HeroAnimationState{Type: ui.AnimNone}
+		}
+		return m, nil
+
 	case diceTickMsg:
 		if m.activeDiceAnimator != nil {
 			m.activeDiceAnimator.Tick(m.activeDiceAnimator.FrameInterval())
@@ -338,6 +349,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.LogMessages = append(m.LogMessages, nextMsg)
 				m.activeAction = nextMsg
 				m.activeCharIdx = 1
+				if !isPacingDot(nextMsg) {
+					m.clearAllHeroAnimations()
+					m.triggerAnimationFromLog(nextMsg)
+				}
 				return m, tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
 					return charTickMsg{}
 				})
@@ -445,7 +460,124 @@ func (m *Model) updatePacingDots() {
 	}
 }
 
+func isPacingDot(msg string) bool {
+	trimmed := strings.TrimSpace(msg)
+	return trimmed == "." || trimmed == ". ." || trimmed == ". . ."
+}
+
+func (m *Model) clearAllHeroAnimations() {
+	for i := range m.Heroes {
+		m.Heroes[i].AnimState = ui.HeroAnimationState{Type: ui.AnimNone}
+	}
+}
+
+func (m *Model) triggerHeroAnimation(heroIdx int, state ui.HeroAnimationState) {
+	if heroIdx >= 0 && heroIdx < len(m.Heroes) {
+		m.Heroes[heroIdx].AnimState = state
+	}
+}
+
+func (m *Model) triggerAnimationFromLog(log string) {
+	if log == "" {
+		return
+	}
+
+	cleanLog := log
+
+	if strings.Contains(cleanLog, " hits ") {
+		hitsIdx := strings.Index(cleanLog, " hits ")
+		for i, h := range m.Heroes {
+			if strings.Contains(cleanLog, h.Name) {
+				heroNameIdx := strings.Index(cleanLog, h.Name)
+				if heroNameIdx < hitsIdx {
+					isCrit := strings.Contains(cleanLog, "CRITICAL")
+					dmgText := extractDmgFromLog(cleanLog)
+					if isCrit {
+						dmgText += "!!!"
+					} else {
+						dmgText += "!"
+					}
+					m.triggerHeroAnimation(i, ui.HeroAnimationState{
+						Type:       ui.AnimAttack,
+						DamageText: dmgText,
+						Icon:       icon.GetNerdFont(icon.KeyAttack),
+						IsCrit:     isCrit,
+					})
+				} else {
+					enemyIcon := extractEnemyIconFromLog(cleanLog)
+					dmgText := extractDmgFromLog(cleanLog)
+					m.triggerHeroAnimation(i, ui.HeroAnimationState{
+						Type:       ui.AnimTakeDamage,
+						DamageText: dmgText,
+						Icon:       enemyIcon,
+					})
+				}
+			}
+		}
+	} else if strings.Contains(cleanLog, "CRITICAL HIT!") || strings.Contains(cleanLog, "strikes for") {
+		for i, h := range m.Heroes {
+			if strings.Contains(cleanLog, h.Name) {
+				dmgText := extractDmgFromLog(cleanLog) + "!!!"
+				m.triggerHeroAnimation(i, ui.HeroAnimationState{
+					Type:       ui.AnimAttack,
+					DamageText: dmgText,
+					Icon:       icon.GetNerdFont(icon.KeyAttack),
+					IsCrit:     true,
+				})
+			}
+		}
+	} else if strings.Contains(cleanLog, "blocks") {
+		for i, h := range m.Heroes {
+			if strings.Contains(cleanLog, h.Name) {
+				m.triggerHeroAnimation(i, ui.HeroAnimationState{
+					Type:       ui.AnimBlock,
+					DamageText: "0",
+					Icon:       icon.GetNerdFont(icon.KeyBlock),
+				})
+			}
+		}
+	} else if strings.Contains(cleanLog, "dodges") {
+		for i, h := range m.Heroes {
+			if strings.Contains(cleanLog, h.Name) {
+				m.triggerHeroAnimation(i, ui.HeroAnimationState{
+					Type:             ui.AnimDodge,
+					DamageText:       "0",
+					Icon:             icon.GetNerdFont(icon.KeyDodge),
+					HorizontalOffset: 1,
+				})
+			}
+		}
+	}
+}
+
+func extractDmgFromLog(log string) string {
+	for _, word := range strings.Fields(log) {
+		trimmed := strings.Trim(word, "!,.")
+		if len(trimmed) > 0 && trimmed[0] >= '0' && trimmed[0] <= '9' {
+			return trimmed
+		}
+	}
+	return "1"
+}
+
+func extractEnemyIconFromLog(log string) string {
+	words := strings.Fields(log)
+	for _, w := range words {
+		for _, r := range w {
+			if r > 127 && r != '⚔' && r != '🛡' && r != '⚡' && r != '💥' {
+				return string(r)
+			}
+		}
+	}
+	return "👾"
+}
+
 func (m *Model) appendActionLog(msg string) tea.Cmd {
+	if !isPacingDot(msg) {
+		m.clearAllHeroAnimations()
+		m.triggerAnimationFromLog(msg)
+	}
+
 	if m.CharDelay <= 0 {
 		m.LogMessages = append(m.LogMessages, msg)
 		m.activeAction = msg

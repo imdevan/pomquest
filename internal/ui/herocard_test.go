@@ -209,5 +209,122 @@ func TestHeroCardComponent_EmptySlotCard(t *testing.T) {
 	}
 }
 
+func TestHeroCardComponent_AttackAnimation(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	hero := HeroCardData{
+		Name:     "Rivthar",
+		Class:    "Warrior",
+		Level:    2,
+		HP:       10,
+		MaxHP:    10,
+		IsActive: true,
+		AnimState: HeroAnimationState{
+			Type:       AnimAttack,
+			DamageText: "3!",
+			Icon:       "⚔️",
+		},
+	}
+
+	comp := NewHeroCardComponent(theme, hero)
+	view := comp.View()
+
+	// Attack animation moves card 1 row up (starts without leading newlines)
+	if strings.HasPrefix(view, "\n") {
+		t.Errorf("expected attack animation card NOT to start with leading newline (raised 1 row up), got:\n%q", view)
+	}
+
+	// Under border remains in standard active position (base box ╮ and bottom ╰──────────╯)
+	if !strings.Contains(view, "╮") || !strings.Contains(view, "╰") {
+		t.Errorf("expected attack card to contain under border (╮, ╰), got:\n%s", view)
+	}
+}
+
+func TestHeroCardComponent_BlockAnimation(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	hero := HeroCardData{
+		Name:  "Rivthar",
+		Class: "Warrior",
+		Level: 2,
+		HP:    10,
+		MaxHP: 10,
+		AnimState: HeroAnimationState{
+			Type:       AnimBlock,
+			DamageText: "0",
+			Icon:       "🛡️",
+		},
+	}
+
+	comp := NewHeroCardComponent(theme, hero)
+	view := comp.View()
+
+	// Block animation moves card 1 row down (3 leading newlines)
+	if !strings.HasPrefix(view, "\n\n\n") {
+		t.Errorf("expected block animation card to start with 3 leading newlines (moved 1 row down), got:\n%q", view)
+	}
+}
+
+func TestHeroCardComponent_DodgeAnimation(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	hero := HeroCardData{
+		Name:  "Rivthar",
+		Class: "Warrior",
+		Level: 2,
+		HP:    10,
+		MaxHP: 10,
+		AnimState: HeroAnimationState{
+			Type:             AnimDodge,
+			DamageText:       "0",
+			Icon:             "󰆷",
+			HorizontalOffset: 1,
+		},
+	}
+
+	comp := NewHeroCardComponent(theme, hero)
+	view := comp.View()
+
+	// Dodge animation shifts card horizontally (leading space per line)
+	lines := strings.Split(view, "\n")
+	if len(lines) < 2 || !strings.HasPrefix(lines[1], " ") {
+		t.Errorf("expected dodge animation card to shift right with leading space on lines, got:\n%s", view)
+	}
+}
+
+func TestHeroCardComponent_TakeDamageAnimation(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	hero := HeroCardData{
+		Name:  "Rivthar",
+		Class: "Warrior",
+		Level: 2,
+		HP:    8,
+		MaxHP: 10,
+		AnimState: HeroAnimationState{
+			Type:       AnimTakeDamage,
+			DamageText: "2",
+			Icon:       "🦇",
+		},
+	}
+
+	comp := NewHeroCardComponent(theme, hero)
+	view := comp.View()
+
+	// Take damage animation moves card 1 row down (3 leading newlines)
+	if !strings.HasPrefix(view, "\n\n\n") {
+		t.Errorf("expected take damage animation card to start with 3 leading newlines, got:\n%q", view)
+	}
+
+	// Verify under border (╮, │, ╯) is rendered on the right edge
+	if !strings.Contains(view, "╮") || !strings.Contains(view, "╯") {
+		t.Errorf("expected take damage card to render under border (╮, ╯), got:\n%s", view)
+	}
+}
+
 
 

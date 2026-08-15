@@ -9,6 +9,7 @@ import (
 
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
+	"github.com/pomquest/internal/ui"
 )
 
 func TestQuestingScreen(t *testing.T) {
@@ -224,5 +225,64 @@ func TestCharacterDelay_TypingAnimation(t *testing.T) {
 	lastLog := model.LogMessages[len(model.LogMessages)-1]
 	if lastLog != ". " {
 		t.Errorf("expected last log to be pacing dot '. ', got %q", lastLog)
+	}
+}
+
+func TestHeroAttackAnimationsFromLog(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test_anim.db")
+
+	cfg := domain.DefaultConfig()
+	model := NewModelWithDBPath(cfg, dbPath)
+
+	// 1. Attack animation log: " jimmothy hits 🦇 Bat for 3 dmg!"
+	log1 := " jimmothy hits 🦇 Bat for 3 dmg!"
+	_ = model.appendActionLog(log1)
+
+	if model.Heroes[0].AnimState.Type != ui.AnimAttack {
+		t.Errorf("expected jimmothy card to have AnimAttack state, got %v", model.Heroes[0].AnimState.Type)
+	}
+	if model.Heroes[0].AnimState.DamageText != "3!" {
+		t.Errorf("expected damage text '3!', got %q", model.Heroes[0].AnimState.DamageText)
+	}
+
+	// View rendering contains damage row indicator "⚔️ 3!"
+	view := model.View()
+	if !strings.Contains(view, "3!") {
+		t.Errorf("expected view to render '3!' in damage row, got:\n%s", view)
+	}
+
+	// 2. Separator line (. . . ) keeps animation state active!
+	model.updatePacingDots()
+	if model.Heroes[0].AnimState.Type != ui.AnimAttack {
+		t.Errorf("expected animation state to remain AnimAttack during pacing dot separator line, got %v", model.Heroes[0].AnimState.Type)
+	}
+
+	// 3. Next phase line clears previous animation state!
+	nextPhaseLog := "💀 🦇 Bat dies 😵"
+	_ = model.appendActionLog(nextPhaseLog)
+	if model.Heroes[0].AnimState.Type != ui.AnimNone {
+		t.Errorf("expected hero AnimState to reset to AnimNone when next phase line begins, got %v", model.Heroes[0].AnimState.Type)
+	}
+
+	// 4. Block animation log: "jimmothy blocks the attack!"
+	log2 := "jimmothy blocks the attack!"
+	_ = model.appendActionLog(log2)
+	if model.Heroes[0].AnimState.Type != ui.AnimBlock {
+		t.Errorf("expected hero card to have AnimBlock state, got %v", model.Heroes[0].AnimState.Type)
+	}
+
+	// 5. Dodge animation log: "jimmothy dodges the attack!"
+	log3 := "jimmothy dodges the attack!"
+	_ = model.appendActionLog(log3)
+	if model.Heroes[0].AnimState.Type != ui.AnimDodge {
+		t.Errorf("expected hero card to have AnimDodge state, got %v", model.Heroes[0].AnimState.Type)
+	}
+
+	// 6. Take damage animation log: "🦇 Bat hits jimmothy for 2 dmg!"
+	log4 := "🦇 Bat hits jimmothy for 2 dmg!"
+	_ = model.appendActionLog(log4)
+	if model.Heroes[0].AnimState.Type != ui.AnimTakeDamage {
+		t.Errorf("expected hero card to have AnimTakeDamage state, got %v", model.Heroes[0].AnimState.Type)
 	}
 }

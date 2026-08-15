@@ -9,6 +9,26 @@ import (
 	"github.com/pomquest/internal/app"
 )
 
+// AnimationType represents combat animation states for hero cards.
+type AnimationType int
+
+const (
+	AnimNone AnimationType = iota
+	AnimAttack
+	AnimBlock
+	AnimDodge
+	AnimTakeDamage
+)
+
+// HeroAnimationState defines active combat animation parameters for a hero card.
+type HeroAnimationState struct {
+	Type             AnimationType
+	DamageText       string
+	Icon             string
+	IsCrit           bool
+	HorizontalOffset int
+}
+
 // HeroCardData holds values for a single hero card display.
 type HeroCardData struct {
 	Name           string
@@ -26,6 +46,7 @@ type HeroCardData struct {
 	ShowFullStats  bool
 	IsUnknownStats bool
 	IsEmptySlot    bool
+	AnimState      HeroAnimationState
 }
 
 // HeroCardComponent renders hero cards according to design specs.
@@ -78,7 +99,16 @@ func (c HeroCardComponent) View() string {
 		Padding(paddingV, paddingH).
 		Width(innerWidth + paddingH*2)
 
-	if c.DataModel.IsActive {
+	if c.DataModel.AnimState.Type == AnimDodge {
+		borderColor := c.Theme.Flags
+		if string(borderColor) == "" {
+			borderColor = lipgloss.Color("12")
+		}
+		cardStyle = cardStyle.BorderForeground(borderColor)
+	} else if c.DataModel.AnimState.Type == AnimTakeDamage {
+		borderColor := lipgloss.Color("01")
+		cardStyle = cardStyle.BorderForeground(borderColor)
+	} else if c.DataModel.IsActive || c.DataModel.AnimState.Type == AnimAttack {
 		cardStyle = cardStyle.BorderForeground(c.Theme.Primary)
 	} else if c.DataModel.IsDead {
 		cardStyle = cardStyle.BorderForeground(c.Theme.Muted)
@@ -172,12 +202,40 @@ func (c HeroCardComponent) View() string {
 
 	frontCard := cardStyle.Render(sb.String())
 
-	if c.DataModel.IsActive {
-		return compositeActiveOffsetCard(frontCard, c.Theme.Border)
+	if c.DataModel.AnimState.Type == AnimAttack {
+		// Attack animation: front card moves 1 row UP while base box remains in standard active position
+		return compositeAttackOffsetCard(frontCard, c.Theme.Border)
 	}
 
-	// Non-active cards in a grid with an active card: top row offset by 1 empty line so active card raises above them
-	return "\n" + frontCard
+	if c.DataModel.AnimState.Type == AnimBlock || c.DataModel.AnimState.Type == AnimTakeDamage {
+		// Block or Take Damage animation: card moves 1 row DOWN (3 leading newlines) with under border showing
+		return "\n\n\n" + compositeSameRowOffsetCard(frontCard, c.Theme.Border)
+	}
+
+	if c.DataModel.AnimState.Type == AnimDodge {
+		// Dodge animation: card moves 1 left or right, flashing blue
+		res := "\n" + frontCard
+		if c.DataModel.AnimState.HorizontalOffset != 0 {
+			lines := strings.Split(res, "\n")
+			for i := range lines {
+				if c.DataModel.AnimState.HorizontalOffset > 0 {
+					lines[i] = " " + lines[i]
+				} else {
+					lines[i] = strings.TrimPrefix(lines[i], " ")
+				}
+			}
+			res = strings.Join(lines, "\n")
+		}
+		return res
+	}
+
+	if c.DataModel.IsActive {
+		// Standard active card: 1 row UP relative to default (1 leading newline)
+		return "\n" + compositeActiveOffsetCard(frontCard, c.Theme.Border)
+	}
+
+	// Standard non-active card: default position (2 leading newlines)
+	return "\n\n" + frontCard
 }
 
 func spaceBetween(left, right string, width int) string {
@@ -188,6 +246,78 @@ func spaceBetween(left, right string, width int) string {
 		spaces = 1
 	}
 	return left + strings.Repeat(" ", spaces) + right
+}
+
+// compositeSameRowOffsetCard overlaps frontCard (shifted 1 col left, same row) over a base border box so under border shows (╮ │ ╯)
+func compositeSameRowOffsetCard(frontCard string, borderColor lipgloss.Color) string {
+	frontLines := strings.Split(frontCard, "\n")
+	height := len(frontLines)
+	if height == 0 {
+		return frontCard
+	}
+
+	borderStyle := lipgloss.NewStyle().Foreground(borderColor)
+
+	var result []string
+	// Row 0: top line of front card + base box top-right corner ╮
+	result = append(result, frontLines[0]+borderStyle.Render("╮"))
+
+	// Rows 1..height-2: front line + base box vertical right border │
+	for i := 1; i < height-1; i++ {
+		result = append(result, frontLines[i]+borderStyle.Render("│"))
+	}
+
+	// Row height-1: front bottom line + base box bottom-right corner ╯
+	if height > 1 {
+		result = append(result, frontLines[height-1]+borderStyle.Render("╯"))
+	}
+
+	return strings.Join(result, "\n")
+}
+
+// compositeAttackOffsetCard overlaps frontCard (shifted 1 row UP relative to base box) while base box remains in standard active position
+func compositeAttackOffsetCard(frontCard string, borderColor lipgloss.Color) string {
+	frontLines := strings.Split(frontCard, "\n")
+	height := len(frontLines)
+	if height == 0 {
+		return frontCard
+	}
+
+	cardWidth := lipgloss.Width(frontLines[0])
+	borderStyle := lipgloss.NewStyle().Foreground(borderColor)
+
+	var result []string
+	// Line 0: top border of front card (shifted 1 row up)
+	result = append(result, frontLines[0]+" ")
+
+	// Line 1: front line 1 + base box top-right corner ╮
+	if height > 1 {
+		result = append(result, frontLines[1]+borderStyle.Render("╮"))
+	}
+
+	// Lines 2..height-2: front line + base box vertical right border │
+	for i := 2; i < height-1; i++ {
+		result = append(result, frontLines[i]+borderStyle.Render("│"))
+	}
+
+	// Line height-1: front bottom border + base box vertical right border │
+	if height > 1 {
+		result = append(result, frontLines[height-1]+borderStyle.Render("│"))
+	}
+
+	// Line height: empty space inside base box walls  │          │
+	if cardWidth > 2 {
+		emptyRow := borderStyle.Render("│") + strings.Repeat(" ", cardWidth-2) + borderStyle.Render("│")
+		result = append(result, " "+emptyRow)
+	}
+
+	// Line height+1: base box bottom border  ╰──────────╯
+	if cardWidth > 2 {
+		bottomBorder := borderStyle.Render("╰" + strings.Repeat("─", cardWidth-2) + "╯")
+		result = append(result, " "+bottomBorder)
+	}
+
+	return strings.Join(result, "\n")
 }
 
 // compositeActiveOffsetCard overlaps frontCard (shifted 1 up, 1 left) over a base border box (standard position)

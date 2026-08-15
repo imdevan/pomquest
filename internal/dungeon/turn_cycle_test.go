@@ -174,17 +174,17 @@ func TestTurnCyclePhasesAndIconography(t *testing.T) {
 
 func TestCriticalHitMissResolution(t *testing.T) {
 	heroes := []app.Hero{
-		{ID: 1, Name: "Arsel", Class: "Warrior", Icon: "⚔️", HP: 10, MaxHP: 10, Attack: 3, Defense: 2, Dex: 5},
+		{Creature: app.Creature{Noun: app.Noun{Name: "Arsel", Icon: "⚔️"}, HP: 10, MaxHP: 10, Attack: 3, Armor: 2}, Class: "Warrior", Stats: app.Stats{Dex: 5}},
 	}
 	monsters := []app.Monster{
-		{ID: 1, Name: "bat", Icon: "🦇", HP: 10, MaxHP: 10, Attack: 2, Defense: 1, Dex: 3},
+		{Creature: app.Creature{Noun: app.Noun{Name: "bat", Icon: "🦇"}, HP: 10, MaxHP: 10, Attack: 2, Armor: 1}, Stats: app.Stats{Dex: 3}},
 	}
 
 	queue := []Combatant{
-		{IsHero: true, HeroIdx: 0, Name: "Arsel", Icon: "⚔️", Speed: 5},
+		{IsHero: true, HeroIdx: 0, Name: "Arsel", Dexterity: 5},
 	}
 	currentIdx := 0
-	stepPhase := 1
+	stepPhase := 4
 	state := TurnCycleState{
 		IsCritHit: true,
 		Dmg:       8,
