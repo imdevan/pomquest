@@ -142,32 +142,32 @@ Concept layout more thoroughly in plan/mission.md
 
 
 ## Feature 11: attack "animations"
-- [ ] 11.1 hero card attack animation
+- [x] 11.1 hero card attack animation
 
 "animations" 0.5 second changes (assigned to variable) to card position and border color to show state, as well as icon number pairs in the row two rows above the active card (to make space for attack card move up animation)
 
-  - [ ] 11.1.1 attack animation
-  - card moves 1 row up
-  - no border color change
-  - hero attack damage type icon + attack damage value ("!"  after value for critical)
-  - triggered when hero "hits" enemy consider the line " Rivthar hits 🦇 Bat for 1 dmg!" the animation should be triggered after Bat
+  - [x] 11.1.1 attack animation
+    - [x] 11.1.1.1 card moves 1 row up
+    - [x] 11.1.1.2 no border color change
+    - [x] 11.1.1.3 hero attack damage type icon + attack damage value ("!" after value for critical)
+    - [x] 11.1.1.4 triggered when hero "hits" enemy consider the line " Rivthar hits 🦇 Bat for 1 dmg!" the animation should be triggered after Bat
   
-  - [ ] 11.1.2 block animation
-  - card moves 1 down
-  - no border color change
-  - show shield icon against damage blocked
-  - [ ] 11.1.3 dodge animation
-  - card moves 1 left or right
-  - border flashes blue color change
-  - show dodge icon 󰆷 against damage dodged
-  - [ ] 11.1.4 take damage animation
-  - card moves 1 down
-  - border color flashes red
-  - damage taken in red with icon on enemy that dealt the damage
-- [ ] 11.2 damage row animation
-- [ ] 11.2.1 damage row is 2 rows above the top of the default card positions. 1 row above active card position
-  - shows icon of damage type delt and amount of damage delt with "!"
-  - critical damage has 3 "!!!"
+  - [x] 11.1.2 block animation
+    - [x] 11.1.2.1 card moves 1 down
+    - [x] 11.1.2.2 no border color change
+    - [x] 11.1.2.3 show shield icon against damage blocked
+  - [x] 11.1.3 dodge animation
+    - [x] 11.1.3.1 card moves 1 left or right
+    - [x] 11.1.3.2 border flashes blue color change
+    - [x] 11.1.3.3 show dodge icon 󰆷 against damage dodged
+  - [x] 11.1.4 take damage animation
+    - [x] 11.1.4.1 card moves 1 down
+    - [x] 11.1.4.2 border color flashes red
+    - [x] 11.1.4.3 damage taken in red with icon on enemy that dealt the damage
+- [x] 11.2 damage row animation
+- [x] 11.2.1 damage row is 2 rows above the top of the default card positions. 1 row above active card position
+  - [x] 11.2.1.1 shows icon of damage type delt and amount of damage delt with "!"
+  - [x] 11.2.1.2 critical damage has 3 "!!!"
 
 
 ## Feature 12: add book of biomes
@@ -185,6 +185,10 @@ Concept layout more thoroughly in plan/mission.md
 - [x] 13.1 add team hearts ui component
   - [x] 13.1.1 takes max and current hp, renders hearts evaluated in 10 HP and 5 HP increments using icon.KeyHeart...
   - [x] 13.1.2 add team hearts to party texture card top-right
+- [x] 13.2 on md and smaller screens when only showing icon label. only show the icon. do not show semicolons.
+  - [x] 13.2.1 remove colon separator from party status icon labels on md and smaller screens
+  - [x] 13.2.2 update party card tests to verify icon labels render without colons in md mode
+- [ ] 13.3 always only show icons for the far right column
 
 ## Feature 14: create custom internal/ui/texturedCard
 - [x] 14.1 create custom internal/ui/texturedCard component supporting embedded text on any of the 4 border corners with padding, margin, and styling properties
@@ -257,6 +261,8 @@ start with 1 monster, bats... 1hp 0def 1 atk
 ## Feature 24: quest log
 - [x] 24.1 replace quest log border with textureCard
 - [x] 24.2 show quest log date top-left text on quest log texture card
+- [ ] 24.3 when in a dungeon show the dugeon name as the top-left texture card title
+  - [ ] 24.3.1 show the room number as the top-right texture card title
 
 ## Feature 25: container
 - [x] 25.1 create container that wraps quest screen components
