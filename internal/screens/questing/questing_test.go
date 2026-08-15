@@ -286,3 +286,42 @@ func TestHeroAttackAnimationsFromLog(t *testing.T) {
 		t.Errorf("expected hero card to have AnimTakeDamage state, got %v", model.Heroes[0].AnimState.Type)
 	}
 }
+
+func TestHeroCardsComponent_HeightStabilityOnTakeDamage(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ui.ThemeFromConfig(cfg)
+	rm := ui.NewResponsiveManager(80)
+
+	normalHeroes := []ui.HeroCardData{
+		{Name: "jimmothy", Class: "fighter", HP: 10, MaxHP: 10, Level: 1},
+		{Name: "applebee", Class: "wizard", HP: 6, MaxHP: 6, Level: 1},
+	}
+
+	normalComp := NewHeroCardsComponent(theme, normalHeroes, 80, rm)
+	normalView := normalComp.View()
+	normalLineCount := strings.Count(normalView, "\n") + 1
+
+	hitHeroes := []ui.HeroCardData{
+		{
+			Name:   "jimmothy",
+			Class:  "fighter",
+			HP:     8,
+			MaxHP:  10,
+			Level:  1,
+			AnimState: ui.HeroAnimationState{
+				Type:       ui.AnimTakeDamage,
+				DamageText: "2",
+				Icon:       "👾",
+			},
+		},
+		{Name: "applebee", Class: "wizard", HP: 6, MaxHP: 6, Level: 1},
+	}
+
+	hitComp := NewHeroCardsComponent(theme, hitHeroes, 80, rm)
+	hitView := hitComp.View()
+	hitLineCount := strings.Count(hitView, "\n") + 1
+
+	if normalLineCount != hitLineCount {
+		t.Errorf("expected hero cards view line count to remain constant when hero takes damage, got normal=%d hit=%d", normalLineCount, hitLineCount)
+	}
+}
