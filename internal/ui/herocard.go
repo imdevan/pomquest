@@ -203,18 +203,18 @@ func (c HeroCardComponent) View() string {
 	frontCard := cardStyle.Render(sb.String())
 
 	if c.DataModel.AnimState.Type == AnimAttack {
-		// Attack animation: front card moves 1 row UP while base box remains in standard active position
-		return compositeAttackOffsetCard(frontCard, c.Theme.Border)
+		// Attack animation: front card moves 1 row UP while base box remains in standard active position (H + 2 + 1 = H + 3 lines)
+		return compositeAttackOffsetCard(frontCard, c.Theme.Border) + "\n"
 	}
 
 	if c.DataModel.AnimState.Type == AnimBlock || c.DataModel.AnimState.Type == AnimTakeDamage {
-		// Block or Take Damage animation: card moves 1 row DOWN (3 leading newlines) with under border showing
+		// Block or Take Damage animation: card moves 1 row DOWN (3 leading newlines) with under border showing (3 + H = H + 3 lines)
 		return "\n\n\n" + compositeSameRowOffsetCard(frontCard, c.Theme.Border)
 	}
 
 	if c.DataModel.AnimState.Type == AnimDodge {
-		// Dodge animation: card moves 1 left or right, flashing blue
-		res := "\n" + frontCard
+		// Dodge animation: card moves 1 left or right, flashing blue (1 + H + 2 = H + 3 lines)
+		res := "\n" + frontCard + "\n\n"
 		if c.DataModel.AnimState.HorizontalOffset != 0 {
 			lines := strings.Split(res, "\n")
 			for i := range lines {
@@ -230,12 +230,12 @@ func (c HeroCardComponent) View() string {
 	}
 
 	if c.DataModel.IsActive {
-		// Standard active card: 1 row UP relative to default (1 leading newline)
-		return "\n" + compositeActiveOffsetCard(frontCard, c.Theme.Border)
+		// Standard active card: 1 row UP relative to default (1 leading newline, 1 trailing newline: 1 + H + 1 + 1 = H + 3 lines)
+		return "\n" + compositeActiveOffsetCard(frontCard, c.Theme.Border) + "\n"
 	}
 
-	// Standard non-active card: default position (2 leading newlines)
-	return "\n\n" + frontCard
+	// Standard non-active card: default position (2 leading newlines, 1 trailing newline: 2 + H + 1 = H + 3 lines)
+	return "\n\n" + frontCard + "\n"
 }
 
 func spaceBetween(left, right string, width int) string {
