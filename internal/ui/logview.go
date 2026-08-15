@@ -4,16 +4,20 @@ import "strings"
 
 // LogViewComponent is a generic auto-scrolling log stream widget with rounded border.
 type LogViewComponent struct {
-	Title    string
-	Messages []string
-	MaxRows  int
-	Width    int
-	Theme    Theme
+	Title       string
+	TopTopLeft  string
+	TopTopRight string
+	TopLeft     string
+	TopRight    string
+	Messages    []string
+	MaxRows     int
+	Width       int
+	Theme       Theme
 }
 
 func NewLogViewComponent(theme Theme, title string, messages []string, maxRows, width int) LogViewComponent {
 	if maxRows <= 0 {
-		maxRows = 10
+		maxRows = 12
 	}
 	if width <= 0 {
 		width = 72
@@ -57,9 +61,42 @@ func (c LogViewComponent) View() string {
 
 	card := NewTexturedCard(c.Theme, c.Width, content).Padding(0, 1)
 
-	if c.Title != "" {
+	if c.TopTopLeft != "" {
+		card.TopTopLeft = CornerText{
+			Text:         c.TopTopLeft,
+			Margin:       1,
+			PaddingLeft:  1,
+			PaddingRight: 1,
+		}
+	}
+	if c.TopTopRight != "" {
+		card.TopTopRight = CornerText{
+			Text:         c.TopTopRight,
+			Margin:       1,
+			PaddingLeft:  1,
+			PaddingRight: 1,
+		}
+	}
+
+	if c.TopLeft != "" {
+		card.TopLeft = CornerText{
+			Text:         c.TopLeft,
+			Margin:       1,
+			PaddingLeft:  1,
+			PaddingRight: 1,
+		}
+	} else if c.Title != "" {
 		card.TopLeft = CornerText{
 			Text:         c.Title,
+			Margin:       1,
+			PaddingLeft:  1,
+			PaddingRight: 1,
+		}
+	}
+
+	if c.TopRight != "" {
+		card.TopRight = CornerText{
+			Text:         c.TopRight,
 			Margin:       1,
 			PaddingLeft:  1,
 			PaddingRight: 1,
