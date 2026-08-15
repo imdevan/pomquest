@@ -27,7 +27,7 @@ func (c TeamHeartsComponent) View() string {
 }
 
 // RenderTeamHearts generates a heart icon string representing current health out of max health.
-// HP is evaluated in 10-HP and 5-HP increments using icon.KeyHeart...
+// HP is evaluated using method: total half hearts N = (HP + 2) / 5.
 func RenderTeamHearts(currentHP, maxHP int, mode icon.Mode) string {
 	if maxHP <= 0 {
 		return ""
@@ -39,26 +39,25 @@ func RenderTeamHearts(currentHP, maxHP int, mode icon.Mode) string {
 		currentHP = maxHP
 	}
 
-	// Round maxHP up to nearest multiple of 5 (total HP capacity)
-	roundedMax := (maxHP + 4) / 5 * 5
-	if roundedMax < 5 {
-		roundedMax = 5
+	// Calculate total half-hearts N = (HP + 2) / 5
+	maxHalfHearts := (maxHP + 2) / 5
+	if maxHalfHearts < 1 {
+		maxHalfHearts = 1
 	}
 
-	num10s := roundedMax / 10
-	hasRem5 := (roundedMax % 10) >= 5
+	curHalfHearts := (currentHP + 2) / 5
+
+	num10s := maxHalfHearts / 2
+	hasRem5 := (maxHalfHearts % 2) != 0
 
 	var hearts []string
-	hpLeft := currentHP
+	hpLeft := curHalfHearts
 
 	for i := 0; i < num10s; i++ {
-		if hpLeft >= 8 {
+		if hpLeft >= 2 {
 			hearts = append(hearts, icon.Get(icon.KeyHeart10Full, mode))
-			hpLeft -= 10
-			if hpLeft < 0 {
-				hpLeft = 0
-			}
-		} else if hpLeft >= 3 {
+			hpLeft -= 2
+		} else if hpLeft == 1 {
 			hearts = append(hearts, icon.Get(icon.KeyHeart10Half, mode))
 			hpLeft = 0
 		} else {
@@ -67,7 +66,7 @@ func RenderTeamHearts(currentHP, maxHP int, mode icon.Mode) string {
 	}
 
 	if hasRem5 {
-		if hpLeft >= 3 {
+		if hpLeft >= 1 {
 			hearts = append(hearts, icon.Get(icon.KeyHeart5Full, mode))
 		} else {
 			hearts = append(hearts, icon.Get(icon.KeyHeart5Empty, mode))
