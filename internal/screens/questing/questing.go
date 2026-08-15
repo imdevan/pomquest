@@ -15,46 +15,49 @@ import (
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/dungeon"
 	"github.com/pomquest/internal/ui"
+	"github.com/pomquest/internal/ui/dice_animation"
 )
 
 type tickMsg time.Time
 type charTickMsg struct{}
+type diceTickMsg struct{}
 
 // Model represents the active questing UI screen.
 type Model struct {
-	Theme           ui.Theme
-	Responsive      *ui.ResponsiveManager
-	LogTitle        string
-	LogMessages     []string
-	Heroes          []ui.HeroCardData
-	Supplies        ui.PartyCardData
-	ProgressData    QuestProgressData
-	Paused          bool
-	Quitted         bool
-	Width           int
-	Height          int
-	DBPath          string
-	CharDelay       int
-	activeAction     string
-	activeCharIdx    int
-	isTyping         bool
-	pendingActions   []string
-	DungeonState    string
-	TurnPhase       string
-	CurrentRoom     int
-	ActiveMonsters  []app.Monster
-	ActiveHeroIdx   int
-	AutoTickCounter int
-	TurnTickSecs    int
-	PartyID         uint
-	GameStateID     uint
-	QuestID         uint
-	partyHeroes     []app.Hero
-	rng             *rand.Rand
-	TurnQueue       []dungeon.Combatant
-	CurrentTurnIdx  int
-	StepPhase       int
-	TurnCycleState  dungeon.TurnCycleState
+	Theme              ui.Theme
+	Responsive         *ui.ResponsiveManager
+	LogTitle           string
+	LogMessages        []string
+	Heroes             []ui.HeroCardData
+	Supplies           ui.PartyCardData
+	ProgressData       QuestProgressData
+	Paused             bool
+	Quitted            bool
+	Width              int
+	Height             int
+	CharDelay          int
+	DungeonState       string
+	TurnPhase          string
+	CurrentRoom        int
+	ActiveHeroIdx      int
+	AutoTickCounter    int
+	TurnTickSecs       int
+	ActiveMonsters     []app.Monster
+	isTyping           bool
+	activeAction       string
+	activeCharIdx      int
+	pendingActions     []string
+	DBPath             string
+	PartyID            uint
+	GameStateID        uint
+	QuestID            uint
+	partyHeroes        []app.Hero
+	rng                *rand.Rand
+	TurnQueue          []dungeon.Combatant
+	CurrentTurnIdx     int
+	StepPhase          int
+	TurnCycleState     dungeon.TurnCycleState
+	activeDiceAnimator *dice_animation.LineAnimator
 }
 
 // NewModel initializes the questing screen using default DB path.
@@ -290,11 +293,40 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Responsive.SetWidth(msg.Width)
 		return m, nil
 
+	case diceTickMsg:
+		if m.activeDiceAnimator != nil {
+			m.activeDiceAnimator.Tick(m.activeDiceAnimator.FrameInterval())
+			if m.activeDiceAnimator.IsFinished() {
+				targetIdx := m.activeDiceAnimator.TargetLineIdx
+				if targetIdx >= 0 && targetIdx < len(m.LogMessages) {
+					m.LogMessages[targetIdx] = m.activeDiceAnimator.Render()
+				}
+				m.activeDiceAnimator = nil
+				if m.isTyping {
+					return m, tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
+						return charTickMsg{}
+					})
+				}
+				return m, nil
+			}
+			return m, tea.Tick(m.activeDiceAnimator.FrameInterval(), func(t time.Time) tea.Msg {
+				return diceTickMsg{}
+			})
+		}
+		return m, nil
+
 	case charTickMsg:
 		if m.isTyping && m.CharDelay > 0 {
 			runes := []rune(m.activeAction)
 			if m.activeCharIdx < len(runes) {
 				m.activeCharIdx++
+				return m, tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
+					return charTickMsg{}
+				})
+			}
+
+			// Pause printing next line while dice are actively rolling
+			if m.activeDiceAnimator != nil && !m.activeDiceAnimator.IsFinished() {
 				return m, tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
 					return charTickMsg{}
 				})
@@ -317,7 +349,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tickMsg:
 		if !m.Paused && m.ProgressData.CurrentSecs < m.ProgressData.TotalSecs {
-			if m.isTyping {
+			if m.isTyping || (m.activeDiceAnimator != nil && !m.activeDiceAnimator.IsFinished()) {
 				return m, tea.Tick(time.Second, func(t time.Time) tea.Msg {
 					return tickMsg(t)
 				})
@@ -358,6 +390,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case " ", "space":
 			if !m.Paused {
+				if m.activeDiceAnimator != nil && !m.activeDiceAnimator.IsFinished() {
+					targetIdx := m.activeDiceAnimator.TargetLineIdx
+					m.activeDiceAnimator.Finish()
+					if targetIdx >= 0 && targetIdx < len(m.LogMessages) {
+						m.LogMessages[targetIdx] = m.activeDiceAnimator.Render()
+					}
+					m.activeDiceAnimator = nil
+				}
+
 				if m.isTyping {
 					for len(m.pendingActions) > 0 {
 						nextMsg := m.pendingActions[0]
@@ -428,16 +469,25 @@ func (m *Model) appendActionLog(msg string) tea.Cmd {
 }
 
 func (m Model) displayLogMessages() []string {
-	if !m.isTyping || len(m.LogMessages) == 0 {
+	if len(m.LogMessages) == 0 {
 		return m.LogMessages
 	}
 
 	display := make([]string, len(m.LogMessages))
 	copy(display, m.LogMessages)
 
-	runes := []rune(m.activeAction)
-	if m.activeCharIdx < len(runes) {
-		display[len(display)-1] = string(runes[:m.activeCharIdx])
+	if m.activeDiceAnimator != nil {
+		targetIdx := m.activeDiceAnimator.TargetLineIdx
+		if targetIdx >= 0 && targetIdx < len(display) {
+			display[targetIdx] = m.activeDiceAnimator.Render()
+		}
+	}
+
+	if m.isTyping {
+		runes := []rune(m.activeAction)
+		if m.activeCharIdx < len(runes) {
+			display[len(display)-1] = string(runes[:m.activeCharIdx])
+		}
 	}
 	return display
 }
@@ -515,7 +565,29 @@ func (m *Model) advanceDungeonCycle() tea.Cmd {
 			m.DungeonState = res.DungeonState
 		}
 		for _, log := range res.ActionLogs {
-			cmds = append(cmds, m.appendActionLog(log))
+			cmd := m.appendActionLog(log)
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			if strings.Contains(log, "rolls") {
+				var diceTargets []int
+				if m.TurnCycleState.AtkD1 > 0 && m.TurnCycleState.AtkD2 > 0 {
+					diceTargets = []int{m.TurnCycleState.AtkD1, m.TurnCycleState.AtkD2}
+				} else if m.TurnCycleState.DefD > 0 {
+					diceTargets = []int{m.TurnCycleState.DefD}
+				}
+				if len(diceTargets) > 0 {
+					targetIdx := len(m.LogMessages) - 1
+					if targetIdx < 0 {
+						targetIdx = 0
+					}
+					m.activeDiceAnimator = dice_animation.NewLineAnimator(log, diceTargets, targetIdx, m.rng)
+					interval := m.activeDiceAnimator.FrameInterval()
+					cmds = append(cmds, tea.Tick(interval, func(t time.Time) tea.Msg {
+						return diceTickMsg{}
+					}))
+				}
+			}
 		}
 
 	case "Victory":
