@@ -55,28 +55,10 @@ Concept layout more thoroughly in plan/mission.md
   - [x] 5.7.1 pad LogViewComponent visible rows to fixed maxRows height regardless of log message count
   - [x] 5.7.2 support pageHeight parameter in LogComponent to scale fixed row height relative to terminal page height (minimum 8 rows, default 14 rows)
   - [x] 5.7.3 preserve explicit card height in TexturedCard container
-- [ ] 5.8 align content to bottom of window
-- redefine questing screen
-- the questing screen in reverse order from the bottom
-- sections remain as is, only adjust spacing 
-  - bottom of screen
-  - 1 row margin
-  - quest summary section
-  - 1 row margin (as is)
-  - party card section
-  - 1 row margin (one less than current)
-  - hero card section
-  - active card row
-  - 2 dmg rows
-  - quest log section
-  - 1 row margin at top of page
-
-
-
-
-- quest progress section should be on bottom of window
-  - [ ] 5.8.1 should be at least one line between top of screen and top of quest log
-- [ ] 5.9 define damage rows
+- [x] 5.8 align content to bottom of window
+  - [x] 5.8.1 align questing screen content to bottom of window with 1 row bottom margin
+  - [x] 5.8.2 adjust section spacing (1 row margin between quest summary and party card; single newline between party card and hero card section)
+  - [x] 5.8.3 ensure at least one line between top of screen and top of quest log
 
 
 
@@ -215,6 +197,13 @@ Concept layout more thoroughly in plan/mission.md
 ## Feature 14: create custom internal/ui/texturedCard
 - [x] 14.1 create custom internal/ui/texturedCard component supporting embedded text on any of the 4 border corners with padding, margin, and styling properties
 - [x] 14.2 use TexturedCard for party card container wrapping party table
+- [x] 14.3 add top-top-left, top-top-right to texturedCard
+  - [x] 14.3.1 add TopTopLeft and TopTopRight CornerText fields to TexturedCard struct
+  - [x] 14.3.2 if top-top-left or top-top-right is set, add a secondary header row with title
+  - [x] 14.3.3 add unit tests for top-top-left and top-top-right rendering in texturedCard
+- [x] 14.4 use top-top-left while party is questing in dungeon on quest log
+  - [x] 14.4.1 show date as top-top-left, dungeon name as top-left, and room name as top-right on quest log
+  - [x] 14.4.2 add unit test verifying quest log headers while questing in dungeon
 
 
 
@@ -480,3 +469,13 @@ classes have an attack type
   atk_mod: int/dex/str/cha 
   armor: flatly reduces incoming damage
 - [ ] 39.2 overhaul damage system based on book_of_attacks
+
+## Feature 40: add mouse hover
+- [ ] 40.1 add mouse hover on party screen to highlight hero card
+- [ ] 40.2 select hero card on click
+- [ ] 40.3 select hero card with default name on double click
+- [ ] 40.4 add scroll to questing page to scroll quest log
+
+## Feature 41: hero leveling
+- [ ] 41.1 hero can only level up during long rest and only once per rest cycle 
+
