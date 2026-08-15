@@ -20,12 +20,14 @@ import (
 
 var AnimDuration = 500 * time.Millisecond
 
-type tickMsg time.Time
-type charTickMsg struct{}
-type diceTickMsg struct{}
-type animTickMsg struct {
-	HeroIdx int
-}
+type (
+	tickMsg     time.Time
+	charTickMsg struct{}
+	diceTickMsg struct{}
+	animTickMsg struct {
+		HeroIdx int
+	}
+)
 
 // Model represents the active questing UI screen.
 type Model struct {
@@ -743,16 +745,18 @@ func (m *Model) advanceDungeonCycle() tea.Cmd {
 		}
 
 	case "Victory":
-		gold := 10 + m.rng.Intn(15)
-		xp := 15 + m.rng.Intn(10)
+		gold := m.rng.Intn(15)
+		loot := m.rng.Intn(2)
+		xp := 1
 
 		m.Supplies.Coins += gold
-		m.Supplies.Loot++
+		m.Supplies.Loot += loot
 
 		for i := range m.partyHeroes {
 			if !m.partyHeroes[i].IsDead && m.partyHeroes[i].HP > 0 {
 				m.partyHeroes[i].XP += xp
-				if m.partyHeroes[i].XP >= m.partyHeroes[i].Level*25 {
+
+				if m.partyHeroes[i].XP >= m.partyHeroes[i].Level*m.partyHeroes[i].Level*100 {
 					m.partyHeroes[i].Level++
 					m.partyHeroes[i].MaxHP += 2
 					m.partyHeroes[i].HP = m.partyHeroes[i].MaxHP
@@ -761,7 +765,9 @@ func (m *Model) advanceDungeonCycle() tea.Cmd {
 			}
 		}
 
-		cmds = append(cmds, m.appendActionLog(fmt.Sprintf("✨ Room #%d Cleared! Party gains +%d Gold and +%d XP!", m.CurrentRoom, gold, xp)))
+		cmds = append(cmds, m.appendActionLog(fmt.Sprintf("✨ Room #%d Cleared!", m.CurrentRoom)))
+
+		cmds = append(cmds, m.appendActionLog(fmt.Sprintf("🎁 Party gains +%d Gold, +%d XP, and +%d Loot!", m.CurrentRoom, gold, xp, loot)))
 		m.CurrentRoom++
 		m.DungeonState = "Entering"
 		m.TurnPhase = "hero"
@@ -853,7 +859,8 @@ func (m Model) View() string {
 		containerWidth = min(DefaultContainerWidth, m.Responsive.Width())
 	}
 
-	logComp := NewLogComponent(m.Theme, m.LogTitle, m.displayLogMessages(), containerWidth, m.Height)
+	roomName := fmt.Sprintf("Room #%d", m.CurrentRoom)
+	logComp := NewLogComponent(m.Theme, m.LogTitle, m.ProgressData.Destination, roomName, m.displayLogMessages(), containerWidth, m.Height)
 	heroCardsComp := NewHeroCardsComponent(m.Theme, m.Heroes, containerWidth, m.Responsive)
 	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth, m.Responsive)
 	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth, m.Responsive)

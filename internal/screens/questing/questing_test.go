@@ -333,7 +333,7 @@ func TestQuestingScreen_BottomAlignmentAndMargins(t *testing.T) {
 	cfg := domain.DefaultConfig()
 	model := NewModelWithDBPath(cfg, dbPath)
 	model.Width = 100
-	model.Height = 40
+	model.Height = 43
 
 	view := model.View()
 
@@ -342,8 +342,8 @@ func TestQuestingScreen_BottomAlignmentAndMargins(t *testing.T) {
 		lines = lines[:len(lines)-1]
 	}
 	t.Logf("TOTAL LINES: %d\nVIEW:\n%s", len(lines), view)
-	if len(lines) != 40 {
-		t.Fatalf("expected view to have 40 lines matching window height, got %d lines", len(lines))
+	if len(lines) != 43 {
+		t.Fatalf("expected view to have 43 lines matching window height, got %d lines", len(lines))
 	}
 
 	// 5.8.1: Top line should be empty (at least one line between top of screen and top of quest log)
@@ -353,13 +353,37 @@ func TestQuestingScreen_BottomAlignmentAndMargins(t *testing.T) {
 
 	// 5.8: Bottom line should be empty (1 row margin at bottom of screen)
 	if strings.TrimSpace(lines[len(lines)-1]) != "" {
-		t.Errorf("expected bottom line (line 39) to be empty for bottom margin, got: %q", lines[39])
+		t.Errorf("expected bottom line (line 42) to be empty for bottom margin, got: %q", lines[len(lines)-1])
 	}
 
 	// Verify quest progress summary is placed towards bottom before the last line margin
 	fullText := strings.Join(lines, "\n")
 	if !strings.Contains(fullText, "Dest:") {
 		t.Errorf("expected view to contain quest progress destination, got:\n%s", fullText)
+	}
+}
+
+func TestQuestingScreen_QuestLogHeaders(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test_questing_headers.db")
+
+	cfg := domain.DefaultConfig()
+	model := NewModelWithDBPath(cfg, dbPath)
+	model.LogTitle = "15, Aug, 1000 A.P."
+	model.ProgressData.Destination = "Catacombs of Doom"
+	model.CurrentRoom = 3
+
+	view := model.View()
+	t.Logf("Questing Screen Header View:\n%s", view)
+
+	if !strings.Contains(view, "15, Aug, 1000 A.P.") {
+		t.Errorf("expected quest log to render date (top-top-left), got:\n%s", view)
+	}
+	if !strings.Contains(view, "Catacombs of Doom") {
+		t.Errorf("expected quest log to render dungeon name (top-left), got:\n%s", view)
+	}
+	if !strings.Contains(view, "Room #3") {
+		t.Errorf("expected quest log to render room name (top-right), got:\n%s", view)
 	}
 }
 
