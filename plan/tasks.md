@@ -56,8 +56,29 @@ Concept layout more thoroughly in plan/mission.md
   - [x] 5.7.2 support pageHeight parameter in LogComponent to scale fixed row height relative to terminal page height (minimum 8 rows, default 14 rows)
   - [x] 5.7.3 preserve explicit card height in TexturedCard container
 - [ ] 5.8 align content to bottom of window
+- redefine questing screen
+- the questing screen in reverse order from the bottom
+- sections remain as is, only adjust spacing 
+  - bottom of screen
+  - 1 row margin
+  - quest summary section
+  - 1 row margin (as is)
+  - party card section
+  - 1 row margin (one less than current)
+  - hero card section
+  - active card row
+  - 2 dmg rows
+  - quest log section
+  - 1 row margin at top of page
+
+
+
+
 - quest progress section should be on bottom of window
-  - [x] 5.8.1 should be at least one line between top of screen and top of quest log
+  - [ ] 5.8.1 should be at least one line between top of screen and top of quest log
+- [ ] 5.9 define damage rows
+
+
 
 ## Feature 6: path screen
 - [x] 6.1 create path screen
