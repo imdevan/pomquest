@@ -109,7 +109,6 @@ func (c PartyCardComponent) View() string {
 
 	var foodStr, lootStr, partsStr, oxStr string
 	var usageStr, dietStr, paceStr, greedStr string
-	var potionsStr, bombsStr, shovelsStr, ropeStr string
 
 	if !rm.IsAtLeast(BreakpointLG) {
 		// On MD or lower: remove name from party status labels. Such that party card has icon value
@@ -122,11 +121,6 @@ func (c PartyCardComponent) View() string {
 		dietStr = fmt.Sprintf("%s %s %s", dietStatIcon, c.Data.Diet, dietValIcon)
 		paceStr = fmt.Sprintf("%s %s %s", paceStatIcon, c.Data.Pace, paceValIcon)
 		greedStr = fmt.Sprintf("%s %s %s", greedStatIcon, c.Data.Greed, greedValIcon)
-
-		potionsStr = fmt.Sprintf("%s %d", potionIcon, c.Data.Potions)
-		bombsStr = fmt.Sprintf("%s %d", bombIcon, c.Data.Bombs)
-		shovelsStr = fmt.Sprintf("%s %d", shovelIcon, c.Data.Shovels)
-		ropeStr = fmt.Sprintf("%s %d", ropeIcon, c.Data.Rope)
 	} else {
 		// On LG+: keep full label names
 		foodStr = fmt.Sprintf("%s food: %slbs", foodIcon, formatNumberWithCommas(c.Data.FoodLbs))
@@ -138,12 +132,13 @@ func (c PartyCardComponent) View() string {
 		dietStr = fmt.Sprintf("%s diet: %s %s", dietStatIcon, c.Data.Diet, dietValIcon)
 		paceStr = fmt.Sprintf("%s pace: %s %s", paceStatIcon, c.Data.Pace, paceValIcon)
 		greedStr = fmt.Sprintf("%s greed: %s %s", greedStatIcon, c.Data.Greed, greedValIcon)
-
-		potionsStr = fmt.Sprintf("%s potions: %d", potionIcon, c.Data.Potions)
-		bombsStr = fmt.Sprintf("%s bombs: %d", bombIcon, c.Data.Bombs)
-		shovelsStr = fmt.Sprintf("%s shovels: %d", shovelIcon, c.Data.Shovels)
-		ropeStr = fmt.Sprintf("%s rope: %d", ropeIcon, c.Data.Rope)
 	}
+
+	// Always only show icons for the far right column
+	potionsStr := fmt.Sprintf("%s %d", potionIcon, c.Data.Potions)
+	bombsStr := fmt.Sprintf("%s %d", bombIcon, c.Data.Bombs)
+	shovelsStr := fmt.Sprintf("%s %d", shovelIcon, c.Data.Shovels)
+	ropeStr := fmt.Sprintf("%s %d", ropeIcon, c.Data.Rope)
 
 	// Gold placed in bottom-right corner of TexturedCard container
 	totalCoins := c.Data.Coins

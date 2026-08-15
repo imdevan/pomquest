@@ -70,17 +70,20 @@ func TestPartyCardComponentView_LG(t *testing.T) {
 	if !strings.Contains(view, " greed: sparse ") {
 		t.Errorf("expected view to contain greed sparse with icons, got:\n%s", view)
 	}
-	if !strings.Contains(view, " potions: 2") {
-		t.Errorf("expected view to contain potions with icon, got:\n%s", view)
+	if !strings.Contains(view, " 2") {
+		t.Errorf("expected view to contain potions with icon only, got:\n%s", view)
 	}
-	if !strings.Contains(view, "󰚑 bombs: 5") {
-		t.Errorf("expected view to contain bombs with icon, got:\n%s", view)
+	if !strings.Contains(view, "󰚑 5") {
+		t.Errorf("expected view to contain bombs with icon only, got:\n%s", view)
 	}
-	if !strings.Contains(view, "󰜐 shovels: 1") {
-		t.Errorf("expected view to contain shovels with icon, got:\n%s", view)
+	if !strings.Contains(view, "󰜐 1") {
+		t.Errorf("expected view to contain shovels with icon only, got:\n%s", view)
 	}
-	if !strings.Contains(view, "󰼃 rope: 3") {
-		t.Errorf("expected view to contain rope with icon, got:\n%s", view)
+	if !strings.Contains(view, "󰼃 3") {
+		t.Errorf("expected view to contain rope with icon only, got:\n%s", view)
+	}
+	if strings.Contains(view, "potions:") {
+		t.Errorf("expected view NOT to contain 'potions:' label in LG mode, got:\n%s", view)
 	}
 }
 
