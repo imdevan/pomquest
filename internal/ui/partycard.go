@@ -112,21 +112,21 @@ func (c PartyCardComponent) View() string {
 	var potionsStr, bombsStr, shovelsStr, ropeStr string
 
 	if !rm.IsAtLeast(BreakpointLG) {
-		// On MD or lower: remove name from party status labels. Such that party card has icon: value
-		foodStr = fmt.Sprintf("%s: %slbs", foodIcon, formatNumberWithCommas(c.Data.FoodLbs))
-		lootStr = fmt.Sprintf("%s: %d", lootIcon, c.Data.Loot)
-		partsStr = fmt.Sprintf("%s: %d", partsIcon, c.Data.SpareParts)
-		oxStr = fmt.Sprintf("%s: %d", oxIcon, c.Data.Oxen)
+		// On MD or lower: remove name from party status labels. Such that party card has icon value
+		foodStr = fmt.Sprintf("%s %slbs", foodIcon, formatNumberWithCommas(c.Data.FoodLbs))
+		lootStr = fmt.Sprintf("%s %d", lootIcon, c.Data.Loot)
+		partsStr = fmt.Sprintf("%s %d", partsIcon, c.Data.SpareParts)
+		oxStr = fmt.Sprintf("%s %d", oxIcon, c.Data.Oxen)
 
-		usageStr = fmt.Sprintf("%s: %s %s", itemUsageStatIcon, c.Data.ItemUsage, usageValIcon)
-		dietStr = fmt.Sprintf("%s: %s %s", dietStatIcon, c.Data.Diet, dietValIcon)
-		paceStr = fmt.Sprintf("%s: %s %s", paceStatIcon, c.Data.Pace, paceValIcon)
-		greedStr = fmt.Sprintf("%s: %s %s", greedStatIcon, c.Data.Greed, greedValIcon)
+		usageStr = fmt.Sprintf("%s %s %s", itemUsageStatIcon, c.Data.ItemUsage, usageValIcon)
+		dietStr = fmt.Sprintf("%s %s %s", dietStatIcon, c.Data.Diet, dietValIcon)
+		paceStr = fmt.Sprintf("%s %s %s", paceStatIcon, c.Data.Pace, paceValIcon)
+		greedStr = fmt.Sprintf("%s %s %s", greedStatIcon, c.Data.Greed, greedValIcon)
 
-		potionsStr = fmt.Sprintf("%s: %d", potionIcon, c.Data.Potions)
-		bombsStr = fmt.Sprintf("%s: %d", bombIcon, c.Data.Bombs)
-		shovelsStr = fmt.Sprintf("%s: %d", shovelIcon, c.Data.Shovels)
-		ropeStr = fmt.Sprintf("%s: %d", ropeIcon, c.Data.Rope)
+		potionsStr = fmt.Sprintf("%s %d", potionIcon, c.Data.Potions)
+		bombsStr = fmt.Sprintf("%s %d", bombIcon, c.Data.Bombs)
+		shovelsStr = fmt.Sprintf("%s %d", shovelIcon, c.Data.Shovels)
+		ropeStr = fmt.Sprintf("%s %d", ropeIcon, c.Data.Rope)
 	} else {
 		// On LG+: keep full label names
 		foodStr = fmt.Sprintf("%s food: %slbs", foodIcon, formatNumberWithCommas(c.Data.FoodLbs))

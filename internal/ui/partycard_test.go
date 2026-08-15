@@ -111,16 +111,19 @@ func TestPartyCardComponentView_MD(t *testing.T) {
 	comp := NewPartyCardComponent(theme, data, 72)
 	view := comp.View()
 
-	if !strings.Contains(view, "󱐟: 2,000lbs") {
-		t.Errorf("expected view to contain food info without label name in MD mode, got:\n%s", view)
+	if !strings.Contains(view, "󱐟 2,000lbs") {
+		t.Errorf("expected view to contain food info without label name or colon in MD mode, got:\n%s", view)
 	}
-	if !strings.Contains(view, "󱢏: 67") {
-		t.Errorf("expected view to contain loot info without label name in MD mode, got:\n%s", view)
+	if !strings.Contains(view, "󱢏 67") {
+		t.Errorf("expected view to contain loot info without label name or colon in MD mode, got:\n%s", view)
 	}
-	if !strings.Contains(view, ": heavy ") {
-		t.Errorf("expected view to contain item usage without label name in MD mode, got:\n%s", view)
+	if !strings.Contains(view, " heavy ") {
+		t.Errorf("expected view to contain item usage without label name or colon in MD mode, got:\n%s", view)
 	}
 	if strings.Contains(view, "food:") {
 		t.Errorf("expected view NOT to contain 'food:' label in MD mode, got:\n%s", view)
+	}
+	if strings.Contains(view, "󱐟:") {
+		t.Errorf("expected view NOT to contain colon after icon in MD mode, got:\n%s", view)
 	}
 }
