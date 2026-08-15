@@ -450,3 +450,26 @@ func TestQuestingScreen_LogScrollingJK(t *testing.T) {
 	}
 }
 
+func TestQuestingScreen_MouseWheelScrolling(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test_questing_mouse.db")
+
+	cfg := domain.DefaultConfig()
+	m := NewModelWithDBPath(cfg, dbPath)
+	m.CharDelay = 0
+
+	// Mouse wheel up increments LogScrollOffset
+	updatedM, _ := m.Update(tea.MouseMsg{Button: tea.MouseButtonWheelUp})
+	mWheelUp := updatedM.(Model)
+	if mWheelUp.LogScrollOffset != 1 {
+		t.Errorf("expected LogScrollOffset to be 1 after mouse wheel up, got %d", mWheelUp.LogScrollOffset)
+	}
+
+	// Mouse wheel down decrements LogScrollOffset and exits scroll mode
+	updatedM2, _ := mWheelUp.Update(tea.MouseMsg{Button: tea.MouseButtonWheelDown})
+	mWheelDown := updatedM2.(Model)
+	if mWheelDown.LogScrollOffset != 0 {
+		t.Errorf("expected LogScrollOffset to be 0 after mouse wheel down, got %d", mWheelDown.LogScrollOffset)
+	}
+}
+

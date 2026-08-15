@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/dungeon"
@@ -281,6 +282,7 @@ func (m *Model) SetDimensions(width, height int) {
 func (m Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
 		tea.ClearScreen,
+		mouse.EnableMouseCmd(),
 		tea.Tick(time.Second, func(t time.Time) tea.Msg {
 			return tickMsg(t)
 		}),
@@ -295,6 +297,25 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.MouseMsg:
+		mouseEvt := mouse.ParseEvent(msg)
+		switch mouseEvt.Type {
+		case mouse.EventScrollUp:
+			m.LogScrollOffset++
+			return m, nil
+
+		case mouse.EventScrollDown:
+			if m.LogScrollOffset > 0 {
+				m.LogScrollOffset--
+				if m.LogScrollOffset == 0 {
+					cmd := m.exitScrollMode()
+					return m, cmd
+				}
+			}
+			return m, nil
+		}
+		return m, nil
+
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
 		m.Height = msg.Height
