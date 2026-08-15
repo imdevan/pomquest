@@ -51,6 +51,10 @@ Concept layout more thoroughly in plan/mission.md
   |food: 2,000lbs|pace: fast| magic items: 0|
   |ox: 4| | gems: 0|
   |spare parts: 3| | tresure chests: 1|
+- [ ] 5.7 quest log should not flex. it should be a fixed size (relative to page height but not content)
+- [ ] 5.8 align content to bottom of window
+- quest progress section should be on bottom of window
+  - [ ] 5.8.1 should be at least one line between top of screen and top of quest log
 
 ## Feature 6: path screen
 - [x] 6.1 create path screen
@@ -59,6 +63,11 @@ Concept layout more thoroughly in plan/mission.md
   - [x] 6.1.3 shows 3 generated dungeon names
   - [x] 6.1.4 use card format, similar to hero cards with box hover effect for selected item. 
 - [x] 6.2 upon selection a Location should be generated and stored in the game states CurrentLocation
+- [x] 6.3 path card update: lines: title, blank, blank, ~, Biome (title case), biome_icon
+  - [x] 6.3.1 update PathCardComponent line ordering to title, blank, blank, ~, Biome, biome_icon
+  - [x] 6.3.2 format Biome name using title case
+  - [x] 6.3.3 render tilde separator `~` between blank lines and Biome
+
 
 ## Feature 7: connect quest screen
 - [x] 7.1 quest screen should show data  from sqlite db likely already in memory
@@ -71,13 +80,16 @@ Concept layout more thoroughly in plan/mission.md
   - [x] 7.6.1 does not affect the 3 dot separators between lines
   - [x] 7.6.2 next action does not execute until previously action as fully been printed
 ## Feature 8: dice 
-- [ ] 8.1 add 6 icons to icons to icon library for each side of a d6
-  - use  󰇋 󰇌 󰇍 󰇎 󰇏
-- [ ] 8.2 use dice icons to represent d6 values in quest log
-current: 
-🗡️ 🎲(6+5=14 vs 7) Holula hits Marauder for 3 dmg!
-update:
-🗡️ 🎲(󰇏 + 󰇎 + 3 = 14 vs 7) Holula hits Marauder for 3 dmg!
+- [x] 8.1 add 6 icons to icons to icon library for each side of a d6
+  - [x] 8.1.1 add d6 face icons (, 󰇋, 󰇌, 󰇍, 󰇎, 󰇏) and helper functions GetD6Icon/GetD6IconKey to icon package
+- [x] 8.2 use dice icons to represent d6 values in quest log
+  - [x] 8.2.1 format subject attack roll d1 and d2 values using d6 face icons (e.g. 󰇏 + 󰇎 + 3 = 14 󰓥)
+  - [x] 8.2.2 format target defense roll d6 value using d6 face icon (e.g. 󰇋 + 1 = 3 )
+- [x] 8.3 add animated dice
+  - [x] 8.3.1 add dice_animation package that will animate the die by shuffling between 1 - max (default 6 but can be less) at a rate of 60 fps (assign to variable) for 1.5 seconds (asign to variable) with a variance of 1 second (animation will last between 0.5 and 2.5 seconds). lands on set value at end of animation
+  - [x] 8.3.2 use for each die in quest log
+  - [x] 8.3.3 suppress log content after '=' sign during die roll animation until completed
+
  
 
 ## Feature 9: refine turn order
@@ -100,6 +112,7 @@ update:
   - [x] 9.4.1 format 1 phase per line in quest log with separator delay
   - [x] 9.4.2 implement phase order: declaration, roll, target reaction, target roll, resolution, death declaration
   - [x] 9.4.3 update turn iconography so subject and target entity icons are displayed in all phase log entries
+  - [x] 9.4.4 critical hit / miss should be on their own line and replace the "hits" line with the separator between roll and critical message
   - phases that begin with subject or target use the icon for the given hero class or monster.
   - always show the hero and monster icons anytime they appear in the quest log. 
 
@@ -160,6 +173,7 @@ update:
   - [x] 12.4.1 defined in icon library
   - [x] 12.4.2 biome icons assigned in book of biomes
   - [x] 12.4.3 display correct biome icon on path screen cards
+
 ## Feature 13: party card
 - [x] 13.1 add team hearts ui component
   - [x] 13.1.1 takes max and current hp, renders hearts evaluated in 10 HP and 5 HP increments using icon.KeyHeart...
