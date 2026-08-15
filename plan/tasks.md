@@ -51,7 +51,11 @@ Concept layout more thoroughly in plan/mission.md
   |food: 2,000lbs|pace: fast| magic items: 0|
   |ox: 4| | gems: 0|
   |spare parts: 3| | tresure chests: 1|
-- [ ] 5.7 quest log should not flex. it should be a fixed size (relative to page height but not content)
+- [x] 5.7 quest log should not flex. it should be a fixed size (relative to page height but not content)
+  - [x] 5.7.1 pad LogViewComponent visible rows to fixed maxRows height regardless of log message count
+  - [x] 5.7.2 support pageHeight parameter in LogComponent to scale fixed row height relative to terminal page height
+  - [x] 5.7.3 preserve explicit card height in TexturedCard container
+
 - [ ] 5.8 align content to bottom of window
 - quest progress section should be on bottom of window
   - [ ] 5.8.1 should be at least one line between top of screen and top of quest log
@@ -137,25 +141,23 @@ Concept layout more thoroughly in plan/mission.md
 
 
 
-## Feature 10: dice roll animation
-
 ## Feature 11: attack "animations"
 
 "animations" 0.5 second changes to card position and border color to show state, as well as icon number pairs in the row two rows above the active card (to make space for attack card move up animation)
 
-- [x] 11.1 attack animation
+- [ ] 11.1 attack animation
   - card moves 1 row up
   - no border color change
   - hero attack damage type icon + attack damage value ("!"  after value for critical)
-- [x] 11.2 block animation
+- [ ] 11.2 block animation
   - card moves 1 down
   - no border color change
   - show shield icon against damage blocked
-- [x] 11.3 dodge animation
+- [ ] 11.3 dodge animation
   - card moves 1 left or right
   - border flashes blue color change
   - show dodge icon 󰆷 against damage dodged
-- [x] 11.4 take damage animation
+- [ ] 11.4 take damage animation
   - card moves 1 down
   - border color flashes red
   - damage taken in red with icon on enemy that dealt the damage
