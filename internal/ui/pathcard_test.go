@@ -82,3 +82,26 @@ func TestPathCardComponent_BiomeIcons(t *testing.T) {
 		}
 	}
 }
+
+func TestPathCardComponent_LineLayoutAndTitleCase(t *testing.T) {
+	theme := ThemeFromConfig(domain.DefaultConfig())
+	data := PathCardData{
+		Name:     "Whispering Woods",
+		Biome:    "shadow_caves",
+		IsActive: false,
+	}
+
+	comp := NewPathCardComponent(theme, data)
+	output := comp.View()
+
+	if !strings.Contains(output, "Whispering Woods") {
+		t.Errorf("expected output to contain title 'Whispering Woods'")
+	}
+	if !strings.Contains(output, "~") {
+		t.Errorf("expected output to contain tilde separator '~'")
+	}
+	if !strings.Contains(output, "Shadow Caves") {
+		t.Errorf("expected output to contain title cased biome 'Shadow Caves', got:\n%s", output)
+	}
+}
+

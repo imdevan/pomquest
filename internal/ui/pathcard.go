@@ -3,6 +3,7 @@ package ui
 import (
 	"math"
 	"strings"
+	"unicode"
 
 	"github.com/charmbracelet/lipgloss"
 
@@ -85,8 +86,8 @@ func (c PathCardComponent) View() string {
 	}
 
 	frontBoxHeight := cardHeight - 1
-	if frontBoxHeight < 7 {
-		frontBoxHeight = 7
+	if frontBoxHeight < 8 {
+		frontBoxHeight = 8
 	}
 
 	paddingV := 1
@@ -131,6 +132,7 @@ func (c PathCardComponent) View() string {
 
 	nameStyle := lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Primary).Align(lipgloss.Center)
 	biomeStyle := lipgloss.NewStyle().Foreground(c.Theme.Tags).Align(lipgloss.Center)
+	tildeStyle := lipgloss.NewStyle().Foreground(c.Theme.Muted).Align(lipgloss.Center)
 
 	nameStr := c.DataModel.Name
 	nameLines := WrapText(nameStr, innerWidth)
@@ -142,8 +144,12 @@ func (c PathCardComponent) View() string {
 		if iconStr == "" {
 			iconStr = icon.GetBiomeIcon(c.DataModel.Biome, icon.ModeNerdFont)
 		}
-		biomeContent := biomeStyle.Render(iconStr + " " + strings.ToUpper(c.DataModel.Biome))
-		bodyContent = nameContent + "\n" + biomeContent
+		biomeTitle := toTitleCase(c.DataModel.Biome)
+		biomeContent := biomeStyle.Render(biomeTitle)
+		iconContent := biomeStyle.Render(iconStr)
+		tildeContent := tildeStyle.Render("~")
+
+		bodyContent = nameContent + "\n\n\n" + tildeContent + "\n" + biomeContent + "\n" + iconContent
 	} else {
 		bodyContent = nameContent
 	}
@@ -159,3 +165,20 @@ func (c PathCardComponent) View() string {
 
 	return cardResult
 }
+
+func toTitleCase(s string) string {
+	s = strings.ReplaceAll(s, "_", " ")
+	words := strings.Fields(s)
+	for i, w := range words {
+		if len(w) > 0 {
+			r := []rune(w)
+			r[0] = unicode.ToUpper(r[0])
+			for j := 1; j < len(r); j++ {
+				r[j] = unicode.ToLower(r[j])
+			}
+			words[i] = string(r)
+		}
+	}
+	return strings.Join(words, " ")
+}
+
