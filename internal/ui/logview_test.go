@@ -54,3 +54,38 @@ func TestLogViewComponentTextWrapping(t *testing.T) {
 		t.Errorf("expected view to contain wrapped log message text, got:\n%s", view)
 	}
 }
+
+func TestLogViewComponentScrolling(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	messages := []string{
+		"Line 1: Log event alpha",
+		"Line 2: Log event beta",
+		"Line 3: Log event gamma",
+		"Line 4: Log event delta",
+		"Line 5: Log event epsilon",
+	}
+
+	// MaxRows = 2. Total messages = 5.
+	// Offset = 0: Should show Line 4 and Line 5
+	comp0 := NewLogViewComponent(theme, "Log", messages, 2, 50)
+	view0 := comp0.View()
+	if !strings.Contains(view0, "Line 4") || !strings.Contains(view0, "Line 5") {
+		t.Errorf("offset=0 expected Line 4 and Line 5, got:\n%s", view0)
+	}
+	if strings.Contains(view0, "Line 1") {
+		t.Errorf("offset=0 should not contain Line 1, got:\n%s", view0)
+	}
+
+	// Offset = 3 (scrolled back 3 lines): Should show Line 1 and Line 2
+	comp3 := NewLogViewComponent(theme, "Log", messages, 2, 50)
+	comp3.ScrollOffset = 3
+	view3 := comp3.View()
+	if !strings.Contains(view3, "Line 1") || !strings.Contains(view3, "Line 2") {
+		t.Errorf("offset=3 expected Line 1 and Line 2, got:\n%s", view3)
+	}
+	if strings.Contains(view3, "Line 5") {
+		t.Errorf("offset=3 should not contain Line 5, got:\n%s", view3)
+	}
+}

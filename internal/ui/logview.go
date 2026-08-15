@@ -4,15 +4,16 @@ import "strings"
 
 // LogViewComponent is a generic auto-scrolling log stream widget with rounded border.
 type LogViewComponent struct {
-	Title       string
-	TopTopLeft  string
-	TopTopRight string
-	TopLeft     string
-	TopRight    string
-	Messages    []string
-	MaxRows     int
-	Width       int
-	Theme       Theme
+	Title        string
+	TopTopLeft   string
+	TopTopRight  string
+	TopLeft      string
+	TopRight     string
+	Messages     []string
+	MaxRows      int
+	Width        int
+	Theme        Theme
+	ScrollOffset int
 }
 
 func NewLogViewComponent(theme Theme, title string, messages []string, maxRows, width int) LogViewComponent {
@@ -46,13 +47,27 @@ func (c LogViewComponent) View() string {
 		}
 	}
 
-	start := 0
-	if len(allWrapped) > c.MaxRows {
-		start = len(allWrapped) - c.MaxRows
+	maxScroll := len(allWrapped) - c.MaxRows
+	if maxScroll < 0 {
+		maxScroll = 0
+	}
+
+	offset := c.ScrollOffset
+	if offset < 0 {
+		offset = 0
+	}
+	if offset > maxScroll {
+		offset = maxScroll
+	}
+
+	start := maxScroll - offset
+	end := start + c.MaxRows
+	if end > len(allWrapped) {
+		end = len(allWrapped)
 	}
 
 	var sb strings.Builder
-	visible := allWrapped[start:]
+	visible := allWrapped[start:end]
 	for _, msg := range visible {
 		sb.WriteString(msg + "\n")
 	}
