@@ -53,12 +53,12 @@ Concept layout more thoroughly in plan/mission.md
   |spare parts: 3| | tresure chests: 1|
 - [x] 5.7 quest log should not flex. it should be a fixed size (relative to page height but not content)
   - [x] 5.7.1 pad LogViewComponent visible rows to fixed maxRows height regardless of log message count
-  - [x] 5.7.2 support pageHeight parameter in LogComponent to scale fixed row height relative to terminal page height
+  - [x] 5.7.2 support pageHeight parameter in LogComponent to scale fixed row height relative to terminal page height (minimum 8 rows, default 14 rows)
   - [x] 5.7.3 preserve explicit card height in TexturedCard container
 
 - [ ] 5.8 align content to bottom of window
 - quest progress section should be on bottom of window
-  - [ ] 5.8.1 should be at least one line between top of screen and top of quest log
+  - [x] 5.8.1 should be at least one line between top of screen and top of quest log
 
 ## Feature 6: path screen
 - [x] 6.1 create path screen
@@ -142,27 +142,32 @@ Concept layout more thoroughly in plan/mission.md
 
 
 ## Feature 11: attack "animations"
+- [ ] 11.1 hero card attack animation
 
-"animations" 0.5 second changes to card position and border color to show state, as well as icon number pairs in the row two rows above the active card (to make space for attack card move up animation)
+"animations" 0.5 second changes (assigned to variable) to card position and border color to show state, as well as icon number pairs in the row two rows above the active card (to make space for attack card move up animation)
 
-- [ ] 11.1 attack animation
+  - [ ] 11.1.1 attack animation
   - card moves 1 row up
   - no border color change
   - hero attack damage type icon + attack damage value ("!"  after value for critical)
-- [ ] 11.2 block animation
+  - triggered when hero "hits" enemy consider the line " Rivthar hits 🦇 Bat for 1 dmg!" the animation should be triggered after Bat
+  
+  - [ ] 11.1.2 block animation
   - card moves 1 down
   - no border color change
   - show shield icon against damage blocked
-- [ ] 11.3 dodge animation
+  - [ ] 11.1.3 dodge animation
   - card moves 1 left or right
   - border flashes blue color change
   - show dodge icon 󰆷 against damage dodged
-- [ ] 11.4 take damage animation
+  - [ ] 11.1.4 take damage animation
   - card moves 1 down
   - border color flashes red
   - damage taken in red with icon on enemy that dealt the damage
-
-
+- [ ] 11.2 damage row animation
+- [ ] 11.2.1 damage row is 2 rows above the top of the default card positions. 1 row above active card position
+  - shows icon of damage type delt and amount of damage delt with "!"
+  - critical damage has 3 "!!!"
 
 
 ## Feature 12: add book of biomes
