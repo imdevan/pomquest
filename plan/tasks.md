@@ -188,7 +188,9 @@ Concept layout more thoroughly in plan/mission.md
 - [x] 13.2 on md and smaller screens when only showing icon label. only show the icon. do not show semicolons.
   - [x] 13.2.1 remove colon separator from party status icon labels on md and smaller screens
   - [x] 13.2.2 update party card tests to verify icon labels render without colons in md mode
-- [ ] 13.3 always only show icons for the far right column
+- [x] 13.3 always only show icons for the far right column
+  - [x] 13.3.1 format far right column items (potions, bombs, shovels, rope) with icon only across all screen breakpoints
+  - [x] 13.3.2 update party card unit tests to verify far right column renders icons without text labels in LG mode
 
 ## Feature 14: create custom internal/ui/texturedCard
 - [x] 14.1 create custom internal/ui/texturedCard component supporting embedded text on any of the 4 border corners with padding, margin, and styling properties
