@@ -329,12 +329,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case charTickMsg:
 		if m.isTyping && m.CharDelay > 0 {
 			runes := []rune(m.activeAction)
-			if m.activeCharIdx < len(runes) {
-				m.activeCharIdx++
+			step := 1
+			if len(m.pendingActions) > 3 {
+				step = 4
+			} else if len(m.pendingActions) > 1 {
+				step = 2
+			}
+
+			if m.activeCharIdx+step <= len(runes) {
+				m.activeCharIdx += step
 				return m, tea.Tick(time.Duration(m.CharDelay)*time.Millisecond, func(t time.Time) tea.Msg {
 					return charTickMsg{}
 				})
 			}
+			m.activeCharIdx = len(runes)
 
 			// Pause printing next line while dice are actively rolling
 			if m.activeDiceAnimator != nil && !m.activeDiceAnimator.IsFinished() {
@@ -344,6 +352,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			if len(m.pendingActions) > 0 {
+				if len(m.pendingActions) > 5 {
+					for len(m.pendingActions) > 2 {
+						flushMsg := m.pendingActions[0]
+						m.pendingActions = m.pendingActions[1:]
+						m.LogMessages = append(m.LogMessages, flushMsg)
+					}
+				}
+
 				nextMsg := m.pendingActions[0]
 				m.pendingActions = m.pendingActions[1:]
 				m.LogMessages = append(m.LogMessages, nextMsg)
@@ -382,7 +398,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmd = m.advanceDungeonCycle()
 				m.TurnTickSecs = 0
 			}
-			m.saveCurrentState()
+			if m.AutoTickCounter%30 == 0 || m.ProgressData.CurrentSecs >= m.ProgressData.TotalSecs {
+				m.saveCurrentState()
+			}
 			return m, tea.Batch(cmd, tea.Tick(time.Second, func(t time.Time) tea.Msg {
 				return tickMsg(t)
 			}))
@@ -402,6 +420,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "p", "esc":
 			m.Paused = !m.Paused
+			m.saveCurrentState()
 
 		case " ", "space":
 			if !m.Paused {
@@ -746,9 +765,10 @@ func (m *Model) advanceDungeonCycle() tea.Cmd {
 		m.CurrentRoom++
 		m.DungeonState = "Entering"
 		m.TurnPhase = "hero"
+		m.saveCurrentState()
 
 	case "Defeat":
-		// Party defeated
+		m.saveCurrentState()
 	}
 
 	// Keep log size bounded
@@ -779,6 +799,11 @@ func (m *Model) saveCurrentState() {
 		return
 	}
 
+	db, err := app.InitDB(m.DBPath)
+	if err != nil {
+		return
+	}
+
 	status := "Active"
 	if m.DungeonState == "Completed" {
 		status = "Completed"
@@ -797,7 +822,7 @@ func (m *Model) saveCurrentState() {
 	}
 	quest.ID = m.QuestID
 
-	savedQuest, err := app.SaveActiveQuestToPath(m.DBPath, quest)
+	savedQuest, err := app.SaveActiveQuest(db, quest)
 	if err == nil && savedQuest.ID != 0 {
 		m.QuestID = savedQuest.ID
 	}
@@ -807,14 +832,14 @@ func (m *Model) saveCurrentState() {
 		Loot:  m.Supplies.Loot,
 	}
 	party.ID = m.PartyID
-	_ = app.SavePartyToPath(m.DBPath, party)
+	_ = app.SaveParty(db, party)
 
 	if m.PartyID != 0 {
-		_ = app.SavePartyHeroesToPath(m.DBPath, m.PartyID, m.partyHeroes)
+		_ = app.SavePartyHeroes(db, m.PartyID, m.partyHeroes)
 	}
 
 	if m.GameStateID != 0 {
-		_ = app.SaveGameLogsToPath(m.DBPath, m.GameStateID, m.LogMessages)
+		_ = app.SaveGameLogs(db, m.GameStateID, m.LogMessages)
 	}
 }
 
