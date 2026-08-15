@@ -853,7 +853,7 @@ func (m Model) View() string {
 		containerWidth = min(DefaultContainerWidth, m.Responsive.Width())
 	}
 
-	logComp := NewLogComponent(m.Theme, m.LogTitle, m.displayLogMessages(), containerWidth)
+	logComp := NewLogComponent(m.Theme, m.LogTitle, m.displayLogMessages(), containerWidth, m.Height)
 	heroCardsComp := NewHeroCardsComponent(m.Theme, m.Heroes, containerWidth, m.Responsive)
 	suppliesComp := NewSuppliesComponent(m.Theme, m.Supplies, containerWidth, m.Responsive)
 	progressComp := NewTimerComponent(m.Theme, m.ProgressData, containerWidth, m.Responsive)
@@ -865,18 +865,23 @@ func (m Model) View() string {
 	}
 	helpComp := NewHelpComponent(m.Theme, helpKeys)
 
+	questSummary := progressComp.View()
+	if helpView := helpComp.View(); helpView != "" {
+		questSummary = questSummary + "\n" + helpView
+	}
+
 	qContainer := NewQuestContainerComponent(m.Theme, containerWidth, m.Responsive)
 	content := qContainer.Render(
 		logComp.View(),
 		heroCardsComp.View(),
 		suppliesComp.View(),
-		progressComp.View(),
-		helpComp.View(),
+		questSummary,
 	)
 
+	contentWithBottomMargin := content + "\n"
 	if m.Width > 0 && m.Height > 0 {
-		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
+		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Bottom, contentWithBottomMargin)
 	}
 
-	return content
+	return "\n" + contentWithBottomMargin
 }

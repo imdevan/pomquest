@@ -64,7 +64,11 @@ func (c QuestContainerComponent) Render(sections ...string) string {
 		}
 		sb.WriteString(s)
 		if i < len(sections)-1 {
-			sb.WriteString("\n\n")
+			if len(sections) == 4 && i == 1 {
+				sb.WriteString("\n")
+			} else {
+				sb.WriteString("\n\n")
+			}
 		}
 	}
 	contentStyle := lipgloss.NewStyle().Width(c.Width).Align(lipgloss.Left)

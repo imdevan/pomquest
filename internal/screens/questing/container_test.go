@@ -48,3 +48,29 @@ func TestQuestContainerComponent_SmallScreenUnsupported(t *testing.T) {
 		t.Errorf("expected container view to render full pane border, got:\n%s", view)
 	}
 }
+
+func TestQuestContainerComponent_FourSectionsSpacing(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ui.ThemeFromConfig(cfg)
+	c := NewQuestContainerComponent(theme, 96)
+
+	s0 := "Quest Log Section"
+	s1 := "Hero Card Section"
+	s2 := "Party Card Section"
+	s3 := "Quest Summary Section"
+
+	view := c.Render(s0, s1, s2, s3)
+
+	rawView := s0 + "\n\n" + s1 + "\n" + s2 + "\n\n" + s3
+	lines := strings.Split(view, "\n")
+	var trimmedLines []string
+	for _, l := range lines {
+		trimmedLines = append(trimmedLines, strings.TrimSpace(l))
+	}
+	compactView := strings.Join(trimmedLines, "\n")
+
+	if !strings.Contains(compactView, rawView) {
+		t.Errorf("expected 4-section view layout to match:\n%s\ngot:\n%s", rawView, compactView)
+	}
+}
+

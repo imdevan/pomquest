@@ -325,3 +325,41 @@ func TestHeroCardsComponent_HeightStabilityOnTakeDamage(t *testing.T) {
 		t.Errorf("expected hero cards view line count to remain constant when hero takes damage, got normal=%d hit=%d", normalLineCount, hitLineCount)
 	}
 }
+
+func TestQuestingScreen_BottomAlignmentAndMargins(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test_questing_alignment.db")
+
+	cfg := domain.DefaultConfig()
+	model := NewModelWithDBPath(cfg, dbPath)
+	model.Width = 100
+	model.Height = 40
+
+	view := model.View()
+
+	lines := strings.Split(view, "\n")
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+	t.Logf("TOTAL LINES: %d\nVIEW:\n%s", len(lines), view)
+	if len(lines) != 40 {
+		t.Fatalf("expected view to have 40 lines matching window height, got %d lines", len(lines))
+	}
+
+	// 5.8.1: Top line should be empty (at least one line between top of screen and top of quest log)
+	if strings.TrimSpace(lines[0]) != "" {
+		t.Errorf("expected top line (line 0) to be empty for top margin, got: %q", lines[0])
+	}
+
+	// 5.8: Bottom line should be empty (1 row margin at bottom of screen)
+	if strings.TrimSpace(lines[len(lines)-1]) != "" {
+		t.Errorf("expected bottom line (line 39) to be empty for bottom margin, got: %q", lines[39])
+	}
+
+	// Verify quest progress summary is placed towards bottom before the last line margin
+	fullText := strings.Join(lines, "\n")
+	if !strings.Contains(fullText, "Dest:") {
+		t.Errorf("expected view to contain quest progress destination, got:\n%s", fullText)
+	}
+}
+
