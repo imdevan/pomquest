@@ -26,6 +26,8 @@ type TexturedCard struct {
 	Border        lipgloss.Border
 	BorderStyle   lipgloss.Style
 	Content       string
+	TopTopLeft    CornerText
+	TopTopRight   CornerText
 	TopLeft       CornerText
 	TopRight      CornerText
 	BottomLeft    CornerText
@@ -80,9 +82,27 @@ func (c TexturedCard) View() string {
 		borderStyle = lipgloss.NewStyle().Foreground(c.Theme.Border)
 	}
 
+	hasTopTop := c.TopTopLeft.Text != "" || c.TopTopRight.Text != ""
+
+	var topTopLine string
+	if hasTopTop {
+		topTopLine = c.renderBorderLine(
+			c.Border.TopLeft,
+			c.Border.TopRight,
+			c.Border.Top,
+			c.TopTopLeft,
+			c.TopTopRight,
+			width,
+			borderStyle,
+		)
+	}
+
+	topLeftCornerChar := c.Border.TopLeft
+	topRightCornerChar := c.Border.TopRight
+
 	topLine := c.renderBorderLine(
-		c.Border.TopLeft,
-		c.Border.TopRight,
+		topLeftCornerChar,
+		topRightCornerChar,
 		c.Border.Top,
 		c.TopLeft,
 		c.TopRight,
@@ -148,6 +168,9 @@ func (c TexturedCard) View() string {
 	}
 
 	var result []string
+	if hasTopTop {
+		result = append(result, topTopLine)
+	}
 	result = append(result, topLine)
 	result = append(result, middleLines...)
 	result = append(result, bottomLine)
