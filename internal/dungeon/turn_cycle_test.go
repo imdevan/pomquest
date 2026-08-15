@@ -172,3 +172,36 @@ func TestTurnCyclePhasesAndIconography(t *testing.T) {
 	}
 }
 
+func TestCriticalHitMissResolution(t *testing.T) {
+	heroes := []app.Hero{
+		{ID: 1, Name: "Arsel", Class: "Warrior", Icon: "⚔️", HP: 10, MaxHP: 10, Attack: 3, Defense: 2, Dex: 5},
+	}
+	monsters := []app.Monster{
+		{ID: 1, Name: "bat", Icon: "🦇", HP: 10, MaxHP: 10, Attack: 2, Defense: 1, Dex: 3},
+	}
+
+	queue := []Combatant{
+		{IsHero: true, HeroIdx: 0, Name: "Arsel", Icon: "⚔️", Speed: 5},
+	}
+	currentIdx := 0
+	stepPhase := 1
+	state := TurnCycleState{
+		IsCritHit: true,
+		Dmg:       8,
+	}
+
+	res := ExecuteCombatTurnCycle(&queue, &currentIdx, &stepPhase, &state, heroes, &monsters, rand.New(rand.NewSource(1)))
+	if len(res.ActionLogs) == 0 {
+		t.Fatalf("expected action logs in phase 4 for critical hit")
+	}
+
+	critLog := res.ActionLogs[0]
+	if !strings.Contains(critLog, "⚡ CRITICAL HIT!") {
+		t.Errorf("expected resolution log to contain '⚡ CRITICAL HIT!', got: %s", critLog)
+	}
+	if strings.Contains(critLog, "hits") {
+		t.Errorf("critical hit log should replace standard hits message, got: %s", critLog)
+	}
+}
+
+

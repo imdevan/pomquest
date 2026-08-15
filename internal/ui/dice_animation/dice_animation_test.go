@@ -102,6 +102,15 @@ func TestLineAnimator(t *testing.T) {
 		t.Errorf("expected LineAnimator not to be finished initially")
 	}
 
+	// Verify that before completion, nothing after the '=' sign is printed
+	initialRender := la.Render()
+	if !strings.HasSuffix(initialRender, "=") {
+		t.Errorf("expected initial render to end at '=', got: %q", initialRender)
+	}
+	if strings.Contains(initialRender, "14") {
+		t.Errorf("expected nothing after '=' to be printed during animation, got: %q", initialRender)
+	}
+
 	// Tick until completed
 	la.Tick(600 * time.Millisecond)
 	if !la.Finished {
@@ -113,4 +122,9 @@ func TestLineAnimator(t *testing.T) {
 	if !strings.Contains(rendered, expectedTargetIcons) {
 		t.Errorf("expected rendered line to contain target icons %q, got %q", expectedTargetIcons, rendered)
 	}
+	if !strings.Contains(rendered, "= 14") {
+		t.Errorf("expected completed line to contain text after '=', got %q", rendered)
+	}
+
 }
+

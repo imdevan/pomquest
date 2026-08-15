@@ -3,6 +3,7 @@ package dice_animation
 import (
 	"math/rand"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/pomquest/internal/adapters/icon"
@@ -11,11 +12,12 @@ import (
 // Default configuration variables as requested in task 8.3.1
 var (
 	DefaultFPS              = 60
-	DefaultDecelFactor      = 6.0
-	DefaultBaseDuration     = 2 * time.Second
-	DefaultVarianceDuration = 500 * time.Millisecond
+	DefaultDecelFactor      = 3.0
+	DefaultBaseDuration     = 1500 * time.Millisecond
+	DefaultVarianceDuration = 1000 * time.Millisecond
 	DefaultMaxSide          = 6
 )
+
 
 // Animator manages the frame animation for a single die with physical deceleration.
 type Animator struct {
@@ -217,13 +219,28 @@ func (la *LineAnimator) Tick(delta time.Duration) {
 }
 
 // Render returns the log line with die icons replaced by their current animated frame icons.
+// While animation is in progress (!la.Finished), nothing after the '=' sign is printed until completion.
 func (la *LineAnimator) Render() string {
 	if len(la.Animators) == 0 {
 		return la.OriginalLine
 	}
 
+	targetLine := la.OriginalLine
+	if !la.Finished {
+		if eqIdx := strings.Index(la.OriginalLine, "="); eqIdx != -1 {
+			targetLine = la.OriginalLine[:eqIdx+1]
+		} else {
+			matches := d6IconRegex.FindAllStringIndex(la.OriginalLine, -1)
+			numAnim := len(la.Animators)
+			if numAnim > 0 && len(matches) >= numAnim {
+				lastEnd := matches[numAnim-1][1]
+				targetLine = la.OriginalLine[:lastEnd]
+			}
+		}
+	}
+
 	animIdx := 0
-	return d6IconRegex.ReplaceAllStringFunc(la.OriginalLine, func(match string) string {
+	return d6IconRegex.ReplaceAllStringFunc(targetLine, func(match string) string {
 		if animIdx < len(la.Animators) {
 			iconStr := la.Animators[animIdx].CurrentIcon()
 			animIdx++
@@ -232,3 +249,5 @@ func (la *LineAnimator) Render() string {
 		return match
 	})
 }
+
+

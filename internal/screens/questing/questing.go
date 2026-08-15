@@ -476,6 +476,13 @@ func (m Model) displayLogMessages() []string {
 	display := make([]string, len(m.LogMessages))
 	copy(display, m.LogMessages)
 
+	if m.isTyping {
+		runes := []rune(m.activeAction)
+		if m.activeCharIdx < len(runes) {
+			display[len(display)-1] = string(runes[:m.activeCharIdx])
+		}
+	}
+
 	if m.activeDiceAnimator != nil {
 		targetIdx := m.activeDiceAnimator.TargetLineIdx
 		if targetIdx >= 0 && targetIdx < len(display) {
@@ -483,12 +490,6 @@ func (m Model) displayLogMessages() []string {
 		}
 	}
 
-	if m.isTyping {
-		runes := []rune(m.activeAction)
-		if m.activeCharIdx < len(runes) {
-			display[len(display)-1] = string(runes[:m.activeCharIdx])
-		}
-	}
 	return display
 }
 

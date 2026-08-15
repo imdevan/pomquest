@@ -272,7 +272,6 @@ func ExecuteCombatTurnCycle(
 				mon := &(*monsters)[combatant.MonsterIdx]
 				mon.HP--
 			}
-			res.ActionLogs = append(res.ActionLogs, fmt.Sprintf("💥 CRITICAL MISS! %s stumbles and takes 1 recoil dmg!", subjectDisp))
 			state.IsMiss = true
 			*stepPhase = 4
 		} else if d1 == 6 && d2 == 6 {
@@ -283,7 +282,6 @@ func ExecuteCombatTurnCycle(
 			} else {
 				state.Dmg = (*monsters)[combatant.MonsterIdx].Attack*2 + 2
 			}
-			res.ActionLogs = append(res.ActionLogs, fmt.Sprintf("⚡ CRITICAL HIT! %s strikes for %d max dmg!", subjectDisp, state.Dmg))
 			*stepPhase = 4
 		} else if atkRollSum <= 4 {
 			// Normal miss
@@ -406,7 +404,52 @@ func ExecuteCombatTurnCycle(
 		*stepPhase = 4
 
 	case 4: // Resolution phase: subject hits target for X dmg or misses/blocked
-		if state.IsMiss {
+		if state.IsCritMiss {
+			res.ActionLogs = append(res.ActionLogs, fmt.Sprintf("💥 CRITICAL MISS! %s stumbles and takes 1 recoil dmg!", subjectDisp))
+			*stepPhase = 0
+			*state = TurnCycleState{}
+			*currentIdx++
+		} else if state.IsCritHit {
+			if isSubjectHero {
+				targetMon := &(*monsters)[0]
+				targetMon.HP -= state.Dmg
+				res.ActionLogs = append(res.ActionLogs, fmt.Sprintf("⚡ CRITICAL HIT! %s strikes for %d max dmg!", subjectDisp, state.Dmg))
+				if targetMon.HP <= 0 {
+					state.TargetSlain = true
+					*stepPhase = 5
+				} else {
+					*stepPhase = 0
+					*state = TurnCycleState{}
+					*currentIdx++
+				}
+			} else {
+				livingHeroIdx := -1
+				for i, h := range heroes {
+					if !h.IsDead && h.HP > 0 {
+						livingHeroIdx = i
+						break
+					}
+				}
+				if livingHeroIdx != -1 {
+					targetHero := &heroes[livingHeroIdx]
+					targetHero.HP -= state.Dmg
+					if targetHero.HP <= 0 {
+						targetHero.HP = 0
+						targetHero.IsDead = true
+						targetHero.Status = "Dead"
+						state.TargetSlain = true
+					}
+				}
+				res.ActionLogs = append(res.ActionLogs, fmt.Sprintf("⚡ CRITICAL HIT! %s strikes for %d max dmg!", subjectDisp, state.Dmg))
+				if state.TargetSlain {
+					*stepPhase = 5
+				} else {
+					*stepPhase = 0
+					*state = TurnCycleState{}
+					*currentIdx++
+				}
+			}
+		} else if state.IsMiss {
 			res.ActionLogs = append(res.ActionLogs, fmt.Sprintf("%s attacks %s, but misses!", subjectDisp, targetDisp))
 			*stepPhase = 0
 			*state = TurnCycleState{}
