@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -125,8 +126,39 @@ func LoadOrCreateActiveParty(db *gorm.DB) (Party, error) {
 	return party, nil
 }
 
-// InitDB opens a SQLite database connection at dbPath, runs migrations, and seeds initial data.
-func InitDB(dbPath string) (*gorm.DB, error) {
+var (
+	dbCacheMu sync.Mutex
+	dbCache   = make(map[string]*gorm.DB)
+)
+
+// CloseDB closes and removes a cached DB connection.
+func CloseDB(dbPath string) error {
+	dbCacheMu.Lock()
+	defer dbCacheMu.Unlock()
+	if db, exists := dbCache[dbPath]; exists {
+		delete(dbCache, dbPath)
+		sqlDB, err := db.DB()
+		if err == nil && sqlDB != nil {
+			return sqlDB.Close()
+		}
+	}
+	return nil
+}
+
+// CloseAllDBs closes all cached database connections.
+func CloseAllDBs() {
+	dbCacheMu.Lock()
+	defer dbCacheMu.Unlock()
+	for p, db := range dbCache {
+		delete(dbCache, p)
+		sqlDB, err := db.DB()
+		if err == nil && sqlDB != nil {
+			_ = sqlDB.Close()
+		}
+	}
+}
+
+func initDBUncached(dbPath string) (*gorm.DB, error) {
 	if dbPath != ":memory:" && dbPath != "file::memory:?cache=shared" {
 		if err := os.MkdirAll(filepath.Dir(dbPath), 0o755); err != nil {
 			return nil, fmt.Errorf("failed to create database directory: %w", err)
@@ -154,8 +186,31 @@ func InitDB(dbPath string) (*gorm.DB, error) {
 	return db, nil
 }
 
+// InitDB returns a cached SQLite database connection at dbPath or initializes and caches one.
+func InitDB(dbPath string) (*gorm.DB, error) {
+	dbCacheMu.Lock()
+	defer dbCacheMu.Unlock()
+
+	if db, exists := dbCache[dbPath]; exists {
+		sqlDB, err := db.DB()
+		if err == nil && sqlDB.Ping() == nil {
+			return db, nil
+		}
+		delete(dbCache, dbPath)
+	}
+
+	db, err := initDBUncached(dbPath)
+	if err != nil {
+		return nil, err
+	}
+	dbCache[dbPath] = db
+	return db, nil
+}
+
 // ResetAndMigrateDB resets the database by removing existing tables/file and auto-migrating all models.
 func ResetAndMigrateDB(dbPath string) (*gorm.DB, error) {
+	_ = CloseDB(dbPath)
+
 	if dbPath != ":memory:" && dbPath != "file::memory:?cache=shared" {
 		_ = os.Remove(dbPath)
 		_ = os.Remove(dbPath + "-wal")
