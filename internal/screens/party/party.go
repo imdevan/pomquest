@@ -266,6 +266,17 @@ func (m Model) View() string {
 
 	grid := lipgloss.JoinHorizontal(lipgloss.Top, spacerCards...)
 
+	w := m.Width
+	if w <= 0 {
+		w = 80
+	}
+	gridWidth := lipgloss.Width(grid)
+	targetWidth := w
+	if gridWidth > targetWidth {
+		targetWidth = gridWidth
+	}
+	centeredGrid := lipgloss.NewStyle().Width(targetWidth).Align(lipgloss.Center).Render(grid)
+
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("←/→", "h/l"), key.WithHelp("←/→", "select hero")),
 	}
@@ -285,7 +296,7 @@ func (m Model) View() string {
 
 	var sb strings.Builder
 	sb.WriteString(header + "\n\n")
-	sb.WriteString(grid + "\n\n")
+	sb.WriteString(centeredGrid + "\n\n")
 	sb.WriteString(helpComp.View())
 
 	contentStyle := lipgloss.NewStyle().Align(lipgloss.Left)

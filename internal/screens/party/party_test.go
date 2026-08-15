@@ -106,3 +106,68 @@ func TestPartyScreen_SQLData(t *testing.T) {
 		t.Errorf("expected quit tea.Cmd when navigating to reroll screen")
 	}
 }
+
+func TestPartyScreen_HeroCardSectionCentered(t *testing.T) {
+	cfg := domain.DefaultConfig()
+
+	// Test 1 hero card
+	p1 := app.Party{
+		MaxPartySize: 1,
+		Heroes: []app.Hero{
+			{Creature: app.Creature{Noun: app.Noun{Name: "SoloHero"}, HP: 10, MaxHP: 10}, Class: "fighter"},
+		},
+	}
+	m1 := NewModelFromParty(cfg, p1)
+	m1.SetDimensions(80, 24)
+	v1 := m1.View()
+
+	if !strings.Contains(v1, "SoloHero") {
+		t.Errorf("expected view v1 to contain 'SoloHero'")
+	}
+	if !strings.Contains(v1, "PARTY MEMBERS") {
+		t.Errorf("expected view v1 to contain header 'PARTY MEMBERS'")
+	}
+
+	// Verify centering: find lines containing card box border e.g. "SoloHero"
+	lines1 := strings.Split(v1, "\n")
+	var foundCardLine1 string
+	for _, l := range lines1 {
+		if strings.Contains(l, "SoloHero") {
+			foundCardLine1 = l
+			break
+		}
+	}
+	if foundCardLine1 == "" {
+		t.Fatalf("card line with SoloHero not found")
+	}
+	// With 80 cols width, "SoloHero" card should have significant leading spaces centering it
+	leadingSpaces1 := len(foundCardLine1) - len(strings.TrimLeft(foundCardLine1, " "))
+	if leadingSpaces1 < 10 {
+		t.Errorf("expected 1 hero card to be centered with leading padding, got line:\n%q", foundCardLine1)
+	}
+
+	// Test 4 hero cards
+	m4 := NewModel(cfg) // default has 4 heroes
+	m4.SetDimensions(120, 24)
+	v4 := m4.View()
+
+	if !strings.Contains(v4, "jimmothy") || !strings.Contains(v4, "applebee") {
+		t.Errorf("expected 4-hero view to contain hero names")
+	}
+
+	lines4 := strings.Split(v4, "\n")
+	var foundCardLine4 string
+	for _, l := range lines4 {
+		if strings.Contains(l, "jimmothy") {
+			foundCardLine4 = l
+			break
+		}
+	}
+	if foundCardLine4 == "" {
+		t.Fatalf("card line with jimmothy not found")
+	}
+	leadingSpaces4 := len(foundCardLine4) - len(strings.TrimLeft(foundCardLine4, " "))
+	if leadingSpaces4 < 5 {
+		t.Errorf("expected 4 hero cards on 120-width screen to be centered with leading padding, got line:\n%q", foundCardLine4)
+	}
+}
