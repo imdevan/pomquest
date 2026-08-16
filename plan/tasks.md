@@ -272,8 +272,10 @@ start with 1 monster, bats... 1hp 0def 1 atk
 ## Feature 24: quest log
 - [x] 24.1 replace quest log border with textureCard
 - [x] 24.2 show quest log date top-left text on quest log texture card
-- [ ] 24.3 when in a dungeon show the dugeon name as the top-left texture card title
-  - [ ] 24.3.1 show the room number as the top-right texture card title
+- [x] 24.3 when in a dungeon show the dugeon name as the top-left texture card title
+  - [x] 24.3.1 show the room number as the top-right texture card title
+- [x] 24.4 add scrolling to quest log
+  - [x] 24.4.1 on questing page j/k scroll back and forward on questing log
 
 ## Feature 25: container
 - [x] 25.1 create container that wraps quest screen components
@@ -471,10 +473,23 @@ classes have an attack type
 - [ ] 39.2 overhaul damage system based on book_of_attacks
 
 ## Feature 40: add mouse hover
-- [ ] 40.1 add mouse hover on party screen to highlight hero card
-- [ ] 40.2 select hero card on click
-- [ ] 40.3 select hero card with default name on double click
-- [ ] 40.4 add scroll to questing page to scroll quest log
+- [x] 40.1 add mouse events to all components using 
+  https://github.com/lrstanley/bubblezone; cloned here: ~/Projects/playground/bubblezone
+  see examples: ~/Projects/playground/bubblezone/_examples/ 
+  - [x] 40.1.1 integrate bubblezone global manager and view scanning in mouse adapter and app model
+  - [x] 40.1.2 wrap menu component choices with bubblezone markers
+  - [x] 40.1.3 wrap hero cards, party cards, and path cards with bubblezone markers
+  - [x] 40.1.4 wrap textured cards and confirmation modal dialogs with bubblezone markers
+- [x] 40.2 menu updates
+  - [x] 40.2.1 on menu item hover - highlight and set cursor as if navigated to by keyboard
+  - [x] 40.2.2 on menu item click - select option as if pressing enter
+- [ ] 40.3 party / reroll card updates
+- on hover: set card to active state as if navigated to by keyboard
+- on click: 
+  - add active_focused state to card that is basically the as the inactive state WITH highlighted border.
+    - remove active_focused state on mouse click up
+- [x] 40.6 add mouse scroll to questing page to scroll quest log
+  - [x] 40.6.1 create an adapter in internal/adapters/mouse to handle capturing mouse events
 
 ## Feature 41: hero leveling
 - [ ] 41.1 hero can only level up during long rest and only once per rest cycle 
