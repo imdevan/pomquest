@@ -161,11 +161,11 @@ func (c PathCardComponent) View() string {
 
 	var cardResult string
 	if c.DataModel.IsActiveFocused {
-		cardResult = "  \n" + frontCard
+		cardResult = PadCardLeft2x1(frontCard)
 	} else if c.DataModel.IsActive {
-		cardResult = compositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
+		cardResult = CompositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
 	} else {
-		cardResult = "  \n" + frontCard
+		cardResult = PadCardLeft2x1(frontCard)
 	}
 
 	if c.ZoneID != "" {
