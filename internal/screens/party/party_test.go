@@ -3,9 +3,11 @@ package party
 import (
 	"strings"
 	"testing"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 )
@@ -169,5 +171,105 @@ func TestPartyScreen_HeroCardSectionCentered(t *testing.T) {
 	leadingSpaces4 := len(foundCardLine4) - len(strings.TrimLeft(foundCardLine4, " "))
 	if leadingSpaces4 < 5 {
 		t.Errorf("expected 4 hero cards on 120-width screen to be centered with leading padding, got line:\n%q", foundCardLine4)
+	}
+}
+
+func TestPartyScreen_MouseHoverAndClick(t *testing.T) {
+	mouse.InitManager()
+	cfg := domain.DefaultConfig()
+	model := NewModel(cfg)
+
+	// Render view so bubblezone registers zones
+	_ = mouse.Scan(model.View())
+	time.Sleep(20 * time.Millisecond)
+
+	zInfo := mouse.Get("party_hero_0")
+	if zInfo == nil {
+		t.Fatalf("expected zone info for party_hero_0")
+	}
+
+	// 1. Mouse hover over hero 0 -> ActiveIndex becomes 0
+	hoverMsg := tea.MouseMsg{
+		X:      zInfo.StartX + 5,
+		Y:      zInfo.StartY + 2,
+		Type:   tea.MouseMotion,
+		Action: tea.MouseActionMotion,
+	}
+	updated, _ := model.Update(hoverMsg)
+	m := updated.(Model)
+	if m.ActiveIndex != 0 {
+		t.Errorf("expected ActiveIndex 0 on mouse hover, got %d", m.ActiveIndex)
+	}
+
+	// 2. Mouse click down (press) -> PressedHeroIndex becomes 0 (active_focused)
+	pressMsg := tea.MouseMsg{
+		X:      zInfo.StartX + 5,
+		Y:      zInfo.StartY + 2,
+		Button: tea.MouseButtonLeft,
+	}
+	updated, _ = m.Update(pressMsg)
+	m = updated.(Model)
+	if m.PressedHeroIndex != 0 {
+		t.Errorf("expected PressedHeroIndex 0 on mouse press, got %d", m.PressedHeroIndex)
+	}
+
+	// 3. Mouse release -> PressedHeroIndex resets to -1
+	releaseMsg := tea.MouseMsg{
+		X:      zInfo.StartX + 5,
+		Y:      zInfo.StartY + 2,
+		Type:   tea.MouseRelease,
+		Action: tea.MouseActionRelease,
+	}
+	updated, _ = m.Update(releaseMsg)
+	m = updated.(Model)
+	if m.PressedHeroIndex != -1 {
+		t.Errorf("expected PressedHeroIndex -1 on mouse release, got %d", m.PressedHeroIndex)
+	}
+}
+
+func TestPartyScreen_MouseClickRecruitHeroNavigatesToReroll(t *testing.T) {
+	mouse.InitManager()
+	cfg := domain.DefaultConfig()
+	model := NewModel(cfg)
+	model.Heroes[3].IsEmptySlot = true
+
+	_ = mouse.Scan(model.View())
+	time.Sleep(20 * time.Millisecond)
+
+	zInfo := mouse.Get("party_hero_3")
+	if zInfo == nil {
+		t.Fatalf("expected zone info for party_hero_3")
+	}
+
+	pressMsg := tea.MouseMsg{
+		X:      zInfo.StartX + 5,
+		Y:      zInfo.StartY + 2,
+		Button: tea.MouseButtonLeft,
+	}
+	updated, cmd := model.Update(pressMsg)
+	m := updated.(Model)
+
+	if m.PressedHeroIndex != 3 {
+		t.Errorf("expected PressedHeroIndex 3 on mouse press, got %d", m.PressedHeroIndex)
+	}
+	if cmd == nil {
+		t.Fatalf("expected next cycle cmd on mouse click")
+	}
+
+	nextCycleMsg := cmd()
+	updated, cmd2 := m.Update(nextCycleMsg)
+	m = updated.(Model)
+
+	if m.PressedHeroIndex != -1 {
+		t.Errorf("expected PressedHeroIndex -1 on next cycle, got %d", m.PressedHeroIndex)
+	}
+	if !m.NavToReroll {
+		t.Errorf("expected NavToReroll to be true on next cycle")
+	}
+	if m.RerollTargetIndex != 3 {
+		t.Errorf("expected RerollTargetIndex to be 3, got %d", m.RerollTargetIndex)
+	}
+	if cmd2 == nil {
+		t.Errorf("expected quit tea.Cmd when navigating to reroll screen")
 	}
 }

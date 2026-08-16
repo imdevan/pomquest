@@ -1,13 +1,16 @@
 package party
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/ui"
@@ -21,6 +24,7 @@ type Model struct {
 	MaxPartySize      int
 	CurrentPartySize  int
 	ActiveIndex       int
+	PressedHeroIndex  int
 	NavToReroll       bool
 	RerollTargetIndex int
 	Quitted           bool
@@ -94,6 +98,7 @@ func NewModel(cfg domain.Config) Model {
 		MaxPartySize:     len(heroes),
 		CurrentPartySize: len(heroes),
 		ActiveIndex:      2, // pam is default active
+		PressedHeroIndex: -1,
 		Width:            80,
 		Height:           24,
 	}
@@ -147,6 +152,7 @@ func NewModelFromParty(cfg domain.Config, party app.Party) Model {
 		MaxPartySize:     maxSize,
 		CurrentPartySize: len(party.Heroes),
 		ActiveIndex:      0,
+		PressedHeroIndex: -1,
 		Width:            80,
 		Height:           24,
 	}
@@ -180,12 +186,48 @@ func (m Model) Init() tea.Cmd {
 	return tea.ClearScreen
 }
 
+type navToRerollMsg struct {
+	TargetIndex int
+}
+
+func navToRerollCmd(targetIndex int) tea.Cmd {
+	return tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg {
+		return navToRerollMsg{TargetIndex: targetIndex}
+	})
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case navToRerollMsg:
+		m.PressedHeroIndex = -1
+		m.NavToReroll = true
+		m.RerollTargetIndex = msg.TargetIndex
+		return m, tea.Quit
+
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
 		m.Height = msg.Height
 		m.Responsive.SetWidth(msg.Width)
+		return m, nil
+
+	case tea.MouseMsg:
+		evt := mouse.ParseEvent(msg)
+		for i := range m.Heroes {
+			zoneID := fmt.Sprintf("party_hero_%d", i)
+			if mouse.InBounds(zoneID, msg) {
+				m.ActiveIndex = i
+
+				if evt.Type == mouse.EventClick {
+					m.PressedHeroIndex = i
+					if m.Heroes[i].IsDead || m.Heroes[i].IsEmptySlot {
+						return m, navToRerollCmd(i)
+					}
+				}
+			}
+		}
+		if evt.Type == mouse.EventRelease {
+			m.PressedHeroIndex = -1
+		}
 		return m, nil
 
 	case tea.KeyMsg:
@@ -252,8 +294,10 @@ func (m Model) View() string {
 	var cards []string
 	for i, h := range m.Heroes {
 		h.IsActive = (i == m.ActiveIndex)
-		cardView := ui.NewHeroCardComponent(m.Theme, h, m.Responsive).View()
-		cards = append(cards, cardView)
+		h.IsActiveFocused = (i == m.PressedHeroIndex)
+		cardComp := ui.NewHeroCardComponent(m.Theme, h, m.Responsive)
+		cardComp.ZoneID = fmt.Sprintf("party_hero_%d", i)
+		cards = append(cards, cardComp.View())
 	}
 
 	var spacerCards []string
