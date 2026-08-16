@@ -41,8 +41,9 @@ type HeroCardData struct {
 	Armor          int
 	Status         string
 	Icon           string
-	IsActive       bool
-	IsDead         bool
+	IsActive          bool
+	IsActiveFocused   bool
+	IsDead            bool
 	Stats          app.Stats
 	ShowFullStats  bool
 	IsUnknownStats bool
@@ -388,7 +389,7 @@ func (c HeroCardComponent) renderFullStatCard() string {
 		Padding(paddingV, paddingH).
 		Width(innerWidth + paddingH*2)
 
-	if c.DataModel.IsActive {
+	if c.DataModel.IsActive || c.DataModel.IsActiveFocused {
 		cardStyle = cardStyle.BorderForeground(c.Theme.Primary)
 	} else if c.DataModel.IsDead {
 		cardStyle = cardStyle.BorderForeground(c.Theme.Muted)
@@ -487,7 +488,9 @@ func (c HeroCardComponent) renderFullStatCard() string {
 	frontCard := cardStyle.Render(sb.String())
 
 	var cardResult string
-	if c.DataModel.IsActive {
+	if c.DataModel.IsActiveFocused {
+		cardResult = "  \n" + frontCard
+	} else if c.DataModel.IsActive {
 		cardResult = compositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
 	} else {
 		cardResult = "  \n" + frontCard
@@ -511,7 +514,7 @@ func (c HeroCardComponent) renderFullStatCard() string {
 	}
 
 	if c.ZoneID != "" {
-		cardResult = mouse.Mark(c.ZoneID, cardResult)
+		cardResult = mouse.Mark(c.ZoneID, strings.TrimRight(cardResult, "\n")) + "\n"
 	}
 
 	return cardResult
@@ -585,12 +588,12 @@ func (c HeroCardComponent) renderEmptySlotCard() string {
 		Padding(paddingV, paddingH).
 		Width(innerWidth + paddingH*2)
 
-	if c.DataModel.IsActive {
+	if c.DataModel.IsActive || c.DataModel.IsActiveFocused {
 		cardStyle = cardStyle.BorderForeground(c.Theme.Primary)
 	}
 
 	var btnBorder lipgloss.Style
-	if c.DataModel.IsActive {
+	if c.DataModel.IsActive || c.DataModel.IsActiveFocused {
 		btnBorder = lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Primary)
 	} else {
 		btnBorder = lipgloss.NewStyle().Foreground(c.Theme.Muted)
@@ -618,12 +621,19 @@ func (c HeroCardComponent) renderEmptySlotCard() string {
 	frontCard := cardStyle.Render(sb.String())
 
 	var cardResult string
-	if c.DataModel.IsActive {
+	if c.DataModel.IsActiveFocused {
+		cardResult = "  \n" + frontCard
+	} else if c.DataModel.IsActive {
 		cardResult = compositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
 	} else {
 		cardResult = "  \n" + frontCard
 	}
 
-	cardResult += "\n"
+	if c.ZoneID != "" {
+		cardResult = mouse.Mark(c.ZoneID, strings.TrimRight(cardResult, "\n")) + "\n"
+	} else {
+		cardResult += "\n"
+	}
+
 	return cardResult
 }
