@@ -15,6 +15,6 @@ func (c HeaderComponent) View() string {
 	return ui.NewHeaderComponent(
 		c.theme,
 		"🏰 POMQUEST - HEARTH DASHBOARD",
-		"Welcome back, Dark Lord",
+		"Welcome back, Maia",
 	).View()
 }

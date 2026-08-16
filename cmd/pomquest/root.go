@@ -229,7 +229,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.settings.SetDimensions(m.width, m.height)
 					return m, m.settings.Init()
 				case dashboard.ChoiceQuit:
-					m.exitMessage = "Goodbye, Dark Lord!"
+					m.exitMessage = "Goodbye, Maia!"
 					return m, tea.Quit
 				}
 			}

@@ -166,7 +166,7 @@ type GameState struct {
 // Player represents cumulative global player stats across all games.
 type Player struct {
 	gorm.Model
-	Name            string `gorm:"size:64;default:'Dark Lord'"`
+	Name            string `gorm:"size:64;default:'Maia'"`
 	TotalRuns       int    `gorm:"default:0"`
 	QuestsCompleted int    `gorm:"default:0"`
 	HeroesRecruited int    `gorm:"default:0"`

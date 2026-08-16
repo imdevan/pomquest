@@ -66,7 +66,7 @@ func EnsureInitialData(db *gorm.DB) error {
 	}
 	if playerCount == 0 {
 		initialPlayer := Player{
-			Name: "Dark Lord",
+			Name: "Maia",
 		}
 		if err := db.Create(&initialPlayer).Error; err != nil {
 			return err
