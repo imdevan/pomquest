@@ -12,6 +12,7 @@ import (
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/config"
 	"github.com/pomquest/internal/domain"
+	"github.com/pomquest/internal/adapters/mouse"
 	pkg "github.com/pomquest/internal/package"
 	"github.com/pomquest/internal/screens/dashboard"
 	"github.com/pomquest/internal/screens/hoard"
@@ -96,8 +97,9 @@ func runInteractive(cmd *cobra.Command, opts *rootOptions, args []string) error 
 		cfg = domain.DefaultConfig()
 	}
 
+	mouse.InitManager()
 	model := newAppModel(cfg)
-	p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithoutSignalHandler())
+	p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseAllMotion(), tea.WithoutSignalHandler())
 	finalModel, err := p.Run()
 	if err != nil {
 		return fmt.Errorf("failed to run application: %w", err)
@@ -175,7 +177,7 @@ func (m appModel) returnToDashboard() (tea.Model, tea.Cmd) {
 }
 
 func (m appModel) Init() tea.Cmd {
-	return m.dashboard.Init()
+	return tea.Batch(m.dashboard.Init(), mouse.EnableMouseCmd())
 }
 
 func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -348,24 +350,26 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m appModel) View() string {
+	var view string
 	switch m.state {
 	case screenDashboard:
-		return m.dashboard.View()
+		view = m.dashboard.View()
 	case screenPath:
-		return m.path.View()
+		view = m.path.View()
 	case screenQuesting:
-		return m.questing.View()
+		view = m.questing.View()
 	case screenParty:
-		return m.party.View()
+		view = m.party.View()
 	case screenReroll:
-		return m.reroll.View()
+		view = m.reroll.View()
 	case screenHoard:
-		return m.hoard.View()
+		view = m.hoard.View()
 	case screenSettings:
-		return m.settings.View()
+		view = m.settings.View()
 	case screenProvisions:
-		return m.provisions.View()
+		view = m.provisions.View()
 	default:
-		return ""
+		view = ""
 	}
+	return mouse.Scan(view)
 }
