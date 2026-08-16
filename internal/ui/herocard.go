@@ -489,11 +489,11 @@ func (c HeroCardComponent) renderFullStatCard() string {
 
 	var cardResult string
 	if c.DataModel.IsActiveFocused {
-		cardResult = "  \n" + frontCard
+		cardResult = PadCardLeft2x1(frontCard)
 	} else if c.DataModel.IsActive {
-		cardResult = compositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
+		cardResult = CompositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
 	} else {
-		cardResult = "  \n" + frontCard
+		cardResult = PadCardLeft2x1(frontCard)
 	}
 
 	var statusIcon string
@@ -520,8 +520,8 @@ func (c HeroCardComponent) renderFullStatCard() string {
 	return cardResult
 }
 
-// compositeActiveOffsetCard2x1 overlaps frontCard (shifted 1 up, 2 left) over a base border box (standard position)
-func compositeActiveOffsetCard2x1(frontCard string, borderColor lipgloss.Color) string {
+// CompositeActiveOffsetCard2x1 overlaps frontCard (shifted 1 up, 2 left) over a base border box (standard position)
+func CompositeActiveOffsetCard2x1(frontCard string, borderColor lipgloss.Color) string {
 	frontLines := strings.Split(frontCard, "\n")
 	height := len(frontLines)
 	if height == 0 {
@@ -557,6 +557,22 @@ func compositeActiveOffsetCard2x1(frontCard string, borderColor lipgloss.Color) 
 	}
 
 	return strings.Join(result, "\n")
+}
+
+// PadCardLeft2x1 indents a front card with 2 leading spaces on each line and a leading empty row,
+// placing it in the exact baseline position matching CompositeActiveOffsetCard2x1.
+func PadCardLeft2x1(frontCard string) string {
+	lines := strings.Split(frontCard, "\n")
+	var result []string
+	result = append(result, "  ")
+	for _, l := range lines {
+		result = append(result, "  "+l)
+	}
+	return strings.Join(result, "\n")
+}
+
+func compositeActiveOffsetCard2x1(frontCard string, borderColor lipgloss.Color) string {
+	return CompositeActiveOffsetCard2x1(frontCard, borderColor)
 }
 
 func (c HeroCardComponent) renderEmptySlotCard() string {
@@ -622,11 +638,11 @@ func (c HeroCardComponent) renderEmptySlotCard() string {
 
 	var cardResult string
 	if c.DataModel.IsActiveFocused {
-		cardResult = "  \n" + frontCard
+		cardResult = PadCardLeft2x1(frontCard)
 	} else if c.DataModel.IsActive {
-		cardResult = compositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
+		cardResult = CompositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
 	} else {
-		cardResult = "  \n" + frontCard
+		cardResult = PadCardLeft2x1(frontCard)
 	}
 
 	if c.ZoneID != "" {
