@@ -19,6 +19,7 @@ type PathCardData struct {
 	DifficultyModifier float64
 	Icon               string
 	IsActive           bool
+	IsActiveFocused    bool
 }
 
 // PathCardComponent renders path selection cards according to design specs.
@@ -128,7 +129,7 @@ func (c PathCardComponent) View() string {
 		Height(styleHeight).
 		Align(lipgloss.Center, lipgloss.Center)
 
-	if c.DataModel.IsActive {
+	if c.DataModel.IsActive || c.DataModel.IsActiveFocused {
 		cardStyle = cardStyle.BorderForeground(c.Theme.Primary)
 	}
 
@@ -159,14 +160,16 @@ func (c PathCardComponent) View() string {
 	frontCard := cardStyle.Render(bodyContent)
 
 	var cardResult string
-	if c.DataModel.IsActive {
+	if c.DataModel.IsActiveFocused {
+		cardResult = "  \n" + frontCard
+	} else if c.DataModel.IsActive {
 		cardResult = compositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
 	} else {
 		cardResult = "  \n" + frontCard
 	}
 
 	if c.ZoneID != "" {
-		cardResult = mouse.Mark(c.ZoneID, cardResult)
+		cardResult = mouse.Mark(c.ZoneID, strings.TrimRight(cardResult, "\n")) + "\n"
 	}
 
 	return cardResult
