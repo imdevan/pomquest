@@ -26,6 +26,7 @@ type Model struct {
 	Cards            [3]ui.PathCardData
 	Options          [3]app.Location
 	ActiveIndex      int
+	PressedPathIndex int
 	SelectedLocation app.Location
 	Completed        bool
 	Quitted          bool
@@ -49,13 +50,14 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 	rng := rand.New(src)
 
 	m := Model{
-		Theme:       theme,
-		Responsive:  ui.NewResponsiveManager(80),
-		ActiveIndex: 0,
-		Width:       80,
-		Height:      24,
-		DBPath:      dbPath,
-		rng:         rng,
+		Theme:            theme,
+		Responsive:       ui.NewResponsiveManager(80),
+		ActiveIndex:      0,
+		PressedPathIndex: -1,
+		Width:            80,
+		Height:           24,
+		DBPath:           dbPath,
+		rng:              rng,
 	}
 
 	party, err := app.LoadActivePartyFromPath(dbPath)
@@ -120,19 +122,36 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
+type confirmPathMsg struct{}
+
+func confirmPathCmd() tea.Cmd {
+	return tea.Tick(316*time.Millisecond, func(t time.Time) tea.Msg {
+		return confirmPathMsg{}
+	})
+}
+
 // Update handles key messages and state changes for the path screen.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case confirmPathMsg:
+		m.PressedPathIndex = -1
+		return m.confirmPathSelection()
+
 	case tea.MouseMsg:
+		evt := mouse.ParseEvent(msg)
 		for i := 0; i < 3; i++ {
 			zoneID := fmt.Sprintf("path_card_%d", i)
 			if mouse.InBounds(zoneID, msg) {
 				m.ActiveIndex = i
-				parsed := mouse.ParseEvent(msg)
-				if parsed.Type == mouse.EventClick {
-					return m.confirmPathSelection()
+
+				if evt.Type == mouse.EventClick {
+					m.PressedPathIndex = i
+					return m, confirmPathCmd()
 				}
 			}
+		}
+		if evt.Type == mouse.EventRelease {
+			m.PressedPathIndex = -1
 		}
 		return m, nil
 
@@ -289,6 +308,7 @@ func (m Model) View() string {
 	for i := 0; i < 3; i++ {
 		c := m.Cards[i]
 		c.IsActive = (i == m.ActiveIndex)
+		c.IsActiveFocused = (i == m.PressedPathIndex)
 		cardComp := ui.NewPathCardComponentSized(m.Theme, c, cardWidth, cardHeight, rm)
 		cardComp.ZoneID = fmt.Sprintf("path_card_%d", i)
 		cards = append(cards, cardComp.View())

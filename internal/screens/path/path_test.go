@@ -4,8 +4,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 )
@@ -146,5 +148,59 @@ func TestPathScreen_ResponsiveCardSizingAndCentering(t *testing.T) {
 	viewXL := m.View()
 	if viewXL == "" {
 		t.Errorf("expected view on XL breakpoint to be non-empty")
+	}
+}
+
+func TestPathScreen_MouseHoverAndClick(t *testing.T) {
+	mouse.InitManager()
+	cfg := domain.DefaultConfig()
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "path_mouse_test.db")
+
+	model := NewModelWithDBPath(cfg, dbPath)
+
+	// Render view so bubblezone registers zones
+	_ = mouse.Scan(model.View())
+	time.Sleep(20 * time.Millisecond)
+
+	zInfo := mouse.Get("path_card_1")
+	if zInfo == nil {
+		t.Fatalf("expected zone info for path_card_1")
+	}
+
+	// 1. Mouse hover over path card 1 -> ActiveIndex becomes 1
+	hoverMsg := tea.MouseMsg{
+		X:      zInfo.StartX + 5,
+		Y:      zInfo.StartY + 2,
+		Type:   tea.MouseMotion,
+		Action: tea.MouseActionMotion,
+	}
+	updated, _ := model.Update(hoverMsg)
+	m := updated.(Model)
+	if m.ActiveIndex != 1 {
+		t.Errorf("expected ActiveIndex 1 on mouse hover, got %d", m.ActiveIndex)
+	}
+
+	// 2. Mouse click (EventClick) -> PressedPathIndex becomes 1 (active_focused) & returns next cycle cmd
+	pressMsg := tea.MouseMsg{
+		X:      zInfo.StartX + 5,
+		Y:      zInfo.StartY + 2,
+		Button: tea.MouseButtonLeft,
+	}
+	updated, cmd := m.Update(pressMsg)
+	m = updated.(Model)
+	if m.PressedPathIndex != 1 {
+		t.Errorf("expected PressedPathIndex 1 on mouse press, got %d", m.PressedPathIndex)
+	}
+	if cmd == nil {
+		t.Fatalf("expected next cycle cmd on mouse click")
+	}
+
+	// 3. Next cycle message -> PressedPathIndex resets to -1 and confirms path selection
+	nextCycleMsg := cmd()
+	updated, _ = m.Update(nextCycleMsg)
+	m = updated.(Model)
+	if m.PressedPathIndex != -1 {
+		t.Errorf("expected PressedPathIndex -1 on next cycle, got %d", m.PressedPathIndex)
 	}
 }
