@@ -11,6 +11,26 @@ import (
 	"github.com/pomquest/internal/domain"
 )
 
+func TestSettingsScreen_TitleAndNoSubtitles(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	m := NewModel(cfg)
+
+	view := m.View()
+
+	// Title must have Settings icon and Settings
+	if !strings.Contains(view, "⚙") || !strings.Contains(view, "Settings") {
+		t.Fatalf("expected view to contain '⚙' and 'Settings', got:\n%s", view)
+	}
+
+	// Must NOT contain old subtitles or sub-titles
+	if strings.Contains(view, "Manage local database") {
+		t.Fatalf("expected view to NOT contain subtitle, got:\n%s", view)
+	}
+	if strings.Contains(view, "Configuration Menu") {
+		t.Fatalf("expected view to NOT contain 'Configuration Menu' subtitle, got:\n%s", view)
+	}
+}
+
 func TestSettingsScreen_Navigation(t *testing.T) {
 	cfg := domain.DefaultConfig()
 	m := NewModel(cfg)
@@ -34,67 +54,83 @@ func TestSettingsScreen_Navigation(t *testing.T) {
 	}
 }
 
-func TestSettingsScreen_AudioSubView(t *testing.T) {
+func TestSettingsScreen_SFXToggle1Layer(t *testing.T) {
 	cfg := domain.DefaultConfig()
 	m := NewModel(cfg)
 
-	// Press '2' to go to Audio settings
+	initialSFX := m.AudioSFXEnabled
+
+	// Press '2' to toggle SFX
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'2'}})
 	if cmd != nil {
 		updated, _ = updated.(Model).Update(cmd())
 	}
 	m = updated.(Model)
 
-	if m.State != StateAudio {
-		t.Fatalf("expected state StateAudio after pressing '2', got %v", m.State)
-	}
-
-	view := m.View()
-	if !strings.Contains(view, "Audio Settings (Stub)") {
-		t.Fatalf("expected view to contain Audio Settings, got:\n%s", view)
-	}
-
-	// Toggle SFX
-	initialSFX := m.AudioSFXEnabled
-	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
-	m = updated.(Model)
 	if m.AudioSFXEnabled == initialSFX {
 		t.Fatalf("expected AudioSFXEnabled to toggle, got %v", m.AudioSFXEnabled)
 	}
+	if !strings.Contains(m.StatusNotice, "Sound Effects") {
+		t.Fatalf("expected StatusNotice to mention Sound Effects, got %q", m.StatusNotice)
+	}
 
-	// Press 'esc' to return to Main settings menu
-	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	// Press 's' shortcut key
+	updated, cmd = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
+	if cmd != nil {
+		updated, _ = updated.(Model).Update(cmd())
+	}
 	m = updated.(Model)
-	if m.State != StateMain {
-		t.Fatalf("expected state StateMain after pressing esc, got %v", m.State)
+
+	if m.AudioSFXEnabled != initialSFX {
+		t.Fatalf("expected AudioSFXEnabled to toggle back, got %v", m.AudioSFXEnabled)
 	}
 }
 
-func TestSettingsScreen_CreditsSubView(t *testing.T) {
+func TestSettingsScreen_MusicToggle1Layer(t *testing.T) {
 	cfg := domain.DefaultConfig()
 	m := NewModel(cfg)
 
-	// Press '3' to go to Credits
+	initialMusic := m.AudioMusicMuted
+
+	// Press '3' to toggle Music
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'3'}})
 	if cmd != nil {
 		updated, _ = updated.(Model).Update(cmd())
 	}
 	m = updated.(Model)
 
-	if m.State != StateCredits {
-		t.Fatalf("expected state StateCredits after pressing '3', got %v", m.State)
+	if m.AudioMusicMuted == initialMusic {
+		t.Fatalf("expected AudioMusicMuted to toggle, got %v", m.AudioMusicMuted)
+	}
+	if !strings.Contains(m.StatusNotice, "Music") {
+		t.Fatalf("expected StatusNotice to mention Music, got %q", m.StatusNotice)
 	}
 
-	view := m.View()
-	if !strings.Contains(view, "Credits & Acknowledgments") {
-		t.Fatalf("expected view to contain Credits, got:\n%s", view)
+	// Press 'm' shortcut key
+	updated, cmd = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'m'}})
+	if cmd != nil {
+		updated, _ = updated.(Model).Update(cmd())
 	}
-
-	// Press 'b' to return
-	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'b'}})
 	m = updated.(Model)
-	if m.State != StateMain {
-		t.Fatalf("expected state StateMain after pressing 'b', got %v", m.State)
+
+	if m.AudioMusicMuted != initialMusic {
+		t.Fatalf("expected AudioMusicMuted to toggle back, got %v", m.AudioMusicMuted)
+	}
+}
+
+func TestSettingsScreen_Credits1Layer(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	m := NewModel(cfg)
+
+	// Press '4' for Credits
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'4'}})
+	if cmd != nil {
+		updated, _ = updated.(Model).Update(cmd())
+	}
+	m = updated.(Model)
+
+	if !strings.Contains(m.StatusNotice, "PomQuest") {
+		t.Fatalf("expected StatusNotice to mention PomQuest credits, got %q", m.StatusNotice)
 	}
 }
 
@@ -212,7 +248,7 @@ func TestSettingsScreen_MenuCardStyleAndFocusedState(t *testing.T) {
 	if mFinal.FocusedIndex != -1 {
 		t.Errorf("expected FocusedIndex reset to -1, got %d", mFinal.FocusedIndex)
 	}
-	if mFinal.State != StateAudio {
-		t.Errorf("expected StateAudio after transition, got %v", mFinal.State)
+	if mFinal.Selected != ChoiceSFX {
+		t.Errorf("expected ChoiceSFX after transition, got %v", mFinal.Selected)
 	}
 }

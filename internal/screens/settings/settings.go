@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
@@ -19,12 +20,21 @@ type ViewState int
 const (
 	StateMain ViewState = iota
 	StateConfirmReset
-	StateAudio
-	StateCredits
+)
+
+// Choice represents an item selected on the settings menu.
+type Choice int
+
+const (
+	ChoiceReset Choice = iota
+	ChoiceSFX
+	ChoiceMusic
+	ChoiceCredits
+	ChoiceBack
 )
 
 type settingsSelectMsg struct {
-	choiceIndex int
+	choice Choice
 }
 
 // Model represents the Settings UI screen.
@@ -35,6 +45,7 @@ type Model struct {
 	Choices         []string
 	Cursor          int
 	FocusedIndex    int
+	Selected        Choice
 	State           ViewState
 	ConfirmReset    ui.ConfirmationModel
 	AudioSFXEnabled bool
@@ -53,24 +64,31 @@ func NewModel(cfg domain.Config) Model {
 // NewModelWithDBPath initializes Settings screen with a custom SQLite database path.
 func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 	theme := ui.ThemeFromConfig(cfg)
-	return Model{
-		Theme:      theme,
-		Responsive: ui.NewResponsiveManager(80),
-		DBPath:     dbPath,
-		Choices: []string{
-			"1. ♻  Reset Game Data (SQL DB)",
-			"2. 🔊 Audio Settings (Stub)",
-			"3. 📜 Credits & License (Stub)",
-			"4. ⬅  Back to Hearth",
-		},
+	m := Model{
+		Theme:           theme,
+		Responsive:      ui.NewResponsiveManager(80),
+		DBPath:          dbPath,
 		Cursor:          0,
 		FocusedIndex:    -1,
+		Selected:        -1,
 		State:           StateMain,
 		ConfirmReset:    ui.NewConfirmationModel("Reset Game Data?", "Are you sure you want to reset all game data and auto-migrate the database?", theme).WithBorderless(true),
 		AudioSFXEnabled: true,
 		AudioMusicMuted: true,
 		Width:           80,
 		Height:          24,
+	}
+	m.updateChoices()
+	return m
+}
+
+func (m *Model) updateChoices() {
+	m.Choices = []string{
+		"1. ♻  Reset Game Data (SQL DB)",
+		fmt.Sprintf("2. 🔊 Sound Effects: %s", sfxStatus(m.AudioSFXEnabled)),
+		fmt.Sprintf("3. 🎵 Background Music: %s", musicStatus(m.AudioMusicMuted)),
+		"4. 📜 Credits & License",
+		"5. ⬅  Back to Hearth",
 	}
 }
 
@@ -98,9 +116,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case settingsSelectMsg:
 		m.FocusedIndex = -1
-		m.Cursor = msg.choiceIndex
-		m.selectCurrentChoice()
-		return m, nil
+		return m.handleChoiceSelection(msg.choice)
 	}
 
 	switch m.State {
@@ -108,10 +124,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateMain(msg)
 	case StateConfirmReset:
 		return m.updateConfirmReset(msg)
-	case StateAudio:
-		return m.updateAudio(msg)
-	case StateCredits:
-		return m.updateCredits(msg)
 	}
 
 	return m, nil
@@ -126,7 +138,8 @@ func (m Model) updateMain(msg tea.Msg) (tea.Model, tea.Cmd) {
 		menuComp := ui.NewMenuComponent(m.Theme, m.Choices, m.Cursor)
 		menuComp.IDPrefix = "settings_menu"
 		if newCursor, clicked := menuComp.HandleMouse(msg); clicked {
-			return m.triggerChoiceSelection(newCursor)
+			m.Cursor = newCursor
+			return m.triggerChoiceSelection(Choice(newCursor))
 		} else if newCursor != m.Cursor {
 			m.Cursor = newCursor
 		}
@@ -139,6 +152,7 @@ func (m Model) updateMain(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "esc", "b", "backspace", "ctrl+c":
 			m.Quitted = true
+			m.Selected = ChoiceBack
 			return m, nil
 
 		case "up", "k":
@@ -155,46 +169,62 @@ func (m Model) updateMain(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.Cursor = 0
 			}
 
-		case "1":
-			return m.triggerChoiceSelection(0)
-		case "2":
-			return m.triggerChoiceSelection(1)
-		case "3":
-			return m.triggerChoiceSelection(2)
-		case "4":
-			return m.triggerChoiceSelection(3)
+		case "1", "r":
+			m.Cursor = 0
+			return m.triggerChoiceSelection(ChoiceReset)
+		case "2", "s":
+			m.Cursor = 1
+			return m.triggerChoiceSelection(ChoiceSFX)
+		case "3", "m":
+			m.Cursor = 2
+			return m.triggerChoiceSelection(ChoiceMusic)
+		case "4", "c":
+			m.Cursor = 3
+			return m.triggerChoiceSelection(ChoiceCredits)
+		case "5":
+			m.Cursor = 4
+			return m.triggerChoiceSelection(ChoiceBack)
 
 		case "enter", "space":
-			return m.triggerChoiceSelection(m.Cursor)
+			return m.triggerChoiceSelection(Choice(m.Cursor))
 		}
 	}
 	return m, nil
 }
 
-func (m Model) triggerChoiceSelection(idx int) (tea.Model, tea.Cmd) {
-	m.Cursor = idx
-	m.FocusedIndex = idx
+func (m Model) triggerChoiceSelection(choice Choice) (tea.Model, tea.Cmd) {
+	m.Cursor = int(choice)
+	m.FocusedIndex = int(choice)
+	m.Selected = choice
 	return m, tea.Tick(120*time.Millisecond, func(t time.Time) tea.Msg {
-		return settingsSelectMsg{choiceIndex: idx}
+		return settingsSelectMsg{choice: choice}
 	})
 }
 
-func (m *Model) selectCurrentChoice() {
-	switch m.Cursor {
-	case 0: // Reset Game Data
+func (m Model) handleChoiceSelection(choice Choice) (tea.Model, tea.Cmd) {
+	m.Selected = choice
+	switch choice {
+	case ChoiceReset:
 		m.State = StateConfirmReset
 		m.ConfirmReset = ui.NewConfirmationModel(
 			"Reset Game Data?",
 			"Are you sure you want to reset all game data and auto-migrate the database?",
 			m.Theme,
 		).WithBorderless(true)
-	case 1: // Audio
-		m.State = StateAudio
-	case 2: // Credits
-		m.State = StateCredits
-	case 3: // Back
+	case ChoiceSFX:
+		m.AudioSFXEnabled = !m.AudioSFXEnabled
+		m.StatusNotice = fmt.Sprintf("🔊 Sound Effects: %s", sfxStatus(m.AudioSFXEnabled))
+		m.updateChoices()
+	case ChoiceMusic:
+		m.AudioMusicMuted = !m.AudioMusicMuted
+		m.StatusNotice = fmt.Sprintf("🎵 Background Music: %s", musicStatus(m.AudioMusicMuted))
+		m.updateChoices()
+	case ChoiceCredits:
+		m.StatusNotice = "📜 PomQuest • Built with Charm Bubble Tea & LipGloss • MIT License"
+	case ChoiceBack:
 		m.Quitted = true
 	}
+	return m, nil
 }
 
 func (m Model) updateConfirmReset(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -220,40 +250,6 @@ func (m Model) updateConfirmReset(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, cmd
-}
-
-func (m Model) updateAudio(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "esc", "b", "backspace":
-			m.State = StateMain
-			m.StatusNotice = "Audio settings saved (stub)."
-			return m, nil
-		case "1", "s":
-			m.AudioSFXEnabled = !m.AudioSFXEnabled
-			m.StatusNotice = fmt.Sprintf("Sound Effects: %s (stub)", sfxStatus(m.AudioSFXEnabled))
-		case "2", "m":
-			m.AudioMusicMuted = !m.AudioMusicMuted
-			m.StatusNotice = fmt.Sprintf("Music: %s (stub)", musicStatus(m.AudioMusicMuted))
-		case "enter", "space":
-			m.AudioSFXEnabled = !m.AudioSFXEnabled
-			m.StatusNotice = fmt.Sprintf("Sound Effects: %s (stub)", sfxStatus(m.AudioSFXEnabled))
-		}
-	}
-	return m, nil
-}
-
-func (m Model) updateCredits(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "esc", "b", "backspace", "enter", "space":
-			m.State = StateMain
-			return m, nil
-		}
-	}
-	return m, nil
 }
 
 func sfxStatus(enabled bool) string {
@@ -305,164 +301,78 @@ func (m Model) View() string {
 		return content
 	}
 
-	header := ui.NewHeaderComponent(m.Theme, "⚙ Settings & Configuration", "Manage local database, audio preferences, and view credits").View()
+	headerComp := NewHeaderComponent(m.Theme)
 
-	var body string
-	switch m.State {
-	case StateMain:
-		body = m.viewMain(w)
-	case StateConfirmReset:
-		body = m.ConfirmReset.View()
-	case StateAudio:
-		body = m.viewAudio(w)
-	case StateCredits:
-		body = m.viewCredits(w)
+	helpKeys := []key.Binding{
+		key.NewBinding(key.WithKeys("up/down", "j/k"), key.WithHelp("↑/↓", "navigate")),
+		key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "select")),
+		key.NewBinding(key.WithKeys("1-5"), key.WithHelp("1-5", "quick select")),
+		key.NewBinding(key.WithKeys("q"), key.WithHelp("q", "back")),
 	}
 
-	paneWidth := min(w-4, 76)
-	if paneWidth < 40 {
-		paneWidth = 40
+	helpComp := NewHelpComponent(m.Theme, helpKeys)
+
+	if m.State == StateConfirmReset {
+		var sb strings.Builder
+		sb.WriteString(headerComp.View())
+		sb.WriteString(m.ConfirmReset.View() + "\n")
+		sb.WriteString(helpComp.View())
+
+		contentStyle := lipgloss.NewStyle().Align(lipgloss.Left)
+		content := contentStyle.Render(sb.String())
+
+		if m.Width > 0 && m.Height > 0 {
+			return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
+		}
+		return content
 	}
 
-	containerStyle := lipgloss.NewStyle().
-		Padding(1, 2).
-		Width(paneWidth)
-
-	if m.State != StateConfirmReset {
-		containerStyle = containerStyle.
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(m.Theme.Border)
+	// Find the maximum line width of all other text on the page (sans margin)
+	otherTexts := []string{
+		headerComp.View(),
+		helpComp.View(),
+	}
+	if m.StatusNotice != "" {
+		otherTexts = append(otherTexts, m.StatusNotice)
 	}
 
-	content := lipgloss.JoinVertical(
-		lipgloss.Left,
-		header,
-		containerStyle.Render(body),
-	)
+	maxOtherWidth := 0
+	for _, txt := range otherTexts {
+		for _, line := range strings.Split(txt, "\n") {
+			w := lipgloss.Width(strings.TrimSpace(line))
+			if w > maxOtherWidth {
+				maxOtherWidth = w
+			}
+		}
+	}
 
-	if m.Height > 0 {
+	menuWidth := maxOtherWidth
+	if m.Width > 0 && m.Width-4 < menuWidth {
+		menuWidth = m.Width - 4
+	}
+	if menuWidth < 30 {
+		menuWidth = 30
+	}
+	menuComp := NewMenuComponent(m.Theme, m.Choices, m.Cursor).WithFocusedIndex(m.FocusedIndex).WithWidth(menuWidth)
+
+	var sb strings.Builder
+	sb.WriteString(headerComp.View())
+	sb.WriteString(menuComp.View() + "\n")
+
+	if m.StatusNotice != "" {
+		sb.WriteString("\n" + lipgloss.NewStyle().Foreground(m.Theme.TextHighlight).Render(m.StatusNotice) + "\n")
+	}
+
+	sb.WriteString(helpComp.View())
+
+	contentStyle := lipgloss.NewStyle().Align(lipgloss.Left)
+	content := contentStyle.Render(sb.String())
+
+	if m.Width > 0 && m.Height > 0 {
 		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
 	}
 
 	return content
-}
-
-func (m Model) viewMain(width int) string {
-	var sb strings.Builder
-
-	menuTitleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(m.Theme.Headings).
-		MarginBottom(1)
-	sb.WriteString(menuTitleStyle.Render("Configuration Menu") + "\n")
-
-	menuWidth := min(width-8, 72)
-	if menuWidth < 30 {
-		menuWidth = 30
-	}
-	menuComp := ui.NewMenuComponent(m.Theme, m.Choices, m.Cursor)
-	menuComp.IDPrefix = "settings_menu"
-	menuComp.FocusedIndex = m.FocusedIndex
-	menuComp.Width = menuWidth
-	sb.WriteString(menuComp.View() + "\n")
-
-	if m.StatusNotice != "" {
-		noticeStyle := lipgloss.NewStyle().
-			MarginTop(1).
-			Italic(true).
-			Foreground(m.Theme.DescriptionHighlight)
-		sb.WriteString("\n" + noticeStyle.Render(m.StatusNotice))
-	}
-
-	helpStyle := lipgloss.NewStyle().
-		MarginTop(1).
-		Foreground(m.Theme.Muted)
-	sb.WriteString("\n" + helpStyle.Render("[↑/↓/j/k] Navigate  [Enter/Space/1-4] Select  [q/esc/b] Back"))
-
-	return sb.String()
-}
-
-func (m Model) viewAudio(width int) string {
-	var sb strings.Builder
-
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(m.Theme.Headings).
-		MarginBottom(1)
-	sb.WriteString(titleStyle.Render("🔊 Audio Settings (Stub)"))
-
-	infoStyle := lipgloss.NewStyle().Foreground(m.Theme.Text)
-	highlightStyle := lipgloss.NewStyle().Bold(true).Foreground(m.Theme.Primary)
-
-	sb.WriteString("\n\n" + infoStyle.Render("Configure in-game sound effects and background music:\n\n"))
-
-	sfxLabel := fmt.Sprintf("1. Sound Effects: [%s]", sfxStatus(m.AudioSFXEnabled))
-	musicLabel := fmt.Sprintf("2. Music Track:   [%s]", musicStatus(m.AudioMusicMuted))
-	synthLabel := "3. Sound Engine:  [Retro Synthesizer Stub]"
-
-	sb.WriteString(highlightStyle.Render(sfxLabel) + "\n")
-	sb.WriteString(highlightStyle.Render(musicLabel) + "\n")
-	sb.WriteString(infoStyle.Render(synthLabel) + "\n")
-
-	if m.StatusNotice != "" {
-		noticeStyle := lipgloss.NewStyle().
-			MarginTop(1).
-			Italic(true).
-			Foreground(m.Theme.DescriptionHighlight)
-		sb.WriteString("\n" + noticeStyle.Render(m.StatusNotice))
-	}
-
-	helpStyle := lipgloss.NewStyle().
-		MarginTop(1).
-		Foreground(m.Theme.Muted)
-	sb.WriteString("\n" + helpStyle.Render("[1/s/Space] Toggle SFX  [2/m] Toggle Music  [q/esc/b] Back"))
-
-	return sb.String()
-}
-
-func (m Model) viewCredits(width int) string {
-	var sb strings.Builder
-
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(m.Theme.Headings)
-	sb.WriteString(titleStyle.Render("📜 Credits & Acknowledgments"))
-
-	bodyStyle := lipgloss.NewStyle().Foreground(m.Theme.Text)
-	accentStyle := lipgloss.NewStyle().Foreground(m.Theme.Secondary).Bold(true)
-
-	creditsText := `
-⚔ PomQuest - Terminal Pomodoro RPG ⚔
-------------------------------------
-A command-line RPG driven by pomodoro focus loops.
-
-Development & Architecture:
-  • Lead Developer: PomQuest Adventurers
-  • Terminal Engine: Charm Bubble Tea & LipGloss
-  • Database: SQLite & GORM Persistence
-
-Special Thanks:
-  • ASCII Tavern Masters & Nerd Fonts
-  • Open Source CLI Community
-
-License: MIT
-`
-	sb.WriteString(bodyStyle.Render(creditsText))
-
-	helpStyle := lipgloss.NewStyle().
-		MarginTop(1).
-		Foreground(m.Theme.Muted)
-	sb.WriteString(accentStyle.Render("Press Esc, Enter, or 'b' to return to Settings."))
-	sb.WriteString("\n" + helpStyle.Render("[q/esc/b/Enter] Back"))
-
-	return sb.String()
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 func max(a, b int) int {
