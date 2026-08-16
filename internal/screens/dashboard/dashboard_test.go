@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
@@ -133,3 +134,73 @@ func TestDashboardScreen_MenuCardStyleAndFocusedState(t *testing.T) {
 		t.Errorf("expected tea.Quit command after transition")
 	}
 }
+
+func TestDashboardScreen_MainMenuWidthMatchesOtherText(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	model := NewModel(cfg)
+	model.SetDimensions(80, 24)
+
+	// In default view, find max width of other text lines (sans margin)
+	headerComp := NewHeaderComponent(model.Theme)
+	statusComp := NewStatusComponent(model.Theme, "Sacred Mirror / Dark Hearth", 0)
+	partyInfoText := "👥 Party: 0/1 Members   💰 Coins: 10s 00c"
+
+	otherTexts := []string{
+		headerComp.View(),
+		statusComp.View(),
+		partyInfoText,
+	}
+
+	maxOtherWidth := 0
+	for _, txt := range otherTexts {
+		for _, line := range strings.Split(txt, "\n") {
+			w := lipgloss.Width(strings.TrimSpace(line))
+			if w > maxOtherWidth {
+				maxOtherWidth = w
+			}
+		}
+	}
+
+	view := model.View()
+	lines := strings.Split(view, "\n")
+
+	// Find rendered menu card border top line `╭───────...╮`
+	var cardBorderWidth int
+	for _, l := range lines {
+		trimmed := strings.TrimSpace(l)
+		if strings.HasPrefix(trimmed, "╭") && strings.Contains(trimmed, "╮") {
+			// Measure width of front card box (sans margin)
+			endIdx := strings.Index(trimmed, "╮")
+			cardBox := trimmed[:endIdx+len("╮")]
+			cardBorderWidth = lipgloss.Width(cardBox)
+			break
+		}
+	}
+
+	if cardBorderWidth < maxOtherWidth {
+		t.Errorf("expected main menu card width (%d) to be at least as wide as other text on page (%d)", cardBorderWidth, maxOtherWidth)
+	}
+
+	// Also verify with status notice when width is wide enough
+	model.SetDimensions(100, 24)
+	model.StatusNotice = "⚠️ Cannot start a quest with 0 party members! Recruit heroes in Party screen first."
+	noticeWidth := lipgloss.Width(model.StatusNotice)
+	viewWithNotice := model.View()
+	linesWithNotice := strings.Split(viewWithNotice, "\n")
+
+	var cardBorderWidthWithNotice int
+	for _, l := range linesWithNotice {
+		trimmed := strings.TrimSpace(l)
+		if strings.HasPrefix(trimmed, "╭") && strings.Contains(trimmed, "╮") {
+			endIdx := strings.Index(trimmed, "╮")
+			cardBox := trimmed[:endIdx+len("╮")]
+			cardBorderWidthWithNotice = lipgloss.Width(cardBox)
+			break
+		}
+	}
+
+	if cardBorderWidthWithNotice < noticeWidth {
+		t.Errorf("expected main menu card width with notice (%d) to expand to at least notice width (%d)", cardBorderWidthWithNotice, noticeWidth)
+	}
+}
+

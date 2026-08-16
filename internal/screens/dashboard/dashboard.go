@@ -219,12 +219,6 @@ func (m Model) View() string {
 	headerComp := NewHeaderComponent(m.Theme)
 	statusComp := NewStatusComponent(m.Theme, "Sacred Mirror / Dark Hearth", 0)
 
-	menuWidth := min(m.Width-4, 48)
-	if menuWidth < 30 {
-		menuWidth = 30
-	}
-	menuComp := NewMenuComponent(m.Theme, m.Choices, m.Cursor).WithFocusedIndex(m.FocusedIndex).WithWidth(menuWidth)
-
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("up/down", "j/k"), key.WithHelp("↑/↓", "navigate")),
 		key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "select")),
@@ -233,6 +227,38 @@ func (m Model) View() string {
 	}
 
 	helpComp := NewHelpComponent(m.Theme, helpKeys)
+
+	partyInfoText := fmt.Sprintf("👥 Party: %d/%d Members   💰 Coins: %s", m.CurrentPartySize, m.MaxPartySize, app.FormatCoins(m.PartyCoins))
+
+	// Find the maximum line width of all other text on the page (sans margin)
+	otherTexts := []string{
+		headerComp.View(),
+		statusComp.View(),
+		partyInfoText,
+		helpComp.View(),
+	}
+	if m.StatusNotice != "" {
+		otherTexts = append(otherTexts, m.StatusNotice)
+	}
+
+	maxOtherWidth := 0
+	for _, txt := range otherTexts {
+		for _, line := range strings.Split(txt, "\n") {
+			w := lipgloss.Width(strings.TrimSpace(line))
+			if w > maxOtherWidth {
+				maxOtherWidth = w
+			}
+		}
+	}
+
+	menuWidth := maxOtherWidth
+	if m.Width > 0 && m.Width-4 < menuWidth {
+		menuWidth = m.Width - 4
+	}
+	if menuWidth < 30 {
+		menuWidth = 30
+	}
+	menuComp := NewMenuComponent(m.Theme, m.Choices, m.Cursor).WithFocusedIndex(m.FocusedIndex).WithWidth(menuWidth)
 
 	var sb strings.Builder
 	sb.WriteString(headerComp.View())
@@ -243,7 +269,6 @@ func (m Model) View() string {
 	partyInfoStyle := lipgloss.NewStyle().
 		MarginTop(1).
 		Foreground(m.Theme.Secondary)
-	partyInfoText := fmt.Sprintf("👥 Party: %d/%d Members   💰 Coins: %s", m.CurrentPartySize, m.MaxPartySize, app.FormatCoins(m.PartyCoins))
 	sb.WriteString(partyInfoStyle.Render(partyInfoText) + "\n")
 
 	if m.StatusNotice != "" {
