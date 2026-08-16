@@ -3,11 +3,11 @@ package settings
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/ui"
@@ -23,6 +23,10 @@ const (
 	StateCredits
 )
 
+type settingsSelectMsg struct {
+	choiceIndex int
+}
+
 // Model represents the Settings UI screen.
 type Model struct {
 	Theme           ui.Theme
@@ -30,6 +34,7 @@ type Model struct {
 	DBPath          string
 	Choices         []string
 	Cursor          int
+	FocusedIndex    int
 	State           ViewState
 	ConfirmReset    ui.ConfirmationModel
 	AudioSFXEnabled bool
@@ -59,6 +64,7 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 			"4. ⬅  Back to Hearth",
 		},
 		Cursor:          0,
+		FocusedIndex:    -1,
 		State:           StateMain,
 		ConfirmReset:    ui.NewConfirmationModel("Reset Game Data?", "Are you sure you want to reset all game data and auto-migrate the database?", theme).WithBorderless(true),
 		AudioSFXEnabled: true,
@@ -90,6 +96,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Height = msg.Height
 		m.Responsive.SetWidth(msg.Width)
 		return m, nil
+	case settingsSelectMsg:
+		m.FocusedIndex = -1
+		m.Cursor = msg.choiceIndex
+		m.selectCurrentChoice()
+		return m, nil
 	}
 
 	switch m.State {
@@ -109,17 +120,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) updateMain(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.MouseMsg:
+		if m.FocusedIndex != -1 {
+			return m, nil
+		}
 		menuComp := ui.NewMenuComponent(m.Theme, m.Choices, m.Cursor)
 		menuComp.IDPrefix = "settings_menu"
 		if newCursor, clicked := menuComp.HandleMouse(msg); clicked {
-			m.Cursor = newCursor
-			m.selectCurrentChoice()
+			return m.triggerChoiceSelection(newCursor)
 		} else if newCursor != m.Cursor {
 			m.Cursor = newCursor
 		}
 		return m, nil
 
 	case tea.KeyMsg:
+		if m.FocusedIndex != -1 {
+			return m, nil
+		}
 		switch msg.String() {
 		case "q", "esc", "b", "backspace", "ctrl+c":
 			m.Quitted = true
@@ -140,23 +156,27 @@ func (m Model) updateMain(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "1":
-			m.Cursor = 0
-			m.selectCurrentChoice()
+			return m.triggerChoiceSelection(0)
 		case "2":
-			m.Cursor = 1
-			m.selectCurrentChoice()
+			return m.triggerChoiceSelection(1)
 		case "3":
-			m.Cursor = 2
-			m.selectCurrentChoice()
+			return m.triggerChoiceSelection(2)
 		case "4":
-			m.Cursor = 3
-			m.selectCurrentChoice()
+			return m.triggerChoiceSelection(3)
 
 		case "enter", "space":
-			m.selectCurrentChoice()
+			return m.triggerChoiceSelection(m.Cursor)
 		}
 	}
 	return m, nil
+}
+
+func (m Model) triggerChoiceSelection(idx int) (tea.Model, tea.Cmd) {
+	m.Cursor = idx
+	m.FocusedIndex = idx
+	return m, tea.Tick(120*time.Millisecond, func(t time.Time) tea.Msg {
+		return settingsSelectMsg{choiceIndex: idx}
+	})
 }
 
 func (m *Model) selectCurrentChoice() {
@@ -334,27 +354,17 @@ func (m Model) viewMain(width int) string {
 		Bold(true).
 		Foreground(m.Theme.Headings).
 		MarginBottom(1)
-	sb.WriteString(menuTitleStyle.Render("Configuration Menu") + "\n\n")
+	sb.WriteString(menuTitleStyle.Render("Configuration Menu") + "\n")
 
-	cursorStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(m.Theme.Primary)
-	selectedStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(m.Theme.Primary)
-	normalStyle := lipgloss.NewStyle().
-		Foreground(m.Theme.Text)
-
-	for i, choice := range m.Choices {
-		var line string
-		if i == m.Cursor {
-			line = fmt.Sprintf("%s %s", cursorStyle.Render("▶"), selectedStyle.Render(choice))
-		} else {
-			line = fmt.Sprintf("  %s", normalStyle.Render(choice))
-		}
-		itemID := fmt.Sprintf("settings_menu_item_%d", i)
-		sb.WriteString(mouse.Mark(itemID, line) + "\n")
+	menuWidth := min(width-8, 72)
+	if menuWidth < 30 {
+		menuWidth = 30
 	}
+	menuComp := ui.NewMenuComponent(m.Theme, m.Choices, m.Cursor)
+	menuComp.IDPrefix = "settings_menu"
+	menuComp.FocusedIndex = m.FocusedIndex
+	menuComp.Width = menuWidth
+	sb.WriteString(menuComp.View() + "\n")
 
 	if m.StatusNotice != "" {
 		noticeStyle := lipgloss.NewStyle().

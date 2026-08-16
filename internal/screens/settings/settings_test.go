@@ -39,7 +39,10 @@ func TestSettingsScreen_AudioSubView(t *testing.T) {
 	m := NewModel(cfg)
 
 	// Press '2' to go to Audio settings
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'2'}})
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'2'}})
+	if cmd != nil {
+		updated, _ = updated.(Model).Update(cmd())
+	}
 	m = updated.(Model)
 
 	if m.State != StateAudio {
@@ -72,7 +75,10 @@ func TestSettingsScreen_CreditsSubView(t *testing.T) {
 	m := NewModel(cfg)
 
 	// Press '3' to go to Credits
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'3'}})
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'3'}})
+	if cmd != nil {
+		updated, _ = updated.(Model).Update(cmd())
+	}
 	m = updated.(Model)
 
 	if m.State != StateCredits {
@@ -113,7 +119,10 @@ func TestSettingsScreen_ResetGameData(t *testing.T) {
 	m := NewModelWithDBPath(cfg, dbPath)
 
 	// Select Reset Game Data ('1')
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
+	if cmd != nil {
+		updated, _ = updated.(Model).Update(cmd())
+	}
 	m = updated.(Model)
 
 	if m.State != StateConfirmReset {
@@ -121,7 +130,7 @@ func TestSettingsScreen_ResetGameData(t *testing.T) {
 	}
 
 	// Send 'y' to confirm reset
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	updated, cmd = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
 	m = updated.(Model)
 
 	// Process confirmation command if quit message emitted
@@ -168,5 +177,42 @@ func TestSettingsScreen_SmallScreenUnsupported(t *testing.T) {
 	view := m.View()
 	if !strings.Contains(view, "terminal width is not") {
 		t.Fatalf("expected small screen unsupported message, got:\n%s", view)
+	}
+}
+
+func TestSettingsScreen_MenuCardStyleAndFocusedState(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	m := NewModel(cfg)
+
+	view := m.View()
+
+	// 1. Should not contain cursor pointer '▶'
+	if strings.Contains(view, "▶") {
+		t.Errorf("expected settings view to not contain cursor pointer '▶', got:\n%s", view)
+	}
+
+	// 2. Should contain rounded borders for menu cards
+	if !strings.Contains(view, "╭") || !strings.Contains(view, "╰") {
+		t.Errorf("expected settings view to contain bordered menu cards, got:\n%s", view)
+	}
+
+	// 3. Test focused state on selection
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'2'}})
+	m2 := updated.(Model)
+	if m2.FocusedIndex != 1 {
+		t.Errorf("expected FocusedIndex to be 1 on select '2', got %d", m2.FocusedIndex)
+	}
+	if cmd == nil {
+		t.Fatalf("expected delay transition cmd on select, got nil")
+	}
+
+	// Executing transition cmd delivers settingsSelectMsg
+	updatedFinal, _ := m2.Update(cmd())
+	mFinal := updatedFinal.(Model)
+	if mFinal.FocusedIndex != -1 {
+		t.Errorf("expected FocusedIndex reset to -1, got %d", mFinal.FocusedIndex)
+	}
+	if mFinal.State != StateAudio {
+		t.Errorf("expected StateAudio after transition, got %v", mFinal.State)
 	}
 }

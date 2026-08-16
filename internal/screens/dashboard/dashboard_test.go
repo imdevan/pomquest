@@ -96,3 +96,40 @@ func TestDashboardScreen_CannotQuestWithZeroPartyMembers(t *testing.T) {
 		t.Errorf("expected quit cmd to transition screen when Quest is allowed")
 	}
 }
+
+func TestDashboardScreen_MenuCardStyleAndFocusedState(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	model := NewModel(cfg)
+
+	view := model.View()
+
+	// 1. Should not contain cursor pointer '▶'
+	if strings.Contains(view, "▶") {
+		t.Errorf("expected dashboard view to not contain cursor pointer '▶', got:\n%s", view)
+	}
+
+	// 2. Should contain rounded borders for menu cards
+	if !strings.Contains(view, "╭") || !strings.Contains(view, "╰") {
+		t.Errorf("expected dashboard view to contain bordered menu cards, got:\n%s", view)
+	}
+
+	// 3. Test focused state on selection
+	updated, cmd := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'2'}})
+	m := updated.(Model)
+	if m.FocusedIndex != 1 {
+		t.Errorf("expected FocusedIndex to be 1 on quick select '2', got %d", m.FocusedIndex)
+	}
+	if cmd == nil {
+		t.Fatalf("expected delay transition cmd on quick select, got nil")
+	}
+
+	// Executing transition cmd delivers menuSelectMsg which quits
+	quitModel, quitCmd := m.Update(cmd())
+	qm := quitModel.(Model)
+	if qm.FocusedIndex != -1 {
+		t.Errorf("expected FocusedIndex reset to -1 after transition, got %d", qm.FocusedIndex)
+	}
+	if quitCmd == nil {
+		t.Errorf("expected tea.Quit command after transition")
+	}
+}
