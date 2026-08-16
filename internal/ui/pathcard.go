@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/adapters/mouse"
 )
 
 // PathCardData holds values for rendering a dungeon path option card.
@@ -22,6 +23,7 @@ type PathCardData struct {
 
 // PathCardComponent renders path selection cards according to design specs.
 type PathCardComponent struct {
+	ZoneID     string
 	Theme      Theme
 	DataModel  PathCardData
 	Responsive *ResponsiveManager
@@ -161,6 +163,10 @@ func (c PathCardComponent) View() string {
 		cardResult = compositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
 	} else {
 		cardResult = "  \n" + frontCard
+	}
+
+	if c.ZoneID != "" {
+		cardResult = mouse.Mark(c.ZoneID, cardResult)
 	}
 
 	return cardResult

@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pomquest/internal/adapters/mouse"
 )
 
 // CornerText specifies text content, padding, margins, and style for a card border corner.
@@ -17,6 +18,7 @@ type CornerText struct {
 
 // TexturedCard is a custom border card container supporting embedded text on any of the 4 corners and inner padding.
 type TexturedCard struct {
+	ZoneID        string
 	Width         int
 	Height        int
 	PaddingTop    int
@@ -175,7 +177,11 @@ func (c TexturedCard) View() string {
 	result = append(result, middleLines...)
 	result = append(result, bottomLine)
 
-	return strings.Join(result, "\n")
+	res := strings.Join(result, "\n")
+	if c.ZoneID != "" {
+		res = mouse.Mark(c.ZoneID, res)
+	}
+	return res
 }
 
 func (c TexturedCard) renderBorderLine(

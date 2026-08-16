@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 )
 
@@ -51,6 +52,7 @@ type HeroCardData struct {
 
 // HeroCardComponent renders hero cards according to design specs.
 type HeroCardComponent struct {
+	ZoneID     string
 	Theme      Theme
 	DataModel  HeroCardData
 	Responsive *ResponsiveManager
@@ -506,6 +508,10 @@ func (c HeroCardComponent) renderFullStatCard() string {
 		cardResult += activeIndicatorRow
 	} else {
 		cardResult += "\n"
+	}
+
+	if c.ZoneID != "" {
+		cardResult = mouse.Mark(c.ZoneID, cardResult)
 	}
 
 	return cardResult

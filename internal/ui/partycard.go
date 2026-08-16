@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 
 	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 )
 
@@ -41,6 +42,7 @@ type PartyCardData struct {
 
 // PartyCardComponent is a generic party resources card widget rendered using TexturedCard.
 type PartyCardComponent struct {
+	ZoneID     string
 	Data       PartyCardData
 	Width      int
 	Theme      Theme
@@ -207,7 +209,11 @@ func (c PartyCardComponent) View() string {
 		Style:        lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Tags),
 	}
 
-	return card.View()
+	res := card.View()
+	if c.ZoneID != "" {
+		res = mouse.Mark(c.ZoneID, res)
+	}
+	return res
 }
 
 func formatNumberWithCommas(n int) string {

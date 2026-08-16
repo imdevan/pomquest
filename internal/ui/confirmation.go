@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pomquest/internal/adapters/mouse"
 )
 
 // ConfirmationModel is a reusable confirmation dialog component based on huh.Confirm.
@@ -107,6 +108,17 @@ func (m ConfirmationModel) Init() tea.Cmd {
 // Update handles messages for the confirmation dialog
 func (m ConfirmationModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.MouseMsg:
+		evt := mouse.ParseEvent(msg)
+		if evt.Type == mouse.EventClick {
+			if mouse.InBounds("confirm_yes", msg) {
+				m.setChoice(true)
+				return m, tea.Quit
+			} else if mouse.InBounds("confirm_no", msg) {
+				m.setChoice(false)
+				return m, tea.Quit
+			}
+		}
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
@@ -169,7 +181,8 @@ func (m ConfirmationModel) View() string {
 			BorderForeground(m.theme.Border)
 	}
 
-	return style.Render(content)
+	rendered := style.Render(content)
+	return mouse.Mark("confirm_dialog", rendered)
 }
 
 // ChoiceValue returns the user's choice
