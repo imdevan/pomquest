@@ -23,21 +23,18 @@ func TestMenuComponent_CardRenderingAndSpacing(t *testing.T) {
 		t.Errorf("expected view to not contain cursor pointer '▶', got:\n%s", viewStr)
 	}
 
-	// 2. Should contain rounded border characters (╭, ╮, ╰, ╯)
-	if !strings.Contains(viewStr, "╭") || !strings.Contains(viewStr, "╰") {
-		t.Errorf("expected view to render bordered cards, got:\n%s", viewStr)
+	// 2. Should contain rounded and shadow border characters (╭, ╮, ╰, ╯, │)
+	if !strings.Contains(viewStr, "╭") || !strings.Contains(viewStr, "╰") || !strings.Contains(viewStr, "╮") {
+		t.Errorf("expected view to render bordered cards with shadow border, got:\n%s", viewStr)
 	}
 
-	// 3. Spacing: lines between card 1 and card 2 include the bottom margin line
+	// 3. Spacing: lines between cards include the shadow border row and bottom margin line
 	lines := strings.Split(viewStr, "\n")
-	// Each bordered card is 3 lines (top border, content, bottom border).
-	// With Margin(0, 1, 1, 1) on non-last cards and Margin(0, 1) on the last card:
-	// Card 1: lines 0..2 + line 3 (margin)
-	// Card 2: lines 4..6 + line 7 (margin)
-	// Card 3 (last): lines 8..10 (no bottom margin line)
-	// Total lines = 4 + 4 + 3 = 11 lines
-	if len(lines) != 11 {
-		t.Errorf("expected 11 total lines (3 cards with bottom margins on non-last), got %d lines:\n%s", len(lines), viewStr)
+	// Each card has 4 lines (elevated card with shadow border, or standard position with top offset).
+	// With Margin(0, 1, 1, 1) on non-last cards (5 lines each) and Margin(0, 1) on the last card (4 lines):
+	// Total lines = 5 + 5 + 4 = 14 lines
+	if len(lines) != 14 {
+		t.Errorf("expected 14 total lines (3 cards with bottom margins on non-last and elevated active card), got %d lines:\n%s", len(lines), viewStr)
 	}
 
 	// 4. Test focused state rendering

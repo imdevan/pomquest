@@ -72,32 +72,39 @@ func (c MenuComponent) View() string {
 	focusedStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(c.Theme.Primary).
-		Background(c.Theme.Primary).
-		Foreground(lipgloss.Color("#000000")).
+		Foreground(c.Theme.TextHighlight).
 		Bold(true).
 		Padding(0, 2).
 		Width(cardWidth)
 
 	var cards []string
 	for i, choice := range c.Choices {
-		var cardStyle lipgloss.Style
+		var frontCard string
+		var renderedCard string
+		// isLast := i == len(c.Choices)-1
+
 		if i == c.FocusedIndex {
-			cardStyle = focusedStyle
+			frontCard = focusedStyle.Render(choice)
+			renderedCard = PadCardLeft2x1(frontCard)
 		} else if i == c.Cursor {
-			cardStyle = activeStyle
+			frontCard = activeStyle.Render(choice)
+			renderedCard = CompositeActiveOffsetCard2x1(frontCard, c.Theme.Border)
 		} else {
-			cardStyle = normalStyle
+			frontCard = normalStyle.Render(choice)
+			renderedCard = PadCardLeft2x1(frontCard)
 		}
 
-		if i == len(c.Choices)-1 {
-			cardStyle = cardStyle.Margin(0, 1)
-		} else {
-			cardStyle = cardStyle.Margin(0, 1, 1, 1)
-		}
+		marginStyle := lipgloss.NewStyle()
+		// if isLast {
+		// marginStyle = marginStyle.Margin(0, 1)
+		// } else {
+		// marginStyle = marginStyle.Margin(0, 1, 1, 1)
+		// }
+		// marginStyle = marginStyle.Margin(0, 1)
 
-		renderedCard := cardStyle.Render(choice)
+		finalCard := marginStyle.Render(renderedCard)
 		itemID := fmt.Sprintf("%s_item_%d", prefix, i)
-		cards = append(cards, mouse.Mark(itemID, renderedCard))
+		cards = append(cards, mouse.Mark(itemID, finalCard))
 	}
 
 	return strings.Join(cards, "\n")
