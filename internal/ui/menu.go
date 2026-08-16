@@ -37,21 +37,23 @@ func (c MenuComponent) View() string {
 	}
 
 	// Calculate uniform card inner width
+	maxLen := 0
+	for _, choice := range c.Choices {
+		l := lipgloss.Width(choice)
+		if l > maxLen {
+			maxLen = l
+		}
+	}
+
 	cardWidth := c.Width
-	if cardWidth > 4 {
-		cardWidth -= 4 // Account for 2 cols border + 2 cols horizontal margin (1 col each side)
-	} else if cardWidth <= 0 {
-		maxLen := 0
-		for _, choice := range c.Choices {
-			l := lipgloss.Width(choice)
-			if l > maxLen {
-				maxLen = l
-			}
-		}
+	if cardWidth > 2 {
+		cardWidth -= 2 // Account for 2 cols border (1 col each side) so box width sans margin equals c.Width
+	}
+	if cardWidth < maxLen {
 		cardWidth = maxLen
-		if cardWidth < 16 {
-			cardWidth = 16
-		}
+	}
+	if cardWidth < 16 {
+		cardWidth = 16
 	}
 
 	normalStyle := lipgloss.NewStyle().

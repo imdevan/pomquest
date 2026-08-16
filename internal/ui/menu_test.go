@@ -28,13 +28,12 @@ func TestMenuComponent_CardRenderingAndSpacing(t *testing.T) {
 		t.Errorf("expected view to render bordered cards with shadow border, got:\n%s", viewStr)
 	}
 
-	// 3. Spacing: lines between cards include the shadow border row and bottom margin line
+	// 3. Spacing: lines between cards include the shadow border row and bottom offset
 	lines := strings.Split(viewStr, "\n")
 	// Each card has 4 lines (elevated card with shadow border, or standard position with top offset).
-	// With Margin(0, 1, 1, 1) on non-last cards (5 lines each) and Margin(0, 1) on the last card (4 lines):
-	// Total lines = 5 + 5 + 4 = 14 lines
-	if len(lines) != 14 {
-		t.Errorf("expected 14 total lines (3 cards with bottom margins on non-last and elevated active card), got %d lines:\n%s", len(lines), viewStr)
+	// Total lines = 4 + 4 + 4 = 12 lines
+	if len(lines) != 12 {
+		t.Errorf("expected 12 total lines (3 cards with offset spacing and elevated active card), got %d lines:\n%s", len(lines), viewStr)
 	}
 
 	// 4. Test focused state rendering
