@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 
 	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/ui"
@@ -74,6 +75,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Width = msg.Width
 		m.Height = msg.Height
 		m.Responsive.SetWidth(msg.Width)
+		return m, nil
+
+	case tea.MouseMsg:
+		totalRows := len(m.Catalog) + 1
+		for i := 0; i < totalRows; i++ {
+			zoneID := fmt.Sprintf("provisions_row_%d", i)
+			if mouse.InBounds(zoneID, msg) {
+				m.Cursor = i
+				parsed := mouse.ParseEvent(msg)
+				if parsed.Type == mouse.EventClick {
+					if i == len(m.Catalog) {
+						m.executePurchase()
+					} else {
+						m.Cart[i]++
+					}
+				}
+			}
+		}
 		return m, nil
 
 	case tea.KeyMsg:
@@ -258,6 +277,7 @@ func (m Model) View() string {
 		} else {
 			itemCol = fmt.Sprintf("  %s", itemCol)
 		}
+		itemCol = mouse.Mark(fmt.Sprintf("provisions_row_%d", i), itemCol)
 
 		rows = append(rows, []string{itemCol, costCol, subtotalCol})
 	}
@@ -270,6 +290,7 @@ func (m Model) View() string {
 	} else {
 		purchaseCol = "  🛒 Complete Purchase"
 	}
+	purchaseCol = mouse.Mark(fmt.Sprintf("provisions_row_%d", len(m.Catalog)), purchaseCol)
 	totalStr := fmt.Sprintf("Total: %s", app.FormatCoins(grandTotal))
 	rows = append(rows, []string{purchaseCol, "", totalStr})
 

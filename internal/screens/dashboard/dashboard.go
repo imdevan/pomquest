@@ -109,6 +109,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Responsive.SetWidth(msg.Width)
 		return m, nil
 
+	case tea.MouseMsg:
+		menuComp := ui.NewMenuComponent(m.Theme, m.Choices, m.Cursor)
+		menuComp.IDPrefix = "dashboard_menu"
+		if newCursor, clicked := menuComp.HandleMouse(msg); clicked {
+			m.Cursor = newCursor
+			return m.handleChoiceSelection(Choice(newCursor))
+		} else if newCursor != m.Cursor {
+			m.Cursor = newCursor
+		}
+		return m, nil
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":

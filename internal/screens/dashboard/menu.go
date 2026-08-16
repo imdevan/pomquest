@@ -18,5 +18,7 @@ func NewMenuComponent(theme ui.Theme, choices []string, cursor int) MenuComponen
 }
 
 func (c MenuComponent) View() string {
-	return ui.NewMenuComponent(c.theme, c.choices, c.cursor).View()
+	comp := ui.NewMenuComponent(c.theme, c.choices, c.cursor)
+	comp.IDPrefix = "dashboard_menu"
+	return comp.View()
 }

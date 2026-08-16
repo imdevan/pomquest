@@ -1,6 +1,7 @@
 package path
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/dungeon"
@@ -121,6 +123,19 @@ func (m Model) Init() tea.Cmd {
 // Update handles key messages and state changes for the path screen.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.MouseMsg:
+		for i := 0; i < 3; i++ {
+			zoneID := fmt.Sprintf("path_card_%d", i)
+			if mouse.InBounds(zoneID, msg) {
+				m.ActiveIndex = i
+				parsed := mouse.ParseEvent(msg)
+				if parsed.Type == mouse.EventClick {
+					return m.confirmPathSelection()
+				}
+			}
+		}
+		return m, nil
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q", "esc":
@@ -152,35 +167,40 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.generateOptions()
 
 		case "enter", "space", " ":
-			if m.PartySize <= 0 {
-				m.StatusNotice = "⚠️ Cannot start a quest with 0 party members! Recruit heroes in Party screen first."
-				return m, nil
-			}
-
-			selected := m.Options[m.ActiveIndex]
-			savedLoc, err := app.SaveSelectedLocationToPath(m.DBPath, selected)
-			if err == nil {
-				m.SelectedLocation = savedLoc
-			} else {
-				m.SelectedLocation = selected
-			}
-
-			newQuest := app.Quest{
-				Title:        m.SelectedLocation.Name,
-				Biome:        m.SelectedLocation.Biome,
-				PathLength:   1500,
-				TotalSecs:    1500,
-				ElapsedSecs:  0,
-				CurrentRoom:  1,
-				DungeonState: "Entering",
-				Status:       "Active",
-			}
-			_, _ = app.SaveActiveQuestToPath(m.DBPath, newQuest)
-
-			m.Completed = true
+			return m.confirmPathSelection()
 		}
 	}
 
+	return m, nil
+}
+
+func (m Model) confirmPathSelection() (tea.Model, tea.Cmd) {
+	if m.PartySize <= 0 {
+		m.StatusNotice = "⚠️ Cannot start a quest with 0 party members! Recruit heroes in Party screen first."
+		return m, nil
+	}
+
+	selected := m.Options[m.ActiveIndex]
+	savedLoc, err := app.SaveSelectedLocationToPath(m.DBPath, selected)
+	if err == nil {
+		m.SelectedLocation = savedLoc
+	} else {
+		m.SelectedLocation = selected
+	}
+
+	newQuest := app.Quest{
+		Title:        m.SelectedLocation.Name,
+		Biome:        m.SelectedLocation.Biome,
+		PathLength:   1500,
+		TotalSecs:    1500,
+		ElapsedSecs:  0,
+		CurrentRoom:  1,
+		DungeonState: "Entering",
+		Status:       "Active",
+	}
+	_, _ = app.SaveActiveQuestToPath(m.DBPath, newQuest)
+
+	m.Completed = true
 	return m, nil
 }
 
@@ -270,6 +290,7 @@ func (m Model) View() string {
 		c := m.Cards[i]
 		c.IsActive = (i == m.ActiveIndex)
 		cardComp := ui.NewPathCardComponentSized(m.Theme, c, cardWidth, cardHeight, rm)
+		cardComp.ZoneID = fmt.Sprintf("path_card_%d", i)
 		cards = append(cards, cardComp.View())
 	}
 

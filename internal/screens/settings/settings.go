@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/ui"
@@ -107,6 +108,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) updateMain(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.MouseMsg:
+		menuComp := ui.NewMenuComponent(m.Theme, m.Choices, m.Cursor)
+		menuComp.IDPrefix = "settings_menu"
+		if newCursor, clicked := menuComp.HandleMouse(msg); clicked {
+			m.Cursor = newCursor
+			m.selectCurrentChoice()
+		} else if newCursor != m.Cursor {
+			m.Cursor = newCursor
+		}
+		return m, nil
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "esc", "b", "backspace", "ctrl+c":
@@ -334,11 +346,14 @@ func (m Model) viewMain(width int) string {
 		Foreground(m.Theme.Text)
 
 	for i, choice := range m.Choices {
+		var line string
 		if i == m.Cursor {
-			sb.WriteString(fmt.Sprintf("%s %s\n", cursorStyle.Render("▶"), selectedStyle.Render(choice)))
+			line = fmt.Sprintf("%s %s", cursorStyle.Render("▶"), selectedStyle.Render(choice))
 		} else {
-			sb.WriteString(fmt.Sprintf("  %s\n", normalStyle.Render(choice)))
+			line = fmt.Sprintf("  %s", normalStyle.Render(choice))
 		}
+		itemID := fmt.Sprintf("settings_menu_item_%d", i)
+		sb.WriteString(mouse.Mark(itemID, line) + "\n")
 	}
 
 	if m.StatusNotice != "" {
