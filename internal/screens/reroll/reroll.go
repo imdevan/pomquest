@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/pomquest/internal/adapters/icon"
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/namegen"
@@ -19,21 +20,22 @@ import (
 
 // Model represents the reroll screen state and interactions.
 type Model struct {
-	Theme         ui.Theme
-	Responsive    *ui.ResponsiveManager
-	TargetHeroIdx int
-	Cards         [4]ui.HeroCardData
-	ActiveIndex   int
-	RerollsLeft   int
-	EnteringName  bool
-	NameInput     string
-	SelectedArch  app.ClassArchetype
-	Completed     bool
-	NewHero       ui.HeroCardData
-	Quitted       bool
-	Width         int
-	Height        int
-	rng           *rand.Rand
+	Theme            ui.Theme
+	Responsive       *ui.ResponsiveManager
+	TargetHeroIdx    int
+	Cards            [4]ui.HeroCardData
+	ActiveIndex      int
+	PressedCardIndex int
+	RerollsLeft      int
+	EnteringName     bool
+	NameInput        string
+	SelectedArch     app.ClassArchetype
+	Completed        bool
+	NewHero          ui.HeroCardData
+	Quitted          bool
+	Width            int
+	Height           int
+	rng              *rand.Rand
 }
 
 // NewModel creates a new reroll screen instance.
@@ -43,14 +45,15 @@ func NewModel(cfg domain.Config, targetHeroIdx int) Model {
 	rng := rand.New(src)
 
 	m := Model{
-		Theme:         theme,
-		Responsive:    ui.NewResponsiveManager(80),
-		TargetHeroIdx: targetHeroIdx,
-		ActiveIndex:   0,
-		RerollsLeft:   2,
-		Width:         80,
-		Height:        24,
-		rng:           rng,
+		Theme:            theme,
+		Responsive:       ui.NewResponsiveManager(80),
+		TargetHeroIdx:    targetHeroIdx,
+		ActiveIndex:      0,
+		PressedCardIndex: -1,
+		RerollsLeft:      2,
+		Width:            80,
+		Height:           24,
+		rng:              rng,
 	}
 
 	m.generateCards()
@@ -102,14 +105,54 @@ func (m Model) Init() tea.Cmd {
 	return tea.ClearScreen
 }
 
+type selectCardMsg struct {
+	Index int
+}
+
+func selectCardCmd(index int) tea.Cmd {
+	return tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg {
+		return selectCardMsg{Index: index}
+	})
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	catalog := app.ClassCatalog()
+	_ = catalog
 
 	switch msg := msg.(type) {
+	case selectCardMsg:
+		m.PressedCardIndex = -1
+		m.selectCard(msg.Index)
+		return m, nil
+
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
 		m.Height = msg.Height
 		m.Responsive.SetWidth(msg.Width)
+		return m, nil
+
+	case tea.MouseMsg:
+		evt := mouse.ParseEvent(msg)
+		if m.EnteringName {
+			if evt.Type == mouse.EventRelease {
+				m.PressedCardIndex = -1
+			}
+			return m, nil
+		}
+		for i := 0; i < 4; i++ {
+			zoneID := fmt.Sprintf("reroll_card_%d", i)
+			if mouse.InBounds(zoneID, msg) {
+				m.ActiveIndex = i
+
+				if evt.Type == mouse.EventClick {
+					m.PressedCardIndex = i
+					return m, selectCardCmd(i)
+				}
+			}
+		}
+		if evt.Type == mouse.EventRelease {
+			m.PressedCardIndex = -1
+		}
 		return m, nil
 
 	case tea.KeyMsg:
@@ -203,22 +246,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ActiveIndex = 3
 
 		case "enter", "space", " ":
-			if m.ActiveIndex == 0 {
-				// Random card chosen
-				rndIdx := m.rng.Intn(len(catalog))
-				m.SelectedArch = catalog[rndIdx]
-				m.NameInput = namegen.GenerateCharacterNameWithRand(m.rng)
-			} else {
-				// Find matching archetype from selected card
-				cardClass := m.Cards[m.ActiveIndex].Class
-				m.SelectedArch = app.GetClassArchetype(cardClass)
-				m.NameInput = m.Cards[m.ActiveIndex].Name
-			}
-			m.EnteringName = true
+			m.selectCard(m.ActiveIndex)
 		}
 	}
 
 	return m, nil
+}
+
+func (m *Model) selectCard(index int) {
+	catalog := app.ClassCatalog()
+	m.ActiveIndex = index
+	if index == 0 {
+		rndIdx := m.rng.Intn(len(catalog))
+		m.SelectedArch = catalog[rndIdx]
+		m.NameInput = namegen.GenerateCharacterNameWithRand(m.rng)
+	} else {
+		cardClass := m.Cards[index].Class
+		m.SelectedArch = app.GetClassArchetype(cardClass)
+		m.NameInput = m.Cards[index].Name
+	}
+	m.EnteringName = true
 }
 
 func (m Model) View() string {
@@ -241,8 +288,10 @@ func (m Model) View() string {
 	for i := 0; i < 4; i++ {
 		h := m.Cards[i]
 		h.IsActive = (i == m.ActiveIndex)
-		cardView := ui.NewHeroCardComponent(m.Theme, h, m.Responsive).View()
-		cards = append(cards, cardView)
+		h.IsActiveFocused = (i == m.PressedCardIndex)
+		cardComp := ui.NewHeroCardComponent(m.Theme, h, m.Responsive)
+		cardComp.ZoneID = fmt.Sprintf("reroll_card_%d", i)
+		cards = append(cards, cardComp.View())
 	}
 
 	var spacerCards []string

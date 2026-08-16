@@ -3,9 +3,11 @@ package reroll
 import (
 	"strings"
 	"testing"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/domain"
 )
 
@@ -94,5 +96,59 @@ func TestRerollScreen(t *testing.T) {
 	}
 	if cmd == nil {
 		t.Errorf("expected quit tea.Cmd on completion, got nil")
+	}
+}
+
+func TestRerollScreen_MouseHoverAndClick(t *testing.T) {
+	mouse.InitManager()
+	cfg := domain.DefaultConfig()
+	model := NewModel(cfg, 1)
+
+	// Render view so bubblezone registers zones
+	_ = mouse.Scan(model.View())
+	time.Sleep(20 * time.Millisecond)
+
+	zInfo := mouse.Get("reroll_card_1")
+	if zInfo == nil {
+		t.Fatalf("expected zone info for reroll_card_1")
+	}
+
+	// 1. Mouse hover over card 1 -> ActiveIndex becomes 1
+	hoverMsg := tea.MouseMsg{
+		X:      zInfo.StartX + 5,
+		Y:      zInfo.StartY + 2,
+		Type:   tea.MouseMotion,
+		Action: tea.MouseActionMotion,
+	}
+	updated, _ := model.Update(hoverMsg)
+	m := updated.(Model)
+	if m.ActiveIndex != 1 {
+		t.Errorf("expected ActiveIndex 1 on mouse hover, got %d", m.ActiveIndex)
+	}
+
+	// 2. Mouse click (EventClick) -> PressedCardIndex becomes 1 (active_focused) & returns next cycle cmd
+	pressMsg := tea.MouseMsg{
+		X:      zInfo.StartX + 5,
+		Y:      zInfo.StartY + 2,
+		Button: tea.MouseButtonLeft,
+	}
+	updated, cmd := m.Update(pressMsg)
+	m = updated.(Model)
+	if m.PressedCardIndex != 1 {
+		t.Errorf("expected PressedCardIndex 1 on mouse press, got %d", m.PressedCardIndex)
+	}
+	if cmd == nil {
+		t.Fatalf("expected next cycle cmd on mouse click")
+	}
+
+	// 3. Next cycle message -> EnteringName becomes true, PressedCardIndex resets to -1
+	nextCycleMsg := cmd()
+	updated, _ = m.Update(nextCycleMsg)
+	m = updated.(Model)
+	if m.PressedCardIndex != -1 {
+		t.Errorf("expected PressedCardIndex -1 on next cycle, got %d", m.PressedCardIndex)
+	}
+	if !m.EnteringName {
+		t.Errorf("expected EnteringName to be true on next cycle after mouse click")
 	}
 }
