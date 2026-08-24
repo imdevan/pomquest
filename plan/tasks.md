@@ -228,8 +228,6 @@ Concept layout more thoroughly in plan/mission.md
 - [x] 16.2 add those properties to the partycard
 - [x] 16.3 add current party size and max party size
   - [x] 16.3.1 current party size defaults to 0, max party size defaults to 1 - both cached in sql db
-- [ ] 16.4 add party name
-
 ## Feature 17: create icon package
 - [x] 17.1 map strings to nerdfont utf equivalents
 - [x] 17.2 some icons can have a nerd font and emoji variant
@@ -311,7 +309,6 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 28.1.1 pass terminal dimensions across screen transitions to prevent uncentered rendering on frame 1
   - [x] 28.1.2 clear terminal screen on model Init to prevent transition flash
 
-
 ## Feature 29: add hoard screen
 - [x] 29.1 hoard screen implementation
   - [x] 29.1.1 top section shows `treasure_hoard` ASCII art from `plan/ascii-art.md:575`
@@ -351,7 +348,10 @@ start with 1 monster, bats... 1hp 0def 1 atk
   - [x] 30.4.2 render empty hero slots as dotted border cards
   - [x] 30.4.3 inside of the empty card should be a bordered button that reads "Recruit Hero"
   - [x] 30.4.4 on selecting on enter'ing or r'ing should direct user to reroll screen
-  
+- [x] 30.5 party screen ui should be wrapped in responsive container (like reroll screen)
+  - [x] 30.5.1 wrap party screen with responsive manager and small screen breakpoint fallback
+  - [x] 30.5.2 center grid and content using responsive container placement matching reroll screen
+  - [x] 30.5.3 add unit tests verifying party screen responsive container layout and breakpoint support
 
 
 ## Feature 31: add reroll screen
@@ -441,7 +441,7 @@ Soand Sow's General Store
     - [x] 27.1.1.1 resets and migrates the local sql db
   - [x] 36.1.2 audio
     - [x] 27.1.2.1 set in game audio - stub for now
-  - [x] 36.1.3 credits - stub for nowt
+  - [x] 36.1.3 credits - stub for now
 
 ## Feature 37: db flow
 - [x] 37.1 implement db flow
@@ -465,31 +465,89 @@ Soand Sow's General Store
 ## Feature 39: connect to tmux
 see ~/Projects/clis/timr
 ## Feature 40: book of attacks
-- [ ] 40.1 add book_of_attacks
+- [ ] 40.1 add Attack struct
+- [ ] 40.2 add book_of_attacks
 book_of_attacks
+  quick_strike:
+    name: "Quick Strike"
+    target:1
+    die: 1d3 
+    prio: con 
+    atk_mod: strength/dex    
+    def_mod: dex
+  scratch:
+    name: "Scratch"
+    target:1
+    die: 1d2 
+    prio: con 
+    atk_mod: strength/dex    
+    def_mod: con/dex/will
   strike:
     name: "Strike"
     target:1
     die: 1d4 
+    prio: con 
     atk_mod: strength/dex    
-  magic_missile:
-    name: "Magic Missle"
+    def_mod: con/dex/will
+  heavy_strike:
+    name: "Heavy Strike"
     target:1
-atk_mod: strength/dex    
-    die: 1d4 
+    die: 1d8 
+    prio: con 
+    atk_mod: strength/dex    
+    def_mod: con/dex/will
+  eldritch_blast:
+    name: ""
+    target:1
+    die: 1d8 
+    prio: con 
+    atk_mod: strength/dex    
+    def_mod: con/dex/will
+  magic_missile:
+    name: "magic missle"
+    target:r
+    die: 1d2 
+    prio: null 
+    atk_mod: int/cha    
+    def_mod: will/int/dex
+    half_def: con
+  - [ ] 40.2.1 monsters will have 1 attack assigned to them from the book of attacks 
+  - e.g. 
+  - [ ] 40.2.2 monsters will likely use an atack id, but change the name for flavor
+  - for example a wolf may use the attack "Strike", but change the name to "Bite" for flavor. 
 
-Damage:
-  attacks:
+  future attack concepts:
+  vicious mockery:
+    name: "magic missle"
+    die: 1d2 
+    status: mocked
+    prio: null 
+    atk_mod: int/cha    
+  poison_dart:
+    name: "Poison Dart"
+    die: 1d0 
+    status: poison x2
+    prio: null 
+    atk_mod: int/cha    
+  charm:
+    name: "charm"
+    die: 1d0 
+    status: charm
+    prio: null 
+    atk_mod: cha    
+
+  
+
 
 classes have an attack type
   atk_mod: int/dex/str/cha 
   armor: flatly reduces incoming damage
-- [ ] 40.2 overhaul damage system based on book_of_attacks
+- [ ] 40.3 overhaul damage system based on book_of_attacks
 
-## Feature 41: add mouse hover
+## feature 41: add mouse hover
 - [x] 41.1 add mouse events to all components using 
-  https://github.com/lrstanley/bubblezone; cloned here: ~/Projects/playground/bubblezone
-  see examples: ~/Projects/playground/bubblezone/_examples/ 
+  https://github.com/lrstanley/bubblezone; cloned here: ~/projects/playground/bubblezone
+  see examples: ~/projects/playground/bubblezone/_examples/ 
   - [x] 41.1.1 integrate bubblezone global manager and view scanning in mouse adapter and app model
   - [x] 41.1.2 wrap menu component choices with bubblezone markers
   - [x] 41.1.3 wrap hero cards, party cards, and path cards with bubblezone markers
@@ -499,10 +557,25 @@ classes have an attack type
   - [x] 41.2.2 on menu item click - select option as if pressing enter
 - [x] 41.3 party / reroll card updates
   - [x] 41.3.1 on hover: set card to active state as if navigated to by keyboard
-  - [x] 41.3.2 on click: add active_focused state to card (inactive position WITH highlighted border) and remove on mouse click up
+  - [x] 41.3.2 on click: add active_focused state to card (inactive position with highlighted border) and remove on mouse click up
 - [x] 41.6 add mouse scroll to questing page to scroll quest log
   - [x] 41.6.1 create an adapter in internal/adapters/mouse to handle capturing mouse events
 
-## Feature 42: hero leveling
-- [ ] 42.1 hero can only level up during long rest and only once per rest cycle 
+## feature 42: questing menu 
+- [ ] 42.1 triggered by escape on questing screen
+- [ ] 42.2 over lay menu with border
+- ideally everything under it becomes muted text? 
+- card menu style options
+- save & exit
+- retreat (end run)
+- settings (stub for now) 
+
+
+## Feature 43: continue quest
+- [x] 43.1 if a party is currently questing and has living party members show "Continue Quest!" as first option on dashboard
+  - [x] 43.1.1 determine active questing status from party and game state in DB (`IsPartyQuesting`)
+  - [x] 43.1.2 render "1. ⚔  Continue Quest!" as option 1 on dashboard menu when active questing with living members
+  - [x] 43.1.3 render "1. ⚔  Quest! (Start Journey)" when not questing or when 0 living party members
+  - [x] 43.1.4 selecting "Continue Quest!" transitions directly to questing view and resumes quest state from DB without path selection
+  - [x] 43.1.5 preserve quest log and state when exiting or returning to dashboard so questing picks up where previously left off
 
