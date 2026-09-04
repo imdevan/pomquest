@@ -442,8 +442,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			m.saveCurrentState()
-			_ = app.ClearGameLogsToPath(m.DBPath, m.GameStateID)
-			m.LogMessages = nil
 			m.Quitted = true
 			return m, tea.Batch(tea.ClearScreen, tea.Quit)
 
@@ -931,6 +929,10 @@ func (m *Model) saveCurrentState() {
 func (m Model) View() string {
 	if m.Quitted {
 		return ""
+	}
+
+	if m.Responsive != nil && m.Width > 0 {
+		m.Responsive.SetWidth(m.Width)
 	}
 
 	containerWidth := DefaultContainerWidth

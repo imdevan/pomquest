@@ -473,3 +473,28 @@ func TestQuestingScreen_MouseWheelScrolling(t *testing.T) {
 	}
 }
 
+func TestQuestingScreen_HeightStability(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test_questing_height.db")
+
+	cfg := domain.DefaultConfig()
+	m := NewModelWithDBPath(cfg, dbPath)
+	m.SetDimensions(100, 43)
+
+	var initialLineCount int
+	for msgCount := 0; msgCount <= 15; msgCount++ {
+		var logs []string
+		for i := 0; i < msgCount; i++ {
+			logs = append(logs, fmt.Sprintf("Log message #%d: combat happening", i+1))
+		}
+		m.LogMessages = logs
+		view := m.View()
+		lines := strings.Split(strings.TrimRight(view, "\n"), "\n")
+		if initialLineCount == 0 {
+			initialLineCount = len(lines)
+		} else if len(lines) != initialLineCount {
+			t.Errorf("expected questing screen line count to stay constant (%d), but got %d at msgCount=%d", initialLineCount, len(lines), msgCount)
+		}
+	}
+}
+

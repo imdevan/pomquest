@@ -47,11 +47,16 @@ func NewLogComponent(
 }
 
 func (c LogComponent) View() string {
-	maxRows := 12
-	if c.pageHeight > 0 {
-		maxRows = c.pageHeight - 31
-		if maxRows < 4 {
-			maxRows = 4
+	maxRows := 6
+	if c.pageHeight >= 43 {
+		maxRows = c.pageHeight - 33
+		if maxRows > 15 {
+			maxRows = 15
+		}
+	} else if c.pageHeight > 0 {
+		maxRows = c.pageHeight - 32
+		if maxRows < 2 {
+			maxRows = 2
 		} else if maxRows > 15 {
 			maxRows = 15
 		}
