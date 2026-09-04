@@ -141,26 +141,24 @@ func (c TexturedCard) View() string {
 		middleLines = append(middleLines, emptyPaddingLine)
 	}
 
-	trimmedContent := strings.TrimSpace(c.Content)
-	contentLines := strings.Split(trimmedContent, "\n")
-	for _, rawLine := range contentLines {
-		rawLine = strings.TrimRight(rawLine, "\r")
-		if strings.TrimSpace(rawLine) == "" {
-			continue
-		}
-		linesToRender := []string{rawLine}
-		if innerAvailableWidth > 0 && lipgloss.Width(rawLine) > innerAvailableWidth {
-			linesToRender = WrapLine(rawLine, innerAvailableWidth)
-		}
-
-		for _, line := range linesToRender {
-			lineWidth := lipgloss.Width(line)
-			neededSpaces := innerAvailableWidth - lineWidth
-			if neededSpaces < 0 {
-				neededSpaces = 0
+	if c.Content != "" {
+		contentLines := strings.Split(c.Content, "\n")
+		for _, rawLine := range contentLines {
+			rawLine = strings.TrimRight(rawLine, "\r")
+			linesToRender := []string{rawLine}
+			if rawLine != "" && innerAvailableWidth > 0 && lipgloss.Width(rawLine) > innerAvailableWidth {
+				linesToRender = WrapLine(rawLine, innerAvailableWidth)
 			}
-			formattedLine := leftBorder + leftPadStr + line + strings.Repeat(" ", neededSpaces) + rightPadStr + rightBorder
-			middleLines = append(middleLines, formattedLine)
+
+			for _, line := range linesToRender {
+				lineWidth := lipgloss.Width(line)
+				neededSpaces := innerAvailableWidth - lineWidth
+				if neededSpaces < 0 {
+					neededSpaces = 0
+				}
+				formattedLine := leftBorder + leftPadStr + line + strings.Repeat(" ", neededSpaces) + rightPadStr + rightBorder
+				middleLines = append(middleLines, formattedLine)
+			}
 		}
 	}
 
@@ -179,7 +177,7 @@ func (c TexturedCard) View() string {
 
 	res := strings.Join(result, "\n")
 	if c.ZoneID != "" {
-		res = mouse.Mark(c.ZoneID, res)
+		res = mouse.Mark(c.ZoneID, strings.TrimRight(res, "\n")) + "\n"
 	}
 	return res
 }

@@ -66,13 +66,24 @@ func (c LogViewComponent) View() string {
 		end = len(allWrapped)
 	}
 
-	var sb strings.Builder
-	visible := allWrapped[start:end]
-	for _, msg := range visible {
-		sb.WriteString(msg + "\n")
+	var visible []string
+	if len(allWrapped) > 0 && start < len(allWrapped) {
+		visible = append(visible, allWrapped[start:end]...)
 	}
 
-	content := strings.TrimRight(sb.String(), "\n")
+	for len(visible) < c.MaxRows {
+		visible = append(visible, "")
+	}
+
+	var sb strings.Builder
+	for i, msg := range visible {
+		sb.WriteString(msg)
+		if i < len(visible)-1 {
+			sb.WriteString("\n")
+		}
+	}
+
+	content := sb.String()
 
 	card := NewTexturedCard(c.Theme, c.Width, content).Padding(0, 1)
 

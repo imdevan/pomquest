@@ -89,3 +89,22 @@ func TestLogViewComponentScrolling(t *testing.T) {
 		t.Errorf("offset=3 should not contain Line 5, got:\n%s", view3)
 	}
 }
+
+func TestLogViewComponentFixedHeightPadding(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	theme := ThemeFromConfig(cfg)
+
+	// An 8-row viewport should always have exactly 10 lines (1 top border + 8 rows + 1 bottom border)
+	for msgCount := 0; msgCount <= 12; msgCount++ {
+		var msgs []string
+		for i := 0; i < msgCount; i++ {
+			msgs = append(msgs, "Log event message")
+		}
+		comp := NewLogViewComponent(theme, "Log", msgs, 8, 60)
+		view := comp.View()
+		lines := strings.Split(strings.TrimRight(view, "\n"), "\n")
+		if len(lines) != 10 {
+			t.Errorf("expected LogViewComponent with MaxRows=8 to render exactly 10 lines for msgCount=%d, got %d lines:\n%s", msgCount, len(lines), view)
+		}
+	}
+}

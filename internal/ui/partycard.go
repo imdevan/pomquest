@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
@@ -174,7 +175,7 @@ func (c PartyCardComponent) View() string {
 			return lipgloss.NewStyle().Foreground(c.Theme.Text).Align(lipgloss.Left)
 		})
 
-	tableContent := t.Render()
+	tableContent := strings.TrimSpace(t.Render())
 
 	// Wrap party table inside TexturedCard with TopLeft: "Party" header, TopRight: team hearts, and BottomRight: Gold
 	card := NewTexturedCard(c.Theme, c.Width, tableContent).Padding(paddingTopBottom, horizontalPadding)
@@ -211,7 +212,7 @@ func (c PartyCardComponent) View() string {
 
 	res := card.View()
 	if c.ZoneID != "" {
-		res = mouse.Mark(c.ZoneID, res)
+		res = mouse.Mark(c.ZoneID, strings.TrimRight(res, "\n")) + "\n"
 	}
 	return res
 }
