@@ -141,3 +141,50 @@ func TestSaveSelectedLocationAndLoadGameState(t *testing.T) {
 	}
 }
 
+func TestIsPartyQuesting(t *testing.T) {
+	partyWithLiving := Party{
+		Heroes: []Hero{
+			{Creature: Creature{Noun: Noun{Name: "Hero1"}, HP: 10, MaxHP: 10}},
+		},
+	}
+	partyDead := Party{
+		Heroes: []Hero{
+			{Creature: Creature{Noun: Noun{Name: "Hero1"}, HP: 0, MaxHP: 10}, IsDead: true},
+		},
+	}
+	emptyParty := Party{Heroes: []Hero{}}
+
+	questActive := &Quest{
+		Status:       "Active",
+		DungeonState: "InRoom",
+	}
+	questCompleted := &Quest{
+		Status:       "Completed",
+		DungeonState: "Completed",
+	}
+	questFailed := &Quest{
+		Status:       "Failed",
+		DungeonState: "Defeat",
+	}
+
+	if !IsPartyQuesting(partyWithLiving, GameState{CurrentQuest: questActive}) {
+		t.Errorf("expected IsPartyQuesting to be true for living party and active quest")
+	}
+	if IsPartyQuesting(partyDead, GameState{CurrentQuest: questActive}) {
+		t.Errorf("expected IsPartyQuesting to be false for dead party")
+	}
+	if IsPartyQuesting(emptyParty, GameState{CurrentQuest: questActive}) {
+		t.Errorf("expected IsPartyQuesting to be false for empty party")
+	}
+	if IsPartyQuesting(partyWithLiving, GameState{CurrentQuest: questCompleted}) {
+		t.Errorf("expected IsPartyQuesting to be false for completed quest")
+	}
+	if IsPartyQuesting(partyWithLiving, GameState{CurrentQuest: questFailed}) {
+		t.Errorf("expected IsPartyQuesting to be false for failed quest")
+	}
+	if IsPartyQuesting(partyWithLiving, GameState{CurrentQuest: nil}) {
+		t.Errorf("expected IsPartyQuesting to be false for nil quest")
+	}
+}
+
+

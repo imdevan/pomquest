@@ -435,6 +435,28 @@ func SaveActiveQuest(db *gorm.DB, quest Quest) (Quest, error) {
 	return quest, nil
 }
 
+// HasLivingPartyMembers returns true if at least one hero in the party is alive.
+func HasLivingPartyMembers(party Party) bool {
+	for _, h := range party.Heroes {
+		if !h.IsDead && (h.HP > 0 || h.MaxHP == 0) {
+			return true
+		}
+	}
+	return false
+}
+
+// IsPartyQuesting checks whether the party currently has an active, unfinished quest and living heroes.
+func IsPartyQuesting(party Party, gameState GameState) bool {
+	if gameState.CurrentQuest == nil {
+		return false
+	}
+	q := gameState.CurrentQuest
+	if q.Status != "Active" || q.DungeonState == "Completed" || q.DungeonState == "Defeat" || q.DungeonState == "Failed" {
+		return false
+	}
+	return HasLivingPartyMembers(party)
+}
+
 // SaveActiveQuestToPath opens DB at dbPath and saves active quest state.
 func SaveActiveQuestToPath(dbPath string, quest Quest) (Quest, error) {
 	if dbPath == "" {
