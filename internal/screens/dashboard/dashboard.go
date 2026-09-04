@@ -41,32 +41,42 @@ type Model struct {
 	CurrentPartySize int
 	MaxPartySize     int
 	PartyCoins       int
+	IsQuesting       bool
 	Quitted          bool
 	StatusNotice     string
 	Width            int
 	Height           int
 }
 
+func defaultChoices(isQuesting bool) []string {
+	firstOption := "1. ⚔  New Quest!"
+	if isQuesting {
+		firstOption = "1. ⚔  Continue Quest!"
+	}
+	return []string{
+		firstOption,
+		"2. 👥 Party",
+		"3. 🎒 Provisions",
+		"4. 💎 View Dragon Hoard",
+		"5. ⚙  Settings & Config",
+		"6. 🚪 Quit",
+	}
+}
+
 // NewModel initializes a dashboard UI with default menu items.
 func NewModel(cfg domain.Config) Model {
 	theme := ui.ThemeFromConfig(cfg)
 	return Model{
-		Theme:      theme,
-		Responsive: ui.NewResponsiveManager(80),
-		Choices: []string{
-			"1. ⚔  Quest! (Start Journey)",
-			"2. 👥 Party",
-			"3. 🎒 Provisions",
-			"4. 💎 View Dragon Hoard",
-			"5. ⚙  Settings & Config",
-			"6. 🚪 Quit",
-		},
+		Theme:            theme,
+		Responsive:       ui.NewResponsiveManager(80),
+		Choices:          defaultChoices(false),
 		Cursor:           0,
 		FocusedIndex:     -1,
 		Selected:         -1,
 		CurrentPartySize: 0,
 		MaxPartySize:     1,
 		PartyCoins:       1000,
+		IsQuesting:       false,
 		Width:            80,
 		Height:           24,
 	}
@@ -79,11 +89,32 @@ func NewModelFromParty(cfg domain.Config, party app.Party) Model {
 	return m
 }
 
+// NewModelFromPartyAndState initializes a dashboard UI with data populated from Party and GameState models.
+func NewModelFromPartyAndState(cfg domain.Config, party app.Party, gameState app.GameState) Model {
+	m := NewModel(cfg)
+	m.UpdatePartyData(party)
+	m.SetIsQuesting(app.IsPartyQuesting(party, gameState))
+	return m
+}
+
+// NewModelWithDBPath initializes a dashboard UI by loading active party and gamestate from SQLite DB.
+func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
+	party, _ := app.LoadActivePartyFromPath(dbPath)
+	gameState, _ := app.LoadActiveGameStateFromPath(dbPath)
+	return NewModelFromPartyAndState(cfg, party, gameState)
+}
+
+// SetIsQuesting updates the questing state and the menu choice text accordingly.
+func (m *Model) SetIsQuesting(isQuesting bool) {
+	m.IsQuesting = isQuesting
+	m.Choices = defaultChoices(m.IsQuesting)
+}
+
 // UpdatePartyData updates party stats displayed on the dashboard.
 func (m *Model) UpdatePartyData(party app.Party) {
 	var activeCount int
 	for _, h := range party.Heroes {
-		if !h.IsDead {
+		if !h.IsDead && (h.HP > 0 || h.MaxHP == 0) {
 			activeCount++
 		}
 	}
@@ -94,6 +125,9 @@ func (m *Model) UpdatePartyData(party app.Party) {
 	}
 	m.MaxPartySize = maxSize
 	m.PartyCoins = app.TotalCoins(party)
+	if activeCount == 0 && m.IsQuesting {
+		m.SetIsQuesting(false)
+	}
 }
 
 func (m *Model) SetDimensions(width, height int) {

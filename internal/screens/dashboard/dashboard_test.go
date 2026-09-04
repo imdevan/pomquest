@@ -204,3 +204,91 @@ func TestDashboardScreen_MainMenuWidthMatchesOtherText(t *testing.T) {
 	}
 }
 
+func TestDashboardScreen_ContinueQuestOptionWhenActiveQuestAndLivingHeroes(t *testing.T) {
+	cfg := domain.DefaultConfig()
+
+	livingParty := app.Party{
+		Name:             "Living Party",
+		CurrentPartySize: 2,
+		MaxPartySize:     4,
+		Heroes: []app.Hero{
+			{Creature: app.Creature{Noun: app.Noun{Name: "Gimli"}, HP: 10, MaxHP: 10}, Class: "barbarian"},
+			{Creature: app.Creature{Noun: app.Noun{Name: "Legolas"}, HP: 8, MaxHP: 8}, Class: "ranger"},
+		},
+	}
+
+	deadParty := app.Party{
+		Name:             "Fallen Party",
+		CurrentPartySize: 0,
+		MaxPartySize:     4,
+		Heroes: []app.Hero{
+			{Creature: app.Creature{Noun: app.Noun{Name: "Boromir"}, HP: 0, MaxHP: 10}, Class: "fighter", IsDead: true},
+		},
+	}
+
+	activeQuest := &app.Quest{
+		Title:        "The Sunken Tomb",
+		Status:       "Active",
+		DungeonState: "InRoom",
+		CurrentRoom:  2,
+	}
+
+	completedQuest := &app.Quest{
+		Title:        "The Sunken Tomb",
+		Status:       "Completed",
+		DungeonState: "Completed",
+	}
+
+	failedQuest := &app.Quest{
+		Title:        "The Sunken Tomb",
+		Status:       "Failed",
+		DungeonState: "Defeat",
+	}
+
+	// Case 1: Active quest + living heroes -> Continue Quest!
+	mActive := NewModelFromPartyAndState(cfg, livingParty, app.GameState{CurrentQuest: activeQuest})
+	if !mActive.IsQuesting {
+		t.Errorf("expected IsQuesting to be true")
+	}
+	if !strings.Contains(mActive.Choices[0], "Continue Quest!") {
+		t.Errorf("expected choice 0 to be Continue Quest!, got %q", mActive.Choices[0])
+	}
+	viewActive := mActive.View()
+	if !strings.Contains(viewActive, "Continue Quest!") {
+		t.Errorf("expected dashboard view to contain 'Continue Quest!', got:\n%s", viewActive)
+	}
+
+	// Case 2: Active quest + dead party -> Quest!
+	mDead := NewModelFromPartyAndState(cfg, deadParty, app.GameState{CurrentQuest: activeQuest})
+	if mDead.IsQuesting {
+		t.Errorf("expected IsQuesting to be false when all party members are dead")
+	}
+	if !strings.Contains(mDead.Choices[0], "Quest!") {
+		t.Errorf("expected choice 0 to be Start Journey when all dead, got %q", mDead.Choices[0])
+	}
+
+	// Case 3: Completed quest + living party -> Quest!
+	mCompleted := NewModelFromPartyAndState(cfg, livingParty, app.GameState{CurrentQuest: completedQuest})
+	if mCompleted.IsQuesting {
+		t.Errorf("expected IsQuesting to be false when quest is completed")
+	}
+	if !strings.Contains(mCompleted.Choices[0], "Quest!") {
+		t.Errorf("expected choice 0 to be Start Journey when quest completed, got %q", mCompleted.Choices[0])
+	}
+
+	// Case 4: Failed quest + living party -> Quest!
+	mFailed := NewModelFromPartyAndState(cfg, livingParty, app.GameState{CurrentQuest: failedQuest})
+	if mFailed.IsQuesting {
+		t.Errorf("expected IsQuesting to be false when quest is failed")
+	}
+
+	// Case 5: Selecting choice 0 when IsQuesting
+	updated, cmd := mActive.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}})
+	mSel := updated.(Model)
+	if mSel.Selected != ChoiceQuest {
+		t.Errorf("expected Selected to be ChoiceQuest, got %v", mSel.Selected)
+	}
+	if cmd == nil {
+		t.Errorf("expected non-nil cmd on selection")
+	}
+}

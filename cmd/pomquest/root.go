@@ -148,7 +148,7 @@ func newAppModel(cfg domain.Config) appModel {
 
 func newAppModelWithDB(cfg domain.Config, dbPath string) appModel {
 	activeParty, _ := app.LoadActivePartyFromPath(dbPath)
-	dbModel := dashboard.NewModelFromParty(cfg, activeParty)
+	dbModel := dashboard.NewModelWithDBPath(cfg, dbPath)
 	partyModel := party.NewModelFromParty(cfg, activeParty)
 
 	return appModel{
@@ -170,8 +170,7 @@ func newAppModelWithDB(cfg domain.Config, dbPath string) appModel {
 
 func (m appModel) returnToDashboard() (tea.Model, tea.Cmd) {
 	m.state = screenDashboard
-	activeParty, _ := app.LoadActivePartyFromPath(m.dbPath)
-	m.dashboard = dashboard.NewModelFromParty(m.cfg, activeParty)
+	m.dashboard = dashboard.NewModelWithDBPath(m.cfg, m.dbPath)
 	m.dashboard.SetDimensions(m.width, m.height)
 	return m, tea.Batch(tea.ClearScreen, m.dashboard.Init())
 }
@@ -203,6 +202,12 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if dbModel.Selected >= 0 {
 				switch dbModel.Selected {
 				case dashboard.ChoiceQuest:
+					if dbModel.IsQuesting {
+						m.state = screenQuesting
+						m.questing = questing.NewModelWithDBPath(m.cfg, m.dbPath)
+						m.questing.SetDimensions(m.width, m.height)
+						return m, m.questing.Init()
+					}
 					m.state = screenPath
 					m.path = path.NewModelWithDBPath(m.cfg, m.dbPath)
 					m.path.SetDimensions(m.width, m.height)
@@ -257,7 +262,6 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if qModel, ok := newQ.(questing.Model); ok {
 			m.questing = qModel
 			if qModel.Quitted {
-				_ = app.ClearGameLogsToPath(m.dbPath, qModel.GameStateID)
 				return m.returnToDashboard()
 			}
 		}
