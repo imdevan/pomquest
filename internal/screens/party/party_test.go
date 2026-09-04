@@ -273,3 +273,15 @@ func TestPartyScreen_MouseClickRecruitHeroNavigatesToReroll(t *testing.T) {
 		t.Errorf("expected quit tea.Cmd when navigating to reroll screen")
 	}
 }
+
+func TestPartyScreen_SmallScreenUnsupported(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	m := NewModel(cfg)
+	m.SetDimensions(40, 24) // SM breakpoint or less
+
+	view := m.View()
+	if !strings.Contains(view, "terminal width is not") {
+		t.Fatalf("expected small screen unsupported message, got:\n%s", view)
+	}
+}
+

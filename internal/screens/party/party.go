@@ -284,6 +284,35 @@ func (m Model) View() string {
 		return ""
 	}
 
+	w := m.Width
+	if w <= 0 {
+		w = 80
+	}
+
+	rm := m.Responsive
+	if rm == nil {
+		rm = ui.NewResponsiveManager(w)
+	}
+
+	if rm.IsAtMost(ui.BreakpointSM) {
+		msgStyle := lipgloss.NewStyle().
+			Foreground(m.Theme.Text).
+			Align(lipgloss.Center)
+
+		paneStyle := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(m.Theme.Border).
+			Padding(1, 2).
+			Width(max(w-2, 10)).
+			Align(lipgloss.Center)
+
+		content := paneStyle.Render(msgStyle.Render("This terminal width is not currently supported."))
+		if m.Height > 0 {
+			return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
+		}
+		return content
+	}
+
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(m.Theme.Primary).
@@ -310,17 +339,6 @@ func (m Model) View() string {
 
 	grid := lipgloss.JoinHorizontal(lipgloss.Top, spacerCards...)
 
-	w := m.Width
-	if w <= 0 {
-		w = 80
-	}
-	gridWidth := lipgloss.Width(grid)
-	targetWidth := w
-	if gridWidth > targetWidth {
-		targetWidth = gridWidth
-	}
-	centeredGrid := lipgloss.NewStyle().Width(targetWidth).Align(lipgloss.Center).Render(grid)
-
 	helpKeys := []key.Binding{
 		key.NewBinding(key.WithKeys("←/→", "h/l"), key.WithHelp("←/→", "select hero")),
 	}
@@ -340,7 +358,7 @@ func (m Model) View() string {
 
 	var sb strings.Builder
 	sb.WriteString(header + "\n\n")
-	sb.WriteString(centeredGrid + "\n\n")
+	sb.WriteString(grid + "\n\n")
 	sb.WriteString(helpComp.View())
 
 	contentStyle := lipgloss.NewStyle().Align(lipgloss.Left)
@@ -351,4 +369,11 @@ func (m Model) View() string {
 	}
 
 	return content
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
