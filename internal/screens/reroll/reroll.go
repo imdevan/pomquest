@@ -273,6 +273,35 @@ func (m Model) View() string {
 		return ""
 	}
 
+	w := m.Width
+	if w <= 0 {
+		w = 80
+	}
+
+	rm := m.Responsive
+	if rm == nil {
+		rm = ui.NewResponsiveManager(w)
+	}
+
+	if rm.IsAtMost(ui.BreakpointSM) {
+		msgStyle := lipgloss.NewStyle().
+			Foreground(m.Theme.Text).
+			Align(lipgloss.Center)
+
+		paneStyle := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(m.Theme.Border).
+			Padding(1, 2).
+			Width(max(w-2, 10)).
+			Align(lipgloss.Center)
+
+		content := paneStyle.Render(msgStyle.Render("This terminal width is not currently supported."))
+		if m.Height > 0 {
+			return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
+		}
+		return content
+	}
+
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(m.Theme.Primary).
@@ -342,4 +371,11 @@ func (m Model) View() string {
 	}
 
 	return content
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

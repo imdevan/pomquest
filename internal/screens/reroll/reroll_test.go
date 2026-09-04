@@ -152,3 +152,15 @@ func TestRerollScreen_MouseHoverAndClick(t *testing.T) {
 		t.Errorf("expected EnteringName to be true on next cycle after mouse click")
 	}
 }
+
+func TestRerollScreen_SmallScreenUnsupported(t *testing.T) {
+	cfg := domain.DefaultConfig()
+	m := NewModel(cfg, 1)
+	m.SetDimensions(40, 24) // SM breakpoint or less
+
+	view := m.View()
+	if !strings.Contains(view, "terminal width is not") {
+		t.Fatalf("expected small screen unsupported message, got:\n%s", view)
+	}
+}
+
