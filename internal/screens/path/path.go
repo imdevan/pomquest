@@ -16,6 +16,7 @@ import (
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/dungeon"
+	"github.com/pomquest/internal/sacred_texts"
 	"github.com/pomquest/internal/ui"
 )
 
@@ -76,7 +77,7 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 }
 
 func (m *Model) generateOptions() {
-	biomeKeys := dungeon.AllBiomes
+	biomeKeys := sacred_texts.AllBiomes
 
 	generatedNames := make(map[string]bool)
 	for i := 0; i < 3; i++ {
@@ -87,13 +88,13 @@ func (m *Model) generateOptions() {
 		generatedNames[name] = true
 
 		biomeKey := biomeKeys[(i+m.rng.Intn(len(biomeKeys)))%len(biomeKeys)]
-		biomeObj := dungeon.GetBiome(biomeKey)
+		biomeObj := sacred_texts.GetBiome(biomeKey)
 
 		diff := 1.0 + float64(i)*0.25
 		loc := app.Location{
 			Name:               name,
 			Biome:              biomeObj.ID,
-			Description:        biomeObj.Name + " environment with " + dungeon.GetBiomeHazardDescription(biomeObj),
+			Description:        biomeObj.Name + " environment with " + sacred_texts.GetBiomeHazardDescription(biomeObj),
 			DifficultyModifier: diff,
 		}
 		m.Options[i] = loc

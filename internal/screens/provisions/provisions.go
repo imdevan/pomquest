@@ -13,6 +13,7 @@ import (
 	"github.com/pomquest/internal/adapters/mouse"
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
+	"github.com/pomquest/internal/sacred_texts"
 	"github.com/pomquest/internal/ui"
 )
 
@@ -22,7 +23,7 @@ type Model struct {
 	Responsive   *ui.ResponsiveManager
 	DBPath       string
 	Party        app.Party
-	Catalog      []app.ItemDef
+	Catalog      []sacred_texts.ItemDef
 	Cart         map[int]int
 	Cursor       int
 	StatusNotice string
@@ -46,7 +47,7 @@ func NewModelWithDBPath(cfg domain.Config, dbPath string) Model {
 		Responsive: ui.NewResponsiveManager(80),
 		DBPath:     dbPath,
 		Party:      partyData,
-		Catalog:    app.BookOfItems(),
+		Catalog:    sacred_texts.BookOfItems(),
 		Cart:       make(map[int]int),
 		Cursor:     0,
 		Width:      80,

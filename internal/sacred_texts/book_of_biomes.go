@@ -1,4 +1,4 @@
-package dungeon
+package sacred_texts
 
 import (
 	"math/rand"
@@ -216,7 +216,7 @@ func GenerateMonstersForBiomeRoom(biomeID string, crBudget int, r *rand.Rand, ma
 					Name: name,
 					Icon: tmpl.Icon,
 				},
-				HP:     tmpl.HP,
+				HP:     tmpl.MaxHP,
 				MaxHP:  tmpl.MaxHP,
 				Attack: tmpl.Attack,
 				Armor:  tmpl.Armor,

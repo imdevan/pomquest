@@ -1,4 +1,4 @@
-package dungeon
+package sacred_texts
 
 import (
 	"math/rand"
@@ -40,8 +40,8 @@ func TestGenerateMonstersForRoomMaxCR(t *testing.T) {
 func TestBookOfMonstersCRRules(t *testing.T) {
 	for _, m := range BookOfMonsters {
 		if m.CR == 1 {
-			if m.HP < 1 || m.HP > 2 || m.MaxHP < 1 || m.MaxHP > 2 {
-				t.Errorf("CR 1 monster %s expected 1-2 HP, got HP=%d MaxHP=%d", m.Name, m.HP, m.MaxHP)
+			if m.MaxHP < 1 || m.MaxHP > 2 {
+				t.Errorf("CR 1 monster %s expected 1-2 HP, got MaxHP=%d", m.Name, m.MaxHP)
 			}
 			if m.XPValue != 1 {
 				t.Errorf("CR 1 monster %s expected 1 XP, got %d", m.Name, m.XPValue)

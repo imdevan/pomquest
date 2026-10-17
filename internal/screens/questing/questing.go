@@ -15,6 +15,7 @@ import (
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
 	"github.com/pomquest/internal/dungeon"
+	"github.com/pomquest/internal/sacred_texts"
 	"github.com/pomquest/internal/ui"
 	"github.com/pomquest/internal/ui/dice_animation"
 )
@@ -747,7 +748,7 @@ func (m *Model) advanceDungeonCycle() tea.Cmd {
 			}
 		}
 		maxCR := maxHeroLevel
-		m.ActiveMonsters = dungeon.GenerateMonstersForRoom(m.ProgressData.Terrain, crBudget, m.rng, maxCR)
+		m.ActiveMonsters = sacred_texts.GenerateMonstersForRoom(m.ProgressData.Terrain, crBudget, m.rng, maxCR)
 
 		if len(m.ActiveMonsters) == 0 {
 			m.DungeonState = "Victory"

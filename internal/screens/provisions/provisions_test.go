@@ -9,10 +9,11 @@ import (
 
 	"github.com/pomquest/internal/app"
 	"github.com/pomquest/internal/domain"
+	"github.com/pomquest/internal/sacred_texts"
 )
 
 func TestBookOfItems(t *testing.T) {
-	catalog := app.BookOfItems()
+	catalog := sacred_texts.BookOfItems()
 
 	if len(catalog) != 7 {
 		t.Fatalf("expected 7 items in catalog, got %d", len(catalog))

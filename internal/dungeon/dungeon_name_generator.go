@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/pomquest/internal/sacred_texts"
 	"github.com/pomquest/internal/utils"
 )
 
@@ -22,7 +23,7 @@ func GenerateDungeonName() string {
 
 // GenerateDungeonNameWithRand creates a random dungeon name using a provided rand.Rand instance.
 func GenerateDungeonNameWithRand(r *rand.Rand) string {
-	blank := GenerateLocationNameWithRand(r)
+	blank := sacred_texts.GenerateLocationNameWithRand(r)
 	return utils.GenerateNameWithRand(r, blank, Locays)
 }
 

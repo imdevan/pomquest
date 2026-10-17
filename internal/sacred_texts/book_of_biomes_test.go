@@ -1,4 +1,4 @@
-package dungeon
+package sacred_texts
 
 import (
 	"math/rand"
@@ -65,7 +65,7 @@ func TestMonstersForBiomeMultiBiome(t *testing.T) {
 		Name:  "Test Multi Monster",
 		Biome: []string{"forest", "desert"},
 		CR:    1,
-		HP:    5, MaxHP: 5, Attack: 1, Armor: 0, XPValue: 5, LootGold: 1, Icon: "👾",
+		MaxHP: 5, Attack: 1, Armor: 0, XPValue: 5, LootGold: 1, Icon: "👾",
 	}
 	BookOfMonsters = append(BookOfMonsters, testMonster)
 	defer func() {
@@ -104,7 +104,7 @@ func TestAdaptableMonsterName(t *testing.T) {
 		Biome:     []string{"Any"},
 		Adaptable: true,
 		CR:        1,
-		HP:        1, MaxHP: 1, Attack: 1, Armor: 0, XPValue: 1, LootGold: 0, Icon: "👾",
+		MaxHP:     1, Attack: 1, Armor: 0, XPValue: 1, LootGold: 0, Icon: "👾",
 	}
 	BookOfMonsters = append(BookOfMonsters, testMonster)
 	defer func() {

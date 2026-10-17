@@ -1,4 +1,4 @@
-package namegen
+package sacred_texts
 
 // characterNames maps race -> gender -> name data.
 var characterNames = map[Race]map[Gender]nameData{

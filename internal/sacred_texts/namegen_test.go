@@ -1,4 +1,4 @@
-package namegen
+package sacred_texts
 
 import (
 	"math/rand"

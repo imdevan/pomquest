@@ -4,11 +4,13 @@ import (
 	"math/rand"
 	"strings"
 	"testing"
+
+	"github.com/pomquest/internal/sacred_texts"
 )
 
 func TestGenerateLocationName(t *testing.T) {
 	for i := 0; i < 50; i++ {
-		name := GenerateLocationName()
+		name := sacred_texts.GenerateLocationName()
 		if name == "" {
 			t.Errorf("expected non-empty location name")
 		}

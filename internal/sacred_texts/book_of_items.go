@@ -1,4 +1,4 @@
-package app
+package sacred_texts
 
 import "github.com/pomquest/internal/adapters/icon"
 
