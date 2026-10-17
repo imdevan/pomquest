@@ -579,3 +579,7 @@ classes have an attack type
   - [x] 43.1.4 selecting "Continue Quest!" transitions directly to questing view and resumes quest state from DB without path selection
   - [x] 43.1.5 preserve quest log and state when exiting or returning to dashboard so questing picks up where previously left off
 
+
+## Feature 44: Sacred texts update
+- [ ] 44.1 move generators out of texts to their own domain packages
+
